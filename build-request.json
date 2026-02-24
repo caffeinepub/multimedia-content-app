@@ -1,79 +1,70 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin Panel Users Table and Add Unique ID Search Bar",
+  "title": "Fix admin panel: remove backend auth checks for maintenance mode, getAllUsers, blockUser, and unblockUser",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-79",
-      "text": "Fix the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) so that the user list table correctly fetches and renders all registered users by properly calling the useGetAllUsers hook. Ensure the table displays each user's Name, Server, Unique Code, Device ID (truncated), isBlocked status, and Block/Unblock buttons. The table must show data as soon as the 'Users & Controls' tab is active, with a loading skeleton while fetching and an empty-state message if no users are registered yet.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "not showing successfull login users"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Opening the 'Users & Controls' tab in the admin panel triggers the useGetAllUsers hook fetch",
-        "All registered users appear in the table with Name, Server, Unique Code, Device ID (truncated), and Block/Unblock button",
-        "A loading skeleton is shown while the fetch is in progress",
-        "An 'No users registered yet' empty-state message is shown when the array is empty (length === 0)",
-        "The table data updates automatically after a Block or Unblock action invalidates the query cache"
-      ]
-    },
-    {
-      "id": "REQ-80",
-      "text": "Add a search/filter input bar above the users table in the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) labeled 'Search by Unique ID'. As the admin types into this field, the displayed user rows must be filtered client-side to only show entries whose Unique Code contains the entered string (case-insensitive). Clearing the input restores the full unfiltered list.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "not showing search unique id bar"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A text input field labeled 'Search by Unique ID' appears above the users table",
-        "Typing any string filters the table rows to only those whose Unique Code contains the input value (case-insensitive)",
-        "Clearing the search input restores all rows",
-        "The search filter works purely client-side with no additional backend calls",
-        "The search bar is visible and functional on both mobile and desktop layouts"
-      ]
-    },
-    {
-      "id": "REQ-81",
-      "text": "Verify the backend getAllUsers() query function in backend/main.mo correctly iterates over the stable users variable and returns all stored user records as an array. Ensure the return type matches the frontend's expected shape (uniqueCode: Text, deviceId: Text, name: Text, server: Text, isBlocked: Bool) and that no trap or rejection occurs. If any issue is found, fix it so the function reliably returns all registered users.",
+      "id": "REQ-93",
+      "text": "In backend/main.mo, remove all authorization/identity checks from the setMaintenanceMode function. This function must accept calls from any caller (including anonymous) without throwing or returning any 'Unauthorized: Only admins can set maintenance mode' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on setMaintenanceMode.",
       "target": "backend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "not showing successfull login users"
+          "Failed to update maintenance mode: Unauthorized: Only admins can set maintenance mode"
         ]
       },
       "acceptanceCriteria": [
-        "Calling getAllUsers() from the frontend returns an array of all user records registered via registerUser()",
-        "Each returned record contains uniqueCode, deviceId, name, server, and isBlocked fields",
-        "The function does not trap or reject on any valid state",
-        "A user registered via registerUser() appears in the next getAllUsers() call"
+        "Toggling Maintenance Mode in the admin panel does not produce an 'Unauthorized' error toast.",
+        "setMaintenanceMode(true) and setMaintenanceMode(false) succeed when called from an anonymous caller.",
+        "The Maintenance Mode toggle in the admin panel reflects the updated state after toggling."
+      ]
+    },
+    {
+      "id": "REQ-94",
+      "text": "In backend/main.mo, remove all authorization/identity checks from the getAllUsers query function. This function must return all registered user records to any caller (including anonymous) without throwing or returning any 'Unauthorized' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on getAllUsers.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Failed to load users. Please try again."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Calling getAllUsers() from an anonymous caller returns the full array of registered user records without error.",
+        "The 'Registered Users' table in the admin panel loads and displays users without showing the 'Failed to load users. Please try again.' error.",
+        "A loading skeleton is shown while the data is being fetched, and the table populates once the data is returned."
+      ]
+    },
+    {
+      "id": "REQ-95",
+      "text": "In backend/main.mo, remove all authorization/identity checks from the blockUser and unblockUser functions. These functions must accept calls from any caller (including anonymous) without throwing or returning any 'Unauthorized: Only admins can block users' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these two functions.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Calling blockUser(uniqueCode) from an anonymous caller successfully sets the user's isBlocked=true without error.",
+        "Calling unblockUser(uniqueCode) from an anonymous caller successfully sets the user's isBlocked=false without error.",
+        "The Block/Unblock buttons in the admin panel user table function without producing an 'Unauthorized' error."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
-    "Do not remove or alter the existing History and Downloads sections of the Hamburger Menu",
-    "The PIN for admin access remains '09186114' and must not be changed"
+    "Do not change any frontend immutable paths.",
+    "Do not add any new authorization checks to any backend functions.",
+    "Do not alter the data schema or stable variable structure of existing user, poetry, dua, or song records."
   ],
   "nonGoals": [
-    "Changing the login flow or user registration logic",
-    "Modifying the maintenance mode toggle functionality",
-    "Altering the content upload or delete forms",
-    "Adding new backend data fields beyond what is already defined for user records"
+    "Do not modify any frontend components beyond what is strictly necessary.",
+    "Do not change the PIN authentication logic in PINAuthGuard.tsx.",
+    "Do not alter upload, delete, or like functions in the backend."
   ],
   "imageRequirements": {
     "required": [],

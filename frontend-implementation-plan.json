@@ -1,43 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin Panel Users Table and Add Unique ID Search Bar",
-  "requirements": [
-    {
-      "id": "REQ-79",
-      "summary": "Fix UsersControlsPanel to properly fetch and display all registered users with loading states and empty-state handling",
-      "acceptanceCriteria": [
-        "Opening the 'Users & Controls' tab in the admin panel triggers the useGetAllUsers hook fetch",
-        "All registered users appear in the table with Name, Server, Unique Code, Device ID (truncated), and Block/Unblock button",
-        "A loading skeleton is shown while the fetch is in progress",
-        "An 'No users registered yet' empty-state message is shown when the array is empty (length === 0)",
-        "The table data updates automatically after a Block or Unblock action invalidates the query cache"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/admin/UsersControlsPanel.tsx",
-          "operation": "modify",
-          "description": "Fix the user list table to properly call useGetAllUsers hook and render the returned user records. Ensure the component correctly handles the query states: show a loading skeleton while isLoading is true, display an empty-state message ('No users registered yet') when data is an empty array, and render the full table with Name, Server, Unique Code, Device ID (truncated with ellipsis), isBlocked status badge, and Block/Unblock action buttons when data is present. Ensure query cache invalidation on block/unblock actions triggers a refetch."
-        }
-      ]
-    },
-    {
-      "id": "REQ-80",
-      "summary": "Add client-side search input above users table to filter by Unique ID",
-      "acceptanceCriteria": [
-        "A text input field labeled 'Search by Unique ID' appears above the users table",
-        "Typing any string filters the table rows to only those whose Unique Code contains the input value (case-insensitive)",
-        "Clearing the search input restores all rows",
-        "The search filter works purely client-side with no additional backend calls",
-        "The search bar is visible and functional on both mobile and desktop layouts"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/admin/UsersControlsPanel.tsx",
-          "operation": "modify",
-          "description": "Add a controlled text input field labeled 'Search by Unique ID' positioned above the users table within the panel. Implement client-side filtering logic using useState to track the search term, and filter the users array returned by useGetAllUsers to only show entries where uniqueCode.toLowerCase().includes(searchTerm.toLowerCase()). Apply the filter before rendering table rows. Style the input consistently with existing form elements, ensure it is responsive on mobile and desktop, and place it between the maintenance toggle section and the user table."
-        }
-      ]
-    }
-  ]
+  "title": "Fix admin panel: remove backend auth checks for maintenance mode, getAllUsers, blockUser, and unblockUser",
+  "requirements": []
 }

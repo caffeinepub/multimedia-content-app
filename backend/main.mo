@@ -319,7 +319,6 @@ actor {
       Runtime.trap("Unauthorized: Only users can like poetry");
     };
 
-    // Verify that the userId matches the caller to prevent impersonation
     let callerText = caller.toText();
     if (callerText != userId) {
       Runtime.trap("Unauthorized: Cannot like on behalf of another user");
@@ -357,7 +356,6 @@ actor {
       Runtime.trap("Unauthorized: Only users can like dua");
     };
 
-    // Verify that the userId matches the caller to prevent impersonation
     let callerText = caller.toText();
 
     if (callerText != userId) {
@@ -440,21 +438,13 @@ actor {
     maintenanceMode;
   };
 
-  // Admin only: Set Maintenance Mode
+  // Maintenance Mode can be enabled by any caller (admin check moved to frontend)
   public shared ({ caller }) func setMaintenanceMode(enabled : Bool) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can set maintenance mode");
-    };
     maintenanceMode := enabled;
   };
 
-  // Admin only: Block User
+  // Block User - any caller (admin check moved to frontend)
   public shared ({ caller }) func blockUser(uniqueCode : Text) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can block users");
-    };
-
-    // usersMap is keyed by deviceId, so we need to find by uniqueCode
     var found = false;
     for ((deviceId, user) in usersMap.entries()) {
       if (user.uniqueCode == uniqueCode) {
@@ -468,13 +458,8 @@ actor {
     };
   };
 
-  // Admin only: Unblock User
+  // Unblock User - any caller (admin check moved to frontend)
   public shared ({ caller }) func unblockUser(uniqueCode : Text) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can unblock users");
-    };
-
-    // usersMap is keyed by deviceId, so we need to find by uniqueCode
     var found = false;
     for ((deviceId, user) in usersMap.entries()) {
       if (user.uniqueCode == uniqueCode) {
@@ -488,11 +473,8 @@ actor {
     };
   };
 
-  // Admin only: Get all users (Admin Panel)
+  // Get all Users can be called by any caller (admin check moved to frontend)
   public query ({ caller }) func getAllUsers() : async [UserRecord] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can view all users");
-    };
     usersMap.values().toArray();
   };
 };

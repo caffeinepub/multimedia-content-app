@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 41,
+  "projectStateVersion": 51,
   "summary": "Multimedia content app 'Dard-e-munasif' undergoing complete rebuild from scratch due to persistent 'failed to load content' errors across Poetry, Dua, and Songs sections. Backend Motoko stable variables and query functions (getAllPoetry, getAllDua, getAllSongs) will be rewritten with minimal, clean implementation. All existing features will be preserved: four-category navigation, admin panel (PIN: 09186114), full-screen modals, hybrid music player, Web Audio API filters, hamburger menu with History/Downloads/Volume Manager, IndexedDB storage, and external links.",
   "architectural_notes": [
     "Separate /admin route with PIN-only authentication (09186114)",
@@ -20,7 +20,10 @@
     "Admin panel delete function not working — post remains visible after delete click; missing state refresh and confirm dialog",
     "Backend delete functions (deletePoetry, deleteDua, deleteSong) returning 'Only admins can delete' error — authorization check must be removed",
     "Audio plays silently on Android — likely OS-level permission or audio focus not requested; app does not route to Media/Music stream",
-    "Admin panel Users & Controls tab does not display registered users (getAllUsers() data not rendering) and is missing a search-by-Unique-ID bar"
+    "App stuck on loading screen — taking a long time to open; likely backend canister initialization delay or route guard backend checks (getUserByDeviceId/getMaintenanceMode) hanging on slow network",
+    "Admin panel shows 'Only admin can set maintenance mode' error when toggling maintenance mode — backend setMaintenanceMode enforcing unauthorized identity check that must be removed",
+    "Admin panel Users & Controls tab shows 'Failed to load users, make sure you are admin' — backend getAllUsers enforcing unauthorized identity check that must be removed",
+    "Admin panel block/unblock user shows 'Only admin can block users' error — backend blockUser/unblockUser enforcing unauthorized identity check that must be removed"
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -559,6 +562,54 @@
         "REQ-80"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-in-layout-tsx-add-a-hard-timeout-to-the-route-guard-s-backend-checks-getuserbydeviceid-and-getmaintenancemode-if-either-backend-call-does-not-resolve-within-4-seconds-treat-the-result-as-non-blocking-and-allow-the-user-through-to-the-requested-route-rather-than-keeping-them-on-an-infinite-loading-screen-the-timeout-must-be-implemented-per-call-using-promise-race-with-a-timeout-promise-on-timeout-log-a-warning-to-the-console-but-do-not-show-any-error-to-the-user-simply-render-the-app-content-as-normal",
+      "title": "In Layout.tsx, add a hard timeout to the route guard's backend checks (getUserByDeviceId and getMaintenanceMode). If either backend call does not resolve within 4 seconds, treat the result as non-blocking and allow the user through to the requested route rather than keeping them on an infinite loading screen. The timeout must be implemented per-call using Promise.race() with a timeout promise. On timeout, log a warning to the console but do not show any error to the user — simply render the app content as normal.",
+      "reqIds": [
+        "REQ-82"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-layout-tsx-change-the-route-guard-so-both-getuserbydeviceid-and-getmaintenancemode-backend-calls-run-in-parallel-using-promise-allsettled-instead-of-sequentially-this-reduces-total-blocking-time-from-the-sum-of-both-call-durations-to-the-maximum-of-the-two-if-either-call-rejects-or-is-rejected-by-allsettled-treat-it-as-non-blocking-allow-user-through-rather-than-blocking-or-erroring",
+      "title": "In Layout.tsx, change the route guard so both getUserByDeviceId and getMaintenanceMode backend calls run in parallel using Promise.allSettled() instead of sequentially. This reduces total blocking time from the sum of both call durations to the maximum of the two. If either call rejects or is rejected by allSettled, treat it as non-blocking (allow user through) rather than blocking or erroring.",
+      "reqIds": [
+        "REQ-83"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-layout-tsx-if-localstorage-keys-dmuser-deviceid-dmuser-name-or-dmuser-server-are-missing-or-empty-when-the-route-guard-runs-skip-the-getuserbydeviceid-and-getmaintenancemode-backend-calls-entirely-and-redirect-immediately-to-login-without-showing-any-loading-indicator-do-not-attempt-backend-calls-when-the-user-is-not-yet-registered-as-these-calls-will-always-fail-or-hang-and-are-the-primary-cause-of-the-infinite-loading-screen-for-first-time-users",
+      "title": "In Layout.tsx, if localStorage keys 'dmUser_deviceId', 'dmUser_name', or 'dmUser_server' are missing or empty when the route guard runs, skip the getUserByDeviceId and getMaintenanceMode backend calls entirely and redirect immediately to /login without showing any loading indicator. Do not attempt backend calls when the user is not yet registered, as these calls will always fail or hang and are the primary cause of the infinite loading screen for first-time users.",
+      "reqIds": [
+        "REQ-84"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-full-page-white-loading-screen-shown-during-route-guard-checks-in-layout-tsx-with-a-styled-loading-indicator-matching-the-app-s-dark-aesthetic-display-the-app-logo-dard-e-munasif-logo-dim-200x200-png-centered-on-screen-with-a-subtle-pulsing-animation-and-the-text-loading-below-it-on-a-dark-background-consistent-with-the-app-s-color-palette-this-ensures-the-loading-state-feels-intentional-and-branded-rather-than-showing-a-blank-white-screen",
+      "title": "Replace the full-page white 'Loading...' screen shown during route guard checks in Layout.tsx with a styled loading indicator matching the app's dark aesthetic. Display the app logo (dard-e-munasif-logo.dim_200x200.png) centered on screen with a subtle pulsing animation and the text 'Loading...' below it, on a dark background consistent with the app's color palette. This ensures the loading state feels intentional and branded rather than showing a blank white screen.",
+      "reqIds": [
+        "REQ-85"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-remove-the-error-message-text-failed-to-load-users-make-sure-you-are-logged-in-as-admin-and-replace-it-with-a-generic-error-message-such-as-failed-to-load-users-please-try-again-so-it-no-longer-misleads-the-admin-after-the-backend-authorization-check-is-removed",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, remove the error message text 'Failed to load users. Make sure you are logged in as admin.' and replace it with a generic error message such as 'Failed to load users. Please try again.' so it no longer misleads the admin after the backend authorization check is removed.",
+      "reqIds": [
+        "REQ-88"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-replace-the-error-message-text-failed-to-load-users-make-sure-you-are-logged-in-as-admin-with-failed-to-load-users-please-try-again-so-it-no-longer-displays-the-misleading-admin-login-requirement-message",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, replace the error message text 'Failed to load users. Make sure you are logged in as admin.' with 'Failed to load users. Please try again.' so it no longer displays the misleading admin login requirement message.",
+      "reqIds": [
+        "REQ-91"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -815,6 +866,76 @@
       "summary": "Verify the backend getAllUsers() query function in backend/main.mo correctly iterates over the stable users variable and returns all stored user records as an array. Ensure the return type matches the frontend's expected shape (uniqueCode: Text, deviceId: Text, name: Text, server: Text, isBlocked: Bool) and that no trap or rejection occurs. If any issue is found, fix it so the function reliably returns all registered users.",
       "reqIds": [
         "REQ-81"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-53",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the setMaintenanceMode function. This function must accept calls from any caller (including anonymous) without throwing or returning an 'Unauthorized: Only admins can set maintenance mode' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on setMaintenanceMode.",
+      "reqIds": [
+        "REQ-86"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-54",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the getAllUsers query function. This function must return all registered user records to any caller (including anonymous) without throwing or returning an 'Unauthorized' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on getAllUsers.",
+      "reqIds": [
+        "REQ-87"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-55",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the getAllUsers query function. This function must return all registered user records to any caller (including anonymous) without throwing or returning an 'Unauthorized' or 'Make sure you are logged in as admin' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on getAllUsers.",
+      "reqIds": [
+        "REQ-89"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-56",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the setMaintenanceMode function. This function must accept calls from any caller (including anonymous) without throwing or returning an 'Unauthorized: Only admins can set maintenance mode' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on setMaintenanceMode.",
+      "reqIds": [
+        "REQ-90"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-57",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the blockUser and unblockUser functions. These functions must accept calls from any caller (including anonymous) without throwing or returning an 'Unauthorized: Only admins can block users' error. The PIN-protected frontend admin panel is the sole authentication gate.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-58",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the blockUser and unblockUser functions. These functions must accept calls from any caller (including anonymous) without throwing or returning an 'Unauthorized: Only admins can block users' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these two functions.",
+      "reqIds": [
+        "REQ-92"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-59",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the setMaintenanceMode function. This function must accept calls from any caller (including anonymous) without throwing or returning any 'Unauthorized: Only admins can set maintenance mode' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on setMaintenanceMode.",
+      "reqIds": [
+        "REQ-93"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-60",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the getAllUsers query function. This function must return all registered user records to any caller (including anonymous) without throwing or returning any 'Unauthorized' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on getAllUsers.",
+      "reqIds": [
+        "REQ-94"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-61",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the blockUser and unblockUser functions. These functions must accept calls from any caller (including anonymous) without throwing or returning any 'Unauthorized: Only admins can block users' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these two functions.",
+      "reqIds": [
+        "REQ-95"
       ],
       "status": "pending"
     }

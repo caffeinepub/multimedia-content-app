@@ -146,7 +146,7 @@ export default function UsersControlsPanel() {
         {/* Error State */}
         {usersError && !usersLoading && (
           <div className="text-center py-8 text-destructive text-sm">
-            Failed to load users. Make sure you are logged in as admin.
+            Failed to load users. Please try again.
             <div className="mt-2">
               <Button variant="outline" size="sm" onClick={() => refetchUsers()}>
                 Retry

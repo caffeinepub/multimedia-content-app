@@ -1,45 +1,4 @@
 {
   "kind": "feature_evidence_report",
-  "features": [
-    {
-      "featureId": "feature-fix-the-userscontrolspanel-component-frontend-src-components-admin-userscontrolspanel-tsx-so-that-the-user-list-table-correctly-fetches-and-renders-all-registered-users-by-properly-calling-the-usegetallusers-hook-ensure-the-table-displays-each-user-s-name-server-unique-code-device-id-truncated-isblocked-status-and-block-unblock-buttons-the-table-must-show-data-as-soon-as-the-users-controls-tab-is-active-with-a-loading-skeleton-while-fetching-and-an-empty-state-message-if-no-users-are-registered-yet",
-      "featureTitle": "Fix the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) so that the user list table correctly fetches and renders all registered users by properly calling the useGetAllUsers hook. Ensure the table displays each user's Name, Server, Unique Code, Device ID (truncated), isBlocked status, and Block/Unblock buttons. The table must show data as soon as the 'Users & Controls' tab is active, with a loading skeleton while fetching and an empty-state message if no users are registered yet.",
-      "files": [
-        "frontend/src/components/admin/UsersControlsPanel.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-79"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-a-search-filter-input-bar-above-the-users-table-in-the-userscontrolspanel-component-frontend-src-components-admin-userscontrolspanel-tsx-labeled-search-by-unique-id-as-the-admin-types-into-this-field-the-displayed-user-rows-must-be-filtered-client-side-to-only-show-entries-whose-unique-code-contains-the-entered-string-case-insensitive-clearing-the-input-restores-the-full-unfiltered-list",
-      "featureTitle": "Add a search/filter input bar above the users table in the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) labeled 'Search by Unique ID'. As the admin types into this field, the displayed user rows must be filtered client-side to only show entries whose Unique Code contains the entered string (case-insensitive). Clearing the input restores the full unfiltered list.",
-      "files": [
-        "frontend/src/components/admin/UsersControlsPanel.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-80"
-      ],
-      "confidence": "high"
-    }
-  ]
+  "features": []
 }

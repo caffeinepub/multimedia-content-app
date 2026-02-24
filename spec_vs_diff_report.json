@@ -1,24 +1,38 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T18:41:03.419Z",
-  "summary": "The diff implements REQ-79 and REQ-80 in UsersControlsPanel.tsx with proper useGetAllUsers hook usage, loading skeleton, empty-state message, search bar, and block/unblock with cache invalidation. REQ-81 (backend main.mo fix) is not evidenced in the diff.",
+  "generatedAt": "2026-02-24T19:32:36.442Z",
+  "summary": "The diff modifies backend/main.mo and project_state.json. The truncated backend/main.mo content shows the file structure but does not reveal the implementations of setMaintenanceMode, getAllUsers, blockUser, or unblockUser functions — the critical functions for REQ-93, REQ-94, and REQ-95. The visible portion shows other functions still retain authorization checks (e.g., createPoetry, getCallerUserProfile, getUserProfile, saveCallerUserProfile). Without seeing the full diff of the target functions, we cannot confirm any of the three requirements are satisfied.",
   "missing_requirements": [
     {
-      "id": "REQ-81",
-      "requirement": "Verify and fix the backend getAllUsers() query function in backend/main.mo to correctly iterate over the stable users variable and return all stored user records with the correct shape (uniqueCode, deviceId, name, server, isBlocked), without trapping or rejecting.",
-      "reason": "No changes to backend/main.mo are present in the diff. The diff only modifies frontend files. There is no evidence that the backend function was verified or fixed.",
-      "evidence": []
+      "id": "REQ-93",
+      "requirement": "Remove all authorization/identity checks from setMaintenanceMode in backend/main.mo so any caller including anonymous can invoke it without error.",
+      "reason": "The diff of backend/main.mo is truncated and the setMaintenanceMode function body is not visible. There is no evidence that authorization checks were removed from this function.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-94",
+      "requirement": "Remove all authorization/identity checks from the getAllUsers query function in backend/main.mo so any caller including anonymous receives all user records without error.",
+      "reason": "The diff of backend/main.mo is truncated and the getAllUsers function body is not visible. There is no evidence that authorization checks were removed from this function.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-95",
+      "requirement": "Remove all authorization/identity checks from blockUser and unblockUser in backend/main.mo so any caller including anonymous can invoke them without error.",
+      "reason": "The diff of backend/main.mo is truncated and neither blockUser nor unblockUser function bodies are visible. There is no evidence that authorization checks were removed from these functions.",
+      "evidence": [
+        "backend/main.mo"
+      ]
     }
   ],
   "hallucinated_features": [],
-  "confidence": 0.88,
+  "confidence": 0.35,
   "changed_files": [
-    "frontend-file-summaries.txt",
-    "frontend/src/components/Layout.tsx",
-    "frontend/src/components/admin/ContentManagement.tsx",
-    "frontend/src/components/admin/UsersControlsPanel.tsx",
-    "frontend/src/hooks/useQueries.ts",
+    "backend/main.mo",
     "project_state.json"
   ]
 }

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useRouterState, useNavigate } from '@tanstack/react-router';
 import { Music, BookHeart, Sparkles, LayoutGrid } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -7,72 +7,138 @@ import { Moon, Sun } from 'lucide-react';
 import HamburgerMenu from './HamburgerMenu';
 import BanScreen from './BanScreen';
 import MaintenanceScreen from './MaintenanceScreen';
-import { useGetUserByDeviceId, useGetMaintenanceMode } from '../hooks/useQueries';
+import { useActor } from '../hooks/useActor';
+import type { UserRecord } from '../backend';
 
-function isLoggedIn(): boolean {
-  const name = localStorage.getItem('dmUser_name');
-  const server = localStorage.getItem('dmUser_server');
-  return !!(name && name.trim() && server && server.trim());
+function getStoredCredentials(): { deviceId: string; name: string; server: string } | null {
+  const deviceId = localStorage.getItem('dmUser_deviceId') ?? '';
+  const name = localStorage.getItem('dmUser_name') ?? '';
+  const server = localStorage.getItem('dmUser_server') ?? '';
+  if (!deviceId.trim() || !name.trim() || !server.trim()) return null;
+  return { deviceId, name, server };
 }
 
-function getDeviceId(): string {
-  return localStorage.getItem('dmUser_deviceId') ?? '';
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T | null> {
+  const timeout = new Promise<null>((resolve) => {
+    setTimeout(() => {
+      console.warn(`[Layout] ${label} timed out after ${ms}ms — allowing user through`);
+      resolve(null);
+    }, ms);
+  });
+  return Promise.race([promise.catch(() => null), timeout]);
 }
+
+type CheckState =
+  | { status: 'idle' }
+  | { status: 'checking' }
+  | { status: 'done'; isBlocked: boolean; isMaintenance: boolean };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { actor, isFetching: actorFetching } = useActor();
 
   const isActive = (path: string) => currentPath === path;
   const isLoginPage = currentPath === '/login';
 
-  const deviceId = getDeviceId();
-
-  // Check user block status and maintenance mode on every render
-  // Only poll when not on login page and deviceId is available
-  const { data: userRecord, isLoading: userLoading } = useGetUserByDeviceId(
-    !isLoginPage ? deviceId : ''
-  );
-  const { data: maintenanceMode, isLoading: maintenanceLoading } = useGetMaintenanceMode();
+  const [checkState, setCheckState] = useState<CheckState>({ status: 'idle' });
+  const hasChecked = useRef(false);
 
   useEffect(() => {
-    if (!isLoginPage && !isLoggedIn()) {
+    // On login page, no guard needed
+    if (isLoginPage) return;
+
+    // Early exit: no credentials → redirect immediately, no backend calls
+    const creds = getStoredCredentials();
+    if (!creds) {
       navigate({ to: '/login' });
+      return;
     }
-  }, [currentPath, isLoginPage, navigate]);
 
-  // If not logged in and not on login page, render nothing while redirect happens
-  if (!isLoginPage && !isLoggedIn()) {
-    return null;
-  }
+    // Wait for actor to be ready before running checks
+    if (actorFetching || !actor) {
+      setCheckState({ status: 'checking' });
+      return;
+    }
 
-  // On the login page, render children without the full layout chrome
+    // Only run checks once per mount (or when actor becomes available)
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
+    setCheckState({ status: 'checking' });
+
+    const runChecks = async () => {
+      const [userResult, maintenanceResult] = await Promise.allSettled([
+        withTimeout(actor.getUserByDeviceId(creds.deviceId), 4000, 'getUserByDeviceId'),
+        withTimeout(actor.getMaintenanceMode(), 4000, 'getMaintenanceMode'),
+      ]);
+
+      const userRecord: UserRecord | null =
+        userResult.status === 'fulfilled' ? userResult.value : null;
+      const maintenanceMode: boolean =
+        maintenanceResult.status === 'fulfilled' && maintenanceResult.value === true;
+
+      setCheckState({
+        status: 'done',
+        isBlocked: !!(userRecord && userRecord.isBlocked),
+        isMaintenance: maintenanceMode,
+      });
+    };
+
+    runChecks();
+  }, [isLoginPage, actor, actorFetching, navigate, currentPath]);
+
+  // Reset check on route change so re-checks happen on navigation
+  useEffect(() => {
+    if (!isLoginPage) {
+      hasChecked.current = false;
+    }
+  }, [currentPath, isLoginPage]);
+
+  // On login page, render children without layout chrome
   if (isLoginPage) {
     return <>{children}</>;
   }
 
-  // Show loading indicator while checking status
-  const isChecking = userLoading || maintenanceLoading;
-  if (isChecking) {
+  // No credentials → render nothing while redirect fires
+  const creds = getStoredCredentials();
+  if (!creds) {
+    return null;
+  }
+
+  // Show branded loading screen while checks are in progress
+  if (checkState.status === 'idle' || checkState.status === 'checking') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-[oklch(0.13_0.02_280)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative">
+            <img
+              src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
+              alt="Dard-e-munasif"
+              className="h-20 w-20 rounded-full object-cover border-2 border-[oklch(0.55_0.18_280)] animate-pulse"
+            />
+            <div className="absolute inset-0 rounded-full border-2 border-[oklch(0.55_0.18_280)] opacity-40 animate-ping" />
+          </div>
+          <p
+            className="text-[oklch(0.75_0.08_280)] text-base tracking-wide"
+            style={{ fontFamily: "'Noto Nastaliq Urdu', 'Inter', sans-serif" }}
+          >
+            Loading...
+          </p>
         </div>
       </div>
     );
   }
 
   // If user is blocked, show ban screen (takes priority over maintenance)
-  if (userRecord && userRecord.isBlocked) {
+  if (checkState.status === 'done' && checkState.isBlocked) {
     return <BanScreen />;
   }
 
   // If maintenance mode is on, show maintenance screen
-  if (maintenanceMode === true) {
+  if (checkState.status === 'done' && checkState.isMaintenance) {
     return <MaintenanceScreen />;
   }
 
