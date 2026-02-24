@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { Poetry, Dua, Song, CreatePoetryInput, CreateDuaInput, CreateSongInput } from '../backend';
 
+function extractErrorMessage(err: unknown): string {
+  const msg: string = (err as any)?.message || String(err);
+  const trapMatch = msg.match(/Canister trapped explicitly: (.+)/);
+  if (trapMatch) return trapMatch[1];
+  return msg;
+}
+
 export function useGetAllPoetry() {
   const { actor, isFetching } = useActor();
 
@@ -9,9 +16,16 @@ export function useGetAllPoetry() {
     queryKey: ['poetry'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllPoetry();
+      try {
+        const result = await actor.getAllPoetry();
+        return Array.isArray(result) ? result : [];
+      } catch (err: unknown) {
+        throw new Error(extractErrorMessage(err));
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
+    staleTime: 30_000,
   });
 }
 
@@ -22,9 +36,16 @@ export function useGetAllDuas() {
     queryKey: ['duas'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllDuas();
+      try {
+        const result = await actor.getAllDuas();
+        return Array.isArray(result) ? result : [];
+      } catch (err: unknown) {
+        throw new Error(extractErrorMessage(err));
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
+    staleTime: 30_000,
   });
 }
 
@@ -35,9 +56,16 @@ export function useGetAllSongs() {
     queryKey: ['songs'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllSongs();
+      try {
+        const result = await actor.getAllSongs();
+        return Array.isArray(result) ? result : [];
+      } catch (err: unknown) {
+        throw new Error(extractErrorMessage(err));
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
+    staleTime: 30_000,
   });
 }
 
@@ -50,12 +78,8 @@ export function useCreatePoetry() {
       if (!actor) throw new Error('Actor not available. Please refresh and try again.');
       try {
         return await actor.createPoetry(input);
-      } catch (err: any) {
-        // Extract a clean error message from IC trap errors
-        const msg: string = err?.message || String(err);
-        const trapMatch = msg.match(/Canister trapped explicitly: (.+)/);
-        if (trapMatch) throw new Error(trapMatch[1]);
-        throw new Error(msg);
+      } catch (err: unknown) {
+        throw new Error(extractErrorMessage(err));
       }
     },
     onSuccess: () => {
@@ -73,11 +97,8 @@ export function useCreateDua() {
       if (!actor) throw new Error('Actor not available. Please refresh and try again.');
       try {
         return await actor.createDua(input);
-      } catch (err: any) {
-        const msg: string = err?.message || String(err);
-        const trapMatch = msg.match(/Canister trapped explicitly: (.+)/);
-        if (trapMatch) throw new Error(trapMatch[1]);
-        throw new Error(msg);
+      } catch (err: unknown) {
+        throw new Error(extractErrorMessage(err));
       }
     },
     onSuccess: () => {
@@ -95,11 +116,8 @@ export function useCreateSong() {
       if (!actor) throw new Error('Actor not available. Please refresh and try again.');
       try {
         return await actor.createSong(input);
-      } catch (err: any) {
-        const msg: string = err?.message || String(err);
-        const trapMatch = msg.match(/Canister trapped explicitly: (.+)/);
-        if (trapMatch) throw new Error(trapMatch[1]);
-        throw new Error(msg);
+      } catch (err: unknown) {
+        throw new Error(extractErrorMessage(err));
       }
     },
     onSuccess: () => {

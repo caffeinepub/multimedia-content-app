@@ -130,8 +130,12 @@ actor {
     1000 + (Int.abs(Time.now()) % 1001);
   };
 
-  // PUBLIC: Create Poetry
+  // Users only: Create Poetry
   public shared ({ caller }) func createPoetry(input : CreatePoetryInput) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create poetry");
+    };
+
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
@@ -160,8 +164,12 @@ actor {
     id;
   };
 
-  // PUBLIC: Create Dua
+  // Users only: Create Dua
   public shared ({ caller }) func createDua(input : CreateDuaInput) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create duas");
+    };
+
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
@@ -190,8 +198,12 @@ actor {
     id;
   };
 
-  // PUBLIC: Create Song
+  // Users only: Create Song
   public shared ({ caller }) func createSong(input : CreateSongInput) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create songs");
+    };
+
     if (isEmpty(input.title) or isEmpty(input.artist)) {
       Runtime.trap("Title and artist must not be empty");
     };
@@ -289,8 +301,12 @@ actor {
     songMap.values().toArray();
   };
 
-  // Public: Like Poetry (anyone can like, uses caller identity)
+  // Users only: Like Poetry
   public shared ({ caller }) func likePoetry(id : Text, userId : Text) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can like poetry");
+    };
+
     // Verify that the userId matches the caller to prevent impersonation
     let callerText = caller.toText();
     if (callerText != userId) {
@@ -323,8 +339,12 @@ actor {
     };
   };
 
-  // Public: Like Dua (anyone can like, uses caller identity)
+  // Users only: Like Dua
   public shared ({ caller }) func likeDua(id : Text, userId : Text) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can like duas");
+    };
+
     // Verify that the userId matches the caller to prevent impersonation
     let callerText = caller.toText();
     if (callerText != userId) {

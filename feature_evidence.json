@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-app-name-from-spiritual-hub-to-dard-e-munasif-everywhere-it-appears-in-the-frontend-including-the-navbar-header-title-text-browser-tab-title-index-html-title-and-any-other-visible-branding-locations",
-      "featureTitle": "Update the app name from 'Spiritual Hub' to 'Dard-e-munasif' everywhere it appears in the frontend — including the navbar/header title text, browser tab title (index.html <title>), and any other visible branding locations.",
+      "featureId": "feature-fix-the-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-in-frontend-src-hooks-usequeries-ts-ensure-each-hook-calls-the-correct-backend-actor-method-name-exactly-as-defined-in-the-motoko-actor-uses-a-stable-query-key-and-correctly-transforms-the-backend-response-mapping-motoko-record-field-names-to-frontend-typescript-type-field-names-add-graceful-error-handling-so-a-failed-fetch-shows-a-user-friendly-error-state-rather-than-crashing-the-ui",
+      "featureTitle": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the correct backend actor method name exactly as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend response (mapping Motoko record field names to frontend TypeScript type field names). Add graceful error handling so a failed fetch shows a user-friendly error state rather than crashing the UI.",
       "files": [
-        "frontend/index.html",
-        "frontend/src/components/Layout.tsx"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,16 +17,18 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-27"
+        "REQ-39"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-replace-the-current-logo-icon-in-the-navbar-header-and-favicon-with-the-uploaded-circular-black-white-logo-image-dard-e-munasif-logo-dim-200x200-png-saved-to-frontend-public-assets-generated-display-it-as-a-circular-image-next-to-the-app-name-in-the-header-and-set-it-as-the-browser-favicon",
-      "featureTitle": "Replace the current logo/icon in the navbar, header, and favicon with the uploaded circular black & white logo image (dard-e-munasif-logo.dim_200x200.png) saved to frontend/public/assets/generated/. Display it as a circular image next to the app name in the header and set it as the browser favicon.",
+      "featureId": "feature-verify-and-fix-the-poetrypage-duapage-and-songspage-components-to-ensure-their-loading-skeleton-states-error-states-and-empty-states-are-triggered-correctly-based-on-the-actual-data-shapes-returned-by-the-fixed-hooks-remove-any-code-that-incorrectly-maps-field-names-or-makes-incorrect-type-assumptions-that-could-cause-a-valid-response-to-be-treated-as-an-error",
+      "featureTitle": "Verify and fix the PoetryPage, DuaPage, and SongsPage components to ensure their loading skeleton states, error states, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any code that incorrectly maps field names or makes incorrect type assumptions that could cause a valid response to be treated as an error.",
       "files": [
-        "frontend/index.html",
-        "frontend/src/components/Layout.tsx"
+        "frontend/src/pages/DuaPage.tsx",
+        "frontend/src/pages/MixPage.tsx",
+        "frontend/src/pages/PoetryPage.tsx",
+        "frontend/src/pages/SongsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -39,7 +40,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-28"
+        "REQ-40"
       ],
       "confidence": "high"
     }

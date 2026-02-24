@@ -72,7 +72,10 @@ export default function AudioPlayer({ audio, title }: AudioPlayerProps) {
   };
 
   return (
-    <div className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border/50">
+    <div
+      className="space-y-3 p-4 rounded-lg bg-muted/30 border border-border/50"
+      onClick={(e) => e.stopPropagation()}
+    >
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
       <div className="flex items-center gap-3">

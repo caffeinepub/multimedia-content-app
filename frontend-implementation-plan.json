@@ -1,48 +1,57 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Rename app to Dard-e-munasif and apply custom logo across branding",
+  "title": "Fix all content fetch hooks — Poetry, Dua, and Songs failing to load",
   "requirements": [
     {
-      "id": "REQ-27",
-      "summary": "Update the app name from 'Spiritual Hub' to 'Dard-e-munasif' in all visible branding locations",
+      "id": "REQ-39",
+      "summary": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts to call correct backend methods with proper field mapping and error handling",
       "acceptanceCriteria": [
-        "The browser tab title reads 'Dard-e-munasif'",
-        "The navbar/header displays 'Dard-e-munasif' as the app name",
-        "No instance of 'Spiritual Hub' remains visible in the UI"
+        "useGetAllPoetry calls the correct Motoko function name and returns Poetry array without error",
+        "useGetAllDua calls the correct Motoko function name and returns Dua array without error",
+        "useGetAllSongs calls the correct Motoko function name and returns Song array without error",
+        "All field names in the data transformation match the actual Motoko record fields (e.g., likeCount vs like_count, etc.)",
+        "When the backend returns an empty array, the UI shows an empty state, not an error",
+        "When the backend call genuinely fails, the UI shows a user-friendly error message with a retry option"
       ],
       "file_operations": [
         {
-          "path": "frontend/index.html",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Update the <title> tag from 'Spiritual Hub' to 'Dard-e-munasif' to change the browser tab title"
-        },
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Replace 'Spiritual Hub' text in the header/navbar with 'Dard-e-munasif'"
+          "description": "Fix useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks to call the correct backend actor methods (getAllPoetry, getAllDuas, getAllSongs per backend interface), use stable query keys, and ensure data transformation maps backend response fields correctly to frontend TypeScript types. The backend returns Poetry with a 'likes' field (containing count and likedBy), and Dua with a 'likes' field, but frontend types may expect 'likeCount'. Map backend 'likes.count' to frontend 'likeCount' if needed. Add graceful error handling with retry: false to prevent endless retries on data shape mismatches, and ensure empty arrays are treated as valid success responses."
         }
       ]
     },
     {
-      "id": "REQ-28",
-      "summary": "Replace the current logo/icon with the uploaded circular black & white logo image in navbar, header, and favicon",
+      "id": "REQ-40",
+      "summary": "Verify and fix PoetryPage, DuaPage, and SongsPage components to correctly handle loading, error, and empty states based on actual hook response shapes",
       "acceptanceCriteria": [
-        "The circular black & white logo appears in the navbar/header next to the app name",
-        "The favicon in the browser tab uses the same logo image",
-        "The logo renders correctly on both mobile and desktop viewports",
-        "The logo image is served from frontend/public/assets/generated/"
+        "PoetryPage, DuaPage, and SongsPage display loading skeletons while data is being fetched",
+        "Content renders correctly once data is returned from the backend",
+        "Error state is only shown when the backend call actually fails, not due to a data shape mismatch",
+        "Empty state is shown when the backend returns a valid empty array",
+        "MixPage also renders all three content types correctly after the fetch fixes are applied"
       ],
       "file_operations": [
         {
-          "path": "frontend/index.html",
+          "path": "frontend/src/pages/PoetryPage.tsx",
           "operation": "modify",
-          "description": "Add a <link rel=\"icon\"> tag in the <head> section pointing to frontend/public/assets/generated/dard-e-munasif-logo.dim_200x200.png to set the favicon"
+          "description": "Review and fix the PoetryPage component to correctly interpret the data, isLoading, isError, and error states from the useGetAllPoetry hook. Ensure loading skeletons are shown during fetch, error state is only triggered on actual fetch failures (not data shape issues), and an empty state is displayed when data is an empty array. Remove any code that incorrectly assumes field names or treats valid responses as errors."
         },
         {
-          "path": "frontend/src/components/Layout.tsx",
+          "path": "frontend/src/pages/DuaPage.tsx",
           "operation": "modify",
-          "description": "Add an <img> element displaying the circular logo from frontend/public/assets/generated/dard-e-munasif-logo.dim_200x200.png in the header/navbar next to the app name, styled as a circular image with appropriate sizing for mobile and desktop viewports"
+          "description": "Review and fix the DuaPage component to correctly interpret the data, isLoading, isError, and error states from the useGetAllDua hook. Ensure loading skeletons are shown during fetch, error state is only triggered on actual fetch failures (not data shape issues), and an empty state is displayed when data is an empty array. Remove any code that incorrectly assumes field names or treats valid responses as errors."
+        },
+        {
+          "path": "frontend/src/pages/SongsPage.tsx",
+          "operation": "modify",
+          "description": "Review and fix the SongsPage component to correctly interpret the data, isLoading, isError, and error states from the useGetAllSongs hook. Ensure loading skeletons are shown during fetch, error state is only triggered on actual fetch failures (not data shape issues), and an empty state is displayed when data is an empty array. Remove any code that incorrectly assumes field names or treats valid responses as errors."
+        },
+        {
+          "path": "frontend/src/pages/MixPage.tsx",
+          "operation": "modify",
+          "description": "Verify that MixPage correctly aggregates poetry, duas, and songs from all three fixed hooks. Ensure loading states are coordinated (show loading until all three queries complete), error handling gracefully degrades if one query fails, and the sorting by likes works correctly with the fixed field mappings. After the fetch fixes in REQ-39 are applied, MixPage should render all three content types without issues."
         }
       ]
     }

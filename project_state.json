@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 13,
-  "summary": "Multimedia content app with categorized content (Dua, Poetry, Songs, Mix). Features PIN-protected admin panel (PIN: 09186114), auto-generated like counts, download buttons for Poetry/Dua, protected audio streaming for Songs, and clean aesthetic design. App name changed to 'Dard-e-munasif' with custom logo (black & white circular image with blindfolded figure) applied across navbar, header, and favicon.",
+  "projectStateVersion": 19,
+  "summary": "Multimedia content app 'Dard-e-munasif' with categorized content (Dua, Poetry, Songs, Mix). Features PIN-protected admin panel (PIN: 09186114), auto-generated like counts, download buttons for Poetry/Dua, protected audio streaming for Songs, and clean aesthetic design. Custom logo (black & white circular image with blindfolded figure) applied across navbar, header, and favicon. New features: full-screen modal for Poetry/Dua posts, hybrid Music Player (inline preview + full-screen Now Playing UI), Web Audio API filters (Standard/Clean Sound/Ultra Clean Sound), IndexedDB-based History and Downloads, hamburger menu (top right) with History/Downloads/Volume Manager, external redirects for 'Be a Writer' (WhatsApp) and 'Contact' (Gmail).",
   "architectural_notes": [
     "Separate /admin route with PIN-only authentication (09186114)",
     "Content categorization system: Dua, Poetry, Songs, Mix",
@@ -9,11 +9,15 @@
     "File upload system for images and audio files",
     "Auto-generation of like counts (1,000-2,000 range) for social proof",
     "Backend data persistence for all content types",
-    "Backend upload functions had redundant admin authorization check separate from PIN auth - fix: remove backend admin check and rely on PIN-protected frontend guard"
+    "Backend upload functions had redundant admin authorization check separate from PIN auth - fix: remove backend admin check and rely on PIN-protected frontend guard",
+    "IndexedDB used for History (metadata) and Downloads (audio Blobs) for offline access",
+    "Web Audio API pipeline for audio filters: Standard (raw), Clean Sound (High-Pass + 3kHz gain), Ultra Clean Sound (Band-Pass + Compressor)"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
-  "imageRequirements": "## Edit Images\n- Crop and optimize the uploaded black & white circular photo of a blindfolded man with 'dard-e-munasif' written on the blindfold into a clean circular logo with transparent or white background (FB_IMG_1771696316080.jpg > dard-e-munasif-logo.dim_200x200.png)",
+  "known_issues": [
+    "Poetry section fails to load with 'failed to load poetry try again later' error - backend query issue",
+    "All content sections (Poetry, Dua, Songs) showing 'Failed to load content, please try again later' - fetch hooks (useGetAllPoetry, useGetAllDua, useGetAllSongs) failing due to likely mismatched function signatures or data shape issues"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-create-main-navigation-with-four-categories-dua-spiritual-prayers-poetry-poetic-text-images-songs-relaxing-music-sounds-and-mix-combined-feed-showing-trending-content-from-all-three-categories-homepage-must-display-mix-section-by-default",
@@ -214,6 +218,86 @@
         "REQ-28"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-fix-the-usegetallpoetry-react-query-hook-in-frontend-src-hooks-usequeries-ts-to-correctly-call-the-backend-actor-s-poetry-fetch-method-handle-errors-gracefully-and-ensure-the-query-key-actor-call-and-data-transformation-are-all-correct-so-the-poetry-page-renders-content-instead-of-the-error-state",
+      "title": "Fix the useGetAllPoetry React Query hook in frontend/src/hooks/useQueries.ts to correctly call the backend actor's poetry fetch method, handle errors gracefully, and ensure the query key, actor call, and data transformation are all correct so the Poetry page renders content instead of the error state.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-and-fix-the-poetrypage-component-frontend-src-pages-poetrypage-tsx-to-ensure-the-error-boundary-and-loading-skeleton-states-work-correctly-and-that-the-error-alert-is-not-triggered-due-to-incorrect-data-shape-mapping-e-g-mismatched-field-names-between-backend-response-and-frontend-type-expectations",
+      "title": "Verify and fix the PoetryPage component (frontend/src/pages/PoetryPage.tsx) to ensure the error boundary and loading skeleton states work correctly, and that the error alert is not triggered due to incorrect data shape mapping (e.g., mismatched field names between backend response and frontend type expectations).",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-when-a-user-clicks-on-any-post-card-in-the-poetry-or-dua-category-pages-or-in-the-mix-feed-open-a-full-screen-overlay-modal-displaying-the-full-post-content-title-image-audio-content-text-place-a-prominent-close-button-at-the-top-right-corner-clicking-dismisses-the-modal-and-returns-the-user-to-the-feed-without-any-page-navigation",
+      "title": "When a user clicks on any post card in the Poetry or Dua category pages (or in the Mix feed), open a full-screen overlay modal displaying the full post content (title, image/audio, content text). Place a prominent ❌ close button at the top-right corner. Clicking ❌ dismisses the modal and returns the user to the feed without any page navigation.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-hybrid-music-player-for-the-songs-category-in-the-feed-songspage-and-mixpage-keep-the-existing-small-inline-play-pause-button-on-each-song-card-for-quick-preview-when-a-user-clicks-anywhere-on-the-song-card-except-the-inline-play-pause-button-open-a-full-screen-now-playing-ui-featuring-album-art-placeholder-song-title-and-artist-name-a-progress-seeker-bar-scrubable-play-pause-button-elapsed-total-time-display-and-a-now-playing-aesthetic-the-full-screen-player-must-be-dismissible-with-a-or-down-arrow-button",
+      "title": "Implement a hybrid Music Player for the Songs category. In the feed (SongsPage and MixPage), keep the existing small inline Play/Pause button on each song card for quick preview. When a user clicks anywhere on the song card except the inline Play/Pause button, open a full-screen 'Now Playing' UI featuring: album art placeholder, song title and artist name, a progress seeker bar (scrubable), Play/Pause button, elapsed/total time display, and a 'Now Playing' aesthetic. The full-screen player must be dismissible with a ❌ or down-arrow button.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-web-audio-api-based-audio-processing-filters-integrated-into-the-volume-manager-three-modes-must-produce-real-audio-effects-1-standard-no-filter-raw-audio-passthrough-2-clean-sound-apply-a-biquadfilternode-high-pass-filter-cutoff-200hz-plus-a-biquadfilternode-peaking-eq-at-3khz-with-a-positive-gain-boost-4db-to-enhance-voice-lyric-clarity-3-ultra-clean-sound-apply-a-biquadfilternode-band-pass-filter-plus-a-dynamicscompressornode-to-normalize-volume-and-produce-crisp-compressed-output-the-selected-filter-must-apply-to-all-audio-playback-across-song-and-dua-audio-players",
+      "title": "Implement Web Audio API-based audio processing filters integrated into the Volume Manager. Three modes must produce real audio effects: (1) Standard — no filter, raw audio passthrough; (2) Clean Sound — apply a BiquadFilterNode High-Pass filter (cutoff ~200Hz) plus a BiquadFilterNode Peaking EQ at 3kHz with a positive gain boost (~4dB) to enhance voice/lyric clarity; (3) Ultra Clean Sound — apply a BiquadFilterNode Band-Pass filter plus a DynamicsCompressorNode to normalize volume and produce crisp, compressed output. The selected filter must apply to all audio playback across Song and Dua audio players.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-persistent-hamburger-menu-3-line-icon-in-the-upper-right-corner-of-the-app-header-navbar-that-is-visible-on-all-pages-the-menu-must-contain-three-sections-1-history-displays-recently-opened-posts-and-songs-title-category-timestamp-stored-as-metadata-in-indexeddb-2-downloads-lists-audio-files-the-user-has-downloaded-stored-as-blobs-in-indexeddb-with-play-and-delete-options-for-offline-playback-3-volume-manager-contains-a-master-volume-slider-0-100-and-three-mutually-exclusive-filter-toggle-buttons-standard-clean-sound-ultra-clean-sound-the-hamburger-menu-must-persist-its-open-close-state-appropriately-across-page-navigation-without-full-re-mount",
+      "title": "Add a persistent Hamburger Menu (3-line icon) in the upper-right corner of the app header/navbar that is visible on all pages. The menu must contain three sections: (1) History — displays recently opened posts and songs (title, category, timestamp), stored as metadata in IndexedDB; (2) Downloads — lists audio files the user has downloaded, stored as Blobs in IndexedDB, with Play and Delete options for offline playback; (3) Volume Manager — contains a master volume slider (0–100%) and three mutually-exclusive filter toggle buttons: Standard, Clean Sound, Ultra Clean Sound. The hamburger menu must persist its open/close state appropriately across page navigation without full re-mount.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-indexeddb-storage-utilities-for-history-and-downloads-for-history-on-every-post-song-open-event-modal-open-or-full-screen-player-open-save-metadata-id-title-category-timestamp-to-an-indexeddb-object-store-named-history-display-the-50-most-recent-entries-in-the-history-section-for-downloads-when-a-user-downloads-audio-from-a-dua-post-save-the-audio-blob-plus-metadata-id-title-category-to-an-indexeddb-object-store-named-downloads-allow-offline-playback-of-downloaded-audio-directly-from-indexeddb-blob-urls-provide-a-delete-function-to-remove-individual-downloaded-items",
+      "title": "Implement IndexedDB storage utilities for History and Downloads. For History: on every post/song open event (modal open or full-screen player open), save metadata {id, title, category, timestamp} to an IndexedDB object store named 'history'. Display the 50 most recent entries in the History section. For Downloads: when a user downloads audio from a Dua post, save the audio Blob plus metadata {id, title, category} to an IndexedDB object store named 'downloads'. Allow offline playback of downloaded audio directly from IndexedDB Blob URLs. Provide a delete function to remove individual downloaded items.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-be-a-writer-button-and-a-contact-button-in-the-hamburger-menu-or-as-accessible-footer-menu-items-visible-on-all-pages-be-a-writer-must-open-the-url-https-wa-me-919541525891-text-join-20-e2-80-a2-7c-c2-b0-7c-e2-80-a2program-writter-in-a-new-tab-contact-must-open-mailto-dariqlas744-gmail-com-in-the-default-mail-client-or-compose-link-both-buttons-must-be-clearly-labeled",
+      "title": "Add a 'Be a Writer' button and a 'Contact' button in the hamburger menu (or as accessible footer/menu items visible on all pages). 'Be a Writer' must open the URL https://wa.me/919541525891?text=Join%20%E2%80%A2%7C-%C2%B0-%7C%E2%80%A2Program.Writter in a new tab. 'Contact' must open mailto:dariqlas744@gmail.com in the default mail client (or compose link). Both buttons must be clearly labeled.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-in-frontend-src-hooks-usequeries-ts-ensure-each-hook-calls-the-correct-backend-actor-method-name-exactly-as-defined-in-the-motoko-actor-uses-a-stable-query-key-and-correctly-transforms-the-backend-response-mapping-motoko-record-field-names-to-frontend-typescript-type-field-names-add-graceful-error-handling-so-a-failed-fetch-shows-a-user-friendly-error-state-rather-than-crashing-the-ui",
+      "title": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the correct backend actor method name exactly as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend response (mapping Motoko record field names to frontend TypeScript type field names). Add graceful error handling so a failed fetch shows a user-friendly error state rather than crashing the UI.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-and-fix-the-poetrypage-duapage-and-songspage-components-to-ensure-their-loading-skeleton-states-error-states-and-empty-states-are-triggered-correctly-based-on-the-actual-data-shapes-returned-by-the-fixed-hooks-remove-any-code-that-incorrectly-maps-field-names-or-makes-incorrect-type-assumptions-that-could-cause-a-valid-response-to-be-treated-as-an-error",
+      "title": "Verify and fix the PoetryPage, DuaPage, and SongsPage components to ensure their loading skeleton states, error states, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any code that incorrectly maps field names or makes incorrect type assumptions that could cause a valid response to be treated as an error.",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -281,6 +365,52 @@
       "id": "AR-20",
       "summary": "Rename app from 'Spiritual Hub' to 'Dard-e-munasif' and replace branding with the uploaded black & white circular logo (blindfolded figure) across navbar, header, and favicon.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Investigate and fix the backend Motoko actor's getAllPoetry (or equivalent) query function to ensure it returns poetry entries correctly without errors or traps. Verify the function signature, return type, and that stored data is accessible without causing a rejection.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Full-screen modal for Poetry & Dua posts with ❌ close button to return to feed",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Hybrid Music Player: inline Play/Pause on song cards in feed, full-screen Now Playing UI (album art, seeker bar, Play/Pause) when card is tapped",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Web Audio API filters in Volume Manager: Standard (no filter), Clean Sound (High-Pass + 3kHz boost), Ultra Clean Sound (Band-Pass + Dynamics Compressor)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Hamburger menu (top right, persists across pages) with History (IndexedDB metadata), Downloads (IndexedDB audio Blobs for offline), and Volume Manager (master slider + filter toggles)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "External redirects: 'Be a Writer' button → WhatsApp (https://wa.me/919541525891?text=Join%20•|-°-|•Program.Writter), 'Contact' → Gmail compose to dariqlas744@gmail.com",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs (or their equivalent query functions) have correct function signatures, return types, and can be called without trapping or rejecting. Ensure each function returns an array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields).",
+      "reqIds": [
+        "REQ-38"
+      ],
       "status": "pending"
     }
   ],

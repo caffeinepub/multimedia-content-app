@@ -1,65 +1,92 @@
 {
   "kind": "build_request",
-  "title": "Rename app to Dard-e-munasif and apply custom logo across branding",
+  "title": "Fix all content fetch hooks — Poetry, Dua, and Songs failing to load",
   "projectName": "Dard-e-munasif",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-27",
-      "text": "Update the app name from 'Spiritual Hub' to 'Dard-e-munasif' everywhere it appears in the frontend — including the navbar/header title text, browser tab title (index.html <title>), and any other visible branding locations.",
-      "target": "frontend",
+      "id": "REQ-38",
+      "text": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs (or their equivalent query functions) have correct function signatures, return types, and can be called without trapping or rejecting. Ensure each function returns an array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-10",
-          "msg-12"
+          "msg-4",
+          "msg-5"
         ],
         "quotes": [
-          "Change name spritual hub to Dard-e-munasif with this logo",
-          "update the app name to Dard-e-munasif"
+          "Showing failed to load content please try again later",
+          "auditing and correcting all three fetch hooks (useGetAllPoetry, useGetAllDua, useGetAllSongs) in useQueries.ts",
+          "Verify the backend Motoko query functions return the correct types"
         ]
       },
       "acceptanceCriteria": [
-        "The browser tab title reads 'Dard-e-munasif'",
-        "The navbar/header displays 'Dard-e-munasif' as the app name",
-        "No instance of 'Spiritual Hub' remains visible in the UI"
+        "getAllPoetry, getAllDua, and getAllSongs backend query functions return valid arrays without trapping",
+        "Each function's return type matches the data shape expected by the frontend",
+        "Functions are callable by anonymous principals without authorization errors",
+        "Empty arrays are returned gracefully when no content has been uploaded yet"
       ]
     },
     {
-      "id": "REQ-28",
-      "text": "Replace the current logo/icon in the navbar, header, and favicon with the uploaded circular black & white logo image (dard-e-munasif-logo.dim_200x200.png) saved to frontend/public/assets/generated/. Display it as a circular image next to the app name in the header and set it as the browser favicon.",
+      "id": "REQ-39",
+      "text": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the correct backend actor method name exactly as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend response (mapping Motoko record field names to frontend TypeScript type field names). Add graceful error handling so a failed fetch shows a user-friendly error state rather than crashing the UI.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-10",
-          "msg-12"
+          "msg-4",
+          "msg-5"
         ],
         "quotes": [
-          "Change name spritual hub to Dard-e-munasif with this logo",
-          "replace the branding with the uploaded logo (the black & white circular image with the blindfolded figure)"
+          "Showing failed to load content please try again later",
+          "auditing and correcting all three fetch hooks (useGetAllPoetry, useGetAllDua, useGetAllSongs) in useQueries.ts",
+          "Ensuring the frontend data transformation maps backend fields to frontend types correctly"
         ]
       },
       "acceptanceCriteria": [
-        "The circular black & white logo appears in the navbar/header next to the app name",
-        "The favicon in the browser tab uses the same logo image",
-        "The logo renders correctly on both mobile and desktop viewports",
-        "The logo image is served from frontend/public/assets/generated/"
+        "useGetAllPoetry calls the correct Motoko function name and returns Poetry array without error",
+        "useGetAllDua calls the correct Motoko function name and returns Dua array without error",
+        "useGetAllSongs calls the correct Motoko function name and returns Song array without error",
+        "All field names in the data transformation match the actual Motoko record fields (e.g., likeCount vs like_count, etc.)",
+        "When the backend returns an empty array, the UI shows an empty state, not an error",
+        "When the backend call genuinely fails, the UI shows a user-friendly error message with a retry option"
+      ]
+    },
+    {
+      "id": "REQ-40",
+      "text": "Verify and fix the PoetryPage, DuaPage, and SongsPage components to ensure their loading skeleton states, error states, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any code that incorrectly maps field names or makes incorrect type assumptions that could cause a valid response to be treated as an error.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-5"
+        ],
+        "quotes": [
+          "Showing failed to load content please try again later",
+          "ensure the error boundary and loading skeleton states work correctly, and that the error alert is not triggered due to incorrect data shape mapping"
+        ]
+      },
+      "acceptanceCriteria": [
+        "PoetryPage, DuaPage, and SongsPage display loading skeletons while data is being fetched",
+        "Content renders correctly once data is returned from the backend",
+        "Error state is only shown when the backend call actually fails, not due to a data shape mismatch",
+        "Empty state is shown when the backend returns a valid empty array",
+        "MixPage also renders all three content types correctly after the fetch fixes are applied"
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files listed in frontend.immutablePaths",
-    "Do not change the backend schema or any backend logic",
-    "PIN authentication (09186114) and all existing functionality must remain intact"
+    "Do not change the PIN authentication logic (PIN: 09186114) or admin route structure",
+    "Do not modify files listed in frontend.immutablePaths",
+    "All backend changes must remain within the single-actor architecture in backend/main.mo"
   ],
   "nonGoals": [
-    "Changing the visual theme, color palette, or layout",
-    "Adding new features or modifying existing content management",
-    "Modifying backend data models or CRUD operations"
+    "Adding new content features or UI sections beyond fixing the broken fetch hooks",
+    "Changing the visual design or layout of any page",
+    "Modifying the IndexedDB history/downloads utilities",
+    "Altering the Web Audio filter implementation",
+    "Changing the hamburger menu or its sections"
   ],
   "imageRequirements": {
     "required": [],
-    "edits": [
-      "Crop and optimize the uploaded black & white circular photo of a blindfolded man with 'dard-e-munasif' written on the blindfold into a clean circular logo with transparent or white background (FB_IMG_1771696316080.jpg > dard-e-munasif-logo.dim_200x200.png)"
-    ]
+    "edits": []
   }
 }

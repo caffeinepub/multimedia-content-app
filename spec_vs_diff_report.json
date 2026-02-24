@@ -1,25 +1,25 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T12:32:54.492Z",
-  "summary": "The diff implements both REQ-27 and REQ-28. The app name 'Dard-e-munasif' is applied in the browser tab title (index.html), the navbar/header (Layout.tsx), and the footer branding. The custom circular logo image is referenced in the header img tag and as the favicon in index.html. The logo is served from /assets/generated/dard-e-munasif-logo.dim_200x200.png. However, the actual binary image file (dard-e-munasif-logo.dim_200x200.png) does not appear in the diff as an added file, which means the physical asset may not have been committed.",
+  "generatedAt": "2026-02-24T13:38:24.775Z",
+  "summary": "The diff implements fixes for the three frontend fetch hooks (useGetAllPoetry, useGetAllDuas, useGetAllSongs) in useQueries.ts, updates PoetryPage, DuaPage, SongsPage, and MixPage with proper loading/error/empty states. However, the backend Motoko file (backend/main.mo) is not modified or audited in the diff, leaving REQ-38 unaddressed.",
   "missing_requirements": [
     {
-      "id": "REQ-28",
-      "requirement": "The logo image file (dard-e-munasif-logo.dim_200x200.png) must be saved to frontend/public/assets/generated/ and served from there.",
-      "reason": "The diff shows no added files at all ('Added: 0'). The image asset dard-e-munasif-logo.dim_200x200.png is referenced in Layout.tsx and index.html but is not present as an added file in the diff, meaning the actual image binary was not included in the changeset.",
-      "evidence": [
-        "frontend/index.html",
-        "frontend/src/components/Layout.tsx"
-      ]
+      "id": "REQ-38",
+      "requirement": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs have correct function signatures, return types, and can be called without trapping or rejecting. Ensure each function returns an array of the correct record type with all expected fields.",
+      "reason": "The diff summary shows no changes to backend/main.mo. The file is not listed as modified, added, or removed. There is no evidence of any backend audit or fix.",
+      "evidence": []
     }
   ],
   "hallucinated_features": [],
-  "confidence": 0.82,
+  "confidence": 0.88,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/index.html",
-    "frontend/src/components/Layout.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/DuaPage.tsx",
+    "frontend/src/pages/MixPage.tsx",
+    "frontend/src/pages/PoetryPage.tsx",
+    "frontend/src/pages/SongsPage.tsx",
     "project_state.json"
   ]
 }
