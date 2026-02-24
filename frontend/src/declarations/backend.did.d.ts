@@ -51,6 +51,13 @@ export interface Song {
   'artist' : string,
 }
 export interface UserProfile { 'name' : string }
+export interface UserRecord {
+  'isBlocked' : boolean,
+  'name' : string,
+  'server' : string,
+  'uniqueCode' : string,
+  'deviceId' : string,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -83,6 +90,7 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'blockUser' : ActorMethod<[string], undefined>,
   'createDua' : ActorMethod<[CreateDuaInput], string>,
   'createPoetry' : ActorMethod<[CreatePoetryInput], string>,
   'createSong' : ActorMethod<[CreateSongInput], string>,
@@ -92,18 +100,24 @@ export interface _SERVICE {
   'getAllDua' : ActorMethod<[], Array<Dua>>,
   'getAllPoetry' : ActorMethod<[], Array<Poetry>>,
   'getAllSongs' : ActorMethod<[], Array<Song>>,
+  'getAllUsers' : ActorMethod<[], Array<UserRecord>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDuaById' : ActorMethod<[string], [] | [Dua]>,
   'getDuaLikes' : ActorMethod<[string], [] | [Likes]>,
+  'getMaintenanceMode' : ActorMethod<[], boolean>,
   'getPoetryById' : ActorMethod<[string], [] | [Poetry]>,
   'getPoetryLikes' : ActorMethod<[string], [] | [Likes]>,
   'getSongById' : ActorMethod<[string], [] | [Song]>,
+  'getUserByDeviceId' : ActorMethod<[string], [] | [UserRecord]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'likeDua' : ActorMethod<[string, string], boolean>,
   'likePoetry' : ActorMethod<[string, string], boolean>,
+  'registerUser' : ActorMethod<[string, string, string], string>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setMaintenanceMode' : ActorMethod<[boolean], undefined>,
+  'unblockUser' : ActorMethod<[string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

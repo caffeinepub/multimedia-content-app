@@ -1,17 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, X, History, Download, Volume2, Trash2, Play, Pause, PenLine, Mail, ChevronRight } from 'lucide-react';
+import { Menu, X, History, Download, Trash2, Play, Pause, PenLine, Mail, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useHistory } from '../hooks/useHistory';
 import { useDownloads } from '../hooks/useDownloads';
-import { useAudioPlayback } from '../hooks/useAudioPlayback';
-import { FilterMode } from '../hooks/useWebAudioFilters';
 import { toast } from 'sonner';
 
-type MenuSection = 'history' | 'downloads' | 'volume' | null;
+type MenuSection = 'history' | 'downloads' | null;
 
 export default function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,7 +19,6 @@ export default function HamburgerMenu() {
 
   const { history, refreshHistory } = useHistory();
   const { downloads, deleteDownload, playDownload, refreshDownloads } = useDownloads();
-  const { volume, setVolume, filterMode, setFilterMode, isPlaying, currentTrack } = useAudioPlayback();
 
   useEffect(() => {
     if (isOpen) {
@@ -79,17 +75,14 @@ export default function HamburgerMenu() {
 
     const url = playDownload(entry as any);
     const audio = new Audio(url);
+    // Force volume = 1.0 and unmuted for downloaded audio playback
+    audio.muted = false;
+    audio.volume = 1.0;
     downloadAudioRef.current = audio;
     audio.play().catch(() => toast.error('Failed to play audio'));
     audio.onended = () => setPlayingDownloadId(null);
     setPlayingDownloadId(entry.id);
   };
-
-  const filterOptions: { mode: FilterMode; label: string; desc: string }[] = [
-    { mode: 'standard', label: 'Standard', desc: 'Raw audio, no processing' },
-    { mode: 'clean', label: 'Clean Sound', desc: 'High-pass + 3kHz boost' },
-    { mode: 'ultraclean', label: 'Ultra Clean', desc: 'Band-pass + compressor' },
-  ];
 
   const formatTimestamp = (ts: number) => {
     const date = new Date(ts);
@@ -226,73 +219,6 @@ export default function HamburgerMenu() {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Volume Manager Section */}
-              <button
-                onClick={() => toggleSection('volume')}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-colors text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <Volume2 className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-sm">Volume Manager</span>
-                </div>
-                <ChevronRight
-                  className={`h-4 w-4 text-muted-foreground transition-transform ${activeSection === 'volume' ? 'rotate-90' : ''}`}
-                />
-              </button>
-
-              {activeSection === 'volume' && (
-                <div className="mx-2 mb-2 rounded-xl bg-muted/30 border border-border/30 p-3 space-y-4">
-                  {/* Master Volume */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        Master Volume
-                      </span>
-                      <span className="text-xs font-mono text-foreground">
-                        {Math.round(volume * 100)}%
-                      </span>
-                    </div>
-                    <Slider
-                      value={[volume]}
-                      max={1}
-                      step={0.01}
-                      onValueChange={(val) => setVolume(val[0])}
-                      className="cursor-pointer"
-                    />
-                  </div>
-
-                  <Separator />
-
-                  {/* Filter Modes */}
-                  <div className="space-y-2">
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Audio Filter
-                    </span>
-                    <div className="space-y-1.5">
-                      {filterOptions.map(({ mode, label, desc }) => (
-                        <button
-                          key={mode}
-                          onClick={() => setFilterMode(mode)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border transition-all text-left ${
-                            filterMode === mode
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border/40 hover:bg-muted/60 text-foreground'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-medium">{label}</p>
-                            <p className="text-xs text-muted-foreground">{desc}</p>
-                          </div>
-                          {filterMode === mode && (
-                            <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               )}
 

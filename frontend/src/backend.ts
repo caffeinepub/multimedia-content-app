@@ -89,28 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface CreatePoetryInput {
-    title: string;
-    content: string;
-    image?: ExternalBlob;
-}
-export interface CreateDuaInput {
-    title: string;
-    content: string;
-    audio?: ExternalBlob;
-}
-export interface CreateSongInput {
-    title: string;
-    audio: ExternalBlob;
-    artist: string;
-}
-export interface Song {
-    id: string;
-    title: string;
-    audio?: ExternalBlob;
-    category: string;
-    artist: string;
-}
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
@@ -130,6 +108,11 @@ export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
 }
+export interface CreateDuaInput {
+    title: string;
+    content: string;
+    audio?: ExternalBlob;
+}
 export interface Dua {
     id: string;
     title: string;
@@ -138,12 +121,36 @@ export interface Dua {
     likes: Likes;
     category: string;
 }
-export interface UserProfile {
+export interface UserRecord {
+    isBlocked: boolean;
     name: string;
+    server: string;
+    uniqueCode: string;
+    deviceId: string;
+}
+export interface CreateSongInput {
+    title: string;
+    audio: ExternalBlob;
+    artist: string;
+}
+export interface Song {
+    id: string;
+    title: string;
+    audio?: ExternalBlob;
+    category: string;
+    artist: string;
+}
+export interface CreatePoetryInput {
+    title: string;
+    content: string;
+    image?: ExternalBlob;
 }
 export interface _CaffeineStorageRefillResult {
     success?: boolean;
     topped_up_amount?: bigint;
+}
+export interface UserProfile {
+    name: string;
 }
 export enum UserRole {
     admin = "admin",
@@ -159,6 +166,7 @@ export interface backendInterface {
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    blockUser(uniqueCode: string): Promise<void>;
     createDua(input: CreateDuaInput): Promise<string>;
     createPoetry(input: CreatePoetryInput): Promise<string>;
     createSong(input: CreateSongInput): Promise<string>;
@@ -168,20 +176,26 @@ export interface backendInterface {
     getAllDua(): Promise<Array<Dua>>;
     getAllPoetry(): Promise<Array<Poetry>>;
     getAllSongs(): Promise<Array<Song>>;
+    getAllUsers(): Promise<Array<UserRecord>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getDuaById(id: string): Promise<Dua | null>;
     getDuaLikes(id: string): Promise<Likes | null>;
+    getMaintenanceMode(): Promise<boolean>;
     getPoetryById(id: string): Promise<Poetry | null>;
     getPoetryLikes(id: string): Promise<Likes | null>;
     getSongById(id: string): Promise<Song | null>;
+    getUserByDeviceId(deviceId: string): Promise<UserRecord | null>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     likeDua(id: string, userId: string): Promise<boolean>;
     likePoetry(id: string, userId: string): Promise<boolean>;
+    registerUser(name: string, server: string, deviceId: string): Promise<string>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    setMaintenanceMode(enabled: boolean): Promise<void>;
+    unblockUser(uniqueCode: string): Promise<void>;
 }
-import type { CreateDuaInput as _CreateDuaInput, CreatePoetryInput as _CreatePoetryInput, CreateSongInput as _CreateSongInput, Dua as _Dua, ExternalBlob as _ExternalBlob, Likes as _Likes, Poetry as _Poetry, Song as _Song, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { CreateDuaInput as _CreateDuaInput, CreatePoetryInput as _CreatePoetryInput, CreateSongInput as _CreateSongInput, Dua as _Dua, ExternalBlob as _ExternalBlob, Likes as _Likes, Poetry as _Poetry, Song as _Song, UserProfile as _UserProfile, UserRecord as _UserRecord, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -293,6 +307,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n8(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async blockUser(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.blockUser(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.blockUser(arg0);
             return result;
         }
     }
@@ -422,6 +450,20 @@ export class Backend implements backendInterface {
             return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getAllUsers(): Promise<Array<UserRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllUsers();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllUsers();
+            return result;
+        }
+    }
     async getCallerUserProfile(): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -478,6 +520,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n32(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getMaintenanceMode(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMaintenanceMode();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMaintenanceMode();
+            return result;
+        }
+    }
     async getPoetryById(arg0: string): Promise<Poetry | null> {
         if (this.processError) {
             try {
@@ -518,6 +574,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getSongById(arg0);
             return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserByDeviceId(arg0: string): Promise<UserRecord | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserByDeviceId(arg0);
+                return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserByDeviceId(arg0);
+            return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
@@ -576,6 +646,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async registerUser(arg0: string, arg1: string, arg2: string): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerUser(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerUser(arg0, arg1, arg2);
+            return result;
+        }
+    }
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
@@ -587,6 +671,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
+    async setMaintenanceMode(arg0: boolean): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setMaintenanceMode(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setMaintenanceMode(arg0);
+            return result;
+        }
+    }
+    async unblockUser(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.unblockUser(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.unblockUser(arg0);
             return result;
         }
     }
@@ -626,6 +738,9 @@ async function from_candid_opt_n33(_uploadFile: (file: ExternalBlob) => Promise<
 }
 async function from_candid_opt_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Song]): Promise<Song | null> {
     return value.length === 0 ? null : await from_candid_Song_n26(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserRecord]): UserRecord | null {
+    return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
     return value.length === 0 ? null : value[0];

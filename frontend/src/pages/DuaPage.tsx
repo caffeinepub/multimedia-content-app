@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 
 export default function DuaPage() {
   const { isFetching: actorFetching } = useActor();
-  const { data: duas, isLoading, isFetching, error, refetch } = useGetAllDua();
+  const { data: duas, isLoading, isFetching, isError, error, refetch } = useGetAllDua();
   const queryClient = useQueryClient();
 
   const handleRetry = () => {
@@ -17,7 +17,8 @@ export default function DuaPage() {
     refetch();
   };
 
-  const showLoading = actorFetching || isLoading || (isFetching && !duas);
+  // Show loading while actor is initializing OR while the query is in flight
+  const showLoading = actorFetching || isLoading || (isFetching && duas === undefined);
 
   if (showLoading) {
     return (
@@ -37,13 +38,15 @@ export default function DuaPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="space-y-4">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription>Failed to load duas. Please try again later.</AlertDescription>
+          <AlertDescription>
+            {error?.message || 'Failed to load duas. Please try again later.'}
+          </AlertDescription>
         </Alert>
         <div className="flex justify-center">
           <Button onClick={handleRetry} variant="outline" className="gap-2">

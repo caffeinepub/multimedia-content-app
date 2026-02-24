@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 21,
-  "summary": "Multimedia content app 'Dard-e-munasif' with categorized content (Dua, Poetry, Songs, Mix). Features PIN-protected admin panel (PIN: 09186114), auto-generated like counts, download buttons for Poetry/Dua, protected audio streaming for Songs, and clean aesthetic design. Custom logo (black & white circular image with blindfolded figure) applied across navbar, header, and favicon. New features: full-screen modal for Poetry/Dua posts, hybrid Music Player (inline preview + full-screen Now Playing UI), Web Audio API filters (Standard/Clean Sound/Ultra Clean Sound), IndexedDB-based History and Downloads, hamburger menu (top right) with History/Downloads/Volume Manager, external redirects for 'Be a Writer' (WhatsApp) and 'Contact' (Gmail).",
+  "projectStateVersion": 41,
+  "summary": "Multimedia content app 'Dard-e-munasif' undergoing complete rebuild from scratch due to persistent 'failed to load content' errors across Poetry, Dua, and Songs sections. Backend Motoko stable variables and query functions (getAllPoetry, getAllDua, getAllSongs) will be rewritten with minimal, clean implementation. All existing features will be preserved: four-category navigation, admin panel (PIN: 09186114), full-screen modals, hybrid music player, Web Audio API filters, hamburger menu with History/Downloads/Volume Manager, IndexedDB storage, and external links.",
   "architectural_notes": [
     "Separate /admin route with PIN-only authentication (09186114)",
     "Content categorization system: Dua, Poetry, Songs, Mix",
@@ -11,11 +11,16 @@
     "Backend data persistence for all content types",
     "Backend upload functions had redundant admin authorization check separate from PIN auth - fix: remove backend admin check and rely on PIN-protected frontend guard",
     "IndexedDB used for History (metadata) and Downloads (audio Blobs) for offline access",
-    "Web Audio API pipeline for audio filters: Standard (raw), Clean Sound (High-Pass + 3kHz gain), Ultra Clean Sound (Band-Pass + Compressor)"
+    "Web Audio API pipeline for audio filters: Standard (raw), Clean Sound (High-Pass + 3kHz gain), Ultra Clean Sound (Band-Pass + Compressor)",
+    "Full app rebuild initiated — backend Motoko rewritten from scratch with minimal stable variables and simple query functions (no complex types, no auth checks on queries)"
   ],
   "known_issues": [
     "Poetry section fails to load with 'failed to load poetry try again later' error - backend query issue",
-    "All content sections (Poetry, Dua, Songs) showing 'Failed to load content, please try again later' - fetch hooks (useGetAllPoetry, useGetAllDua, useGetAllSongs) failing due to likely mismatched function signatures or data shape issues"
+    "Admin panel song upload opens voice recorder instead of device file manager — input needs accept='audio/*' and capture attribute removed",
+    "Admin panel delete function not working — post remains visible after delete click; missing state refresh and confirm dialog",
+    "Backend delete functions (deletePoetry, deleteDua, deleteSong) returning 'Only admins can delete' error — authorization check must be removed",
+    "Audio plays silently on Android — likely OS-level permission or audio focus not requested; app does not route to Media/Music stream",
+    "Admin panel Users & Controls tab does not display registered users (getAllUsers() data not rendering) and is missing a search-by-Unique-ID bar"
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -322,6 +327,238 @@
         "REQ-44"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-fix-the-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-in-frontend-src-hooks-usequeries-ts-to-call-the-exact-actor-method-names-as-defined-in-the-corrected-motoko-actor-correctly-transform-the-candid-response-by-mapping-all-motoko-record-field-names-including-any-bigint-id-likecount-conversions-to-their-matching-typescript-type-field-names-and-add-try-catch-error-handling-so-network-or-candid-decode-failures-produce-a-user-friendly-error-state-rather-than-crashing-the-ui",
+      "title": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts to call the exact actor method names as defined in the corrected Motoko actor, correctly transform the Candid response by mapping all Motoko record field names (including any BigInt id/likeCount conversions) to their matching TypeScript type field names, and add try/catch error handling so network or Candid decode failures produce a user-friendly error state rather than crashing the UI.",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-poetrypage-duapage-songspage-and-mixpage-components-so-that-1-the-no-contents-available-empty-state-is-only-shown-when-the-returned-data-array-is-confirmed-empty-length-0-after-a-successful-fetch-2-the-error-state-is-only-shown-when-the-hook-reports-iserror-true-3-the-loading-skeleton-is-shown-while-isloading-true-and-4-content-cards-render-correctly-when-the-data-array-is-non-empty-remove-any-field-name-mismatches-or-type-coercions-that-cause-valid-data-to-be-treated-as-empty-or-erroneous",
+      "title": "Fix the PoetryPage, DuaPage, SongsPage, and MixPage components so that: (1) the 'No contents available' empty state is only shown when the returned data array is confirmed empty (length === 0) after a successful fetch, (2) the error state is only shown when the hook reports isError=true, (3) the loading skeleton is shown while isLoading=true, and (4) content cards render correctly when the data array is non-empty. Remove any field-name mismatches or type coercions that cause valid data to be treated as empty or erroneous.",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-rewrite-frontend-src-hooks-usequeries-ts-from-scratch-define-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-that-each-call-the-exact-matching-backend-actor-method-getallpoetry-getalldua-getallsongs-respectively-each-hook-must-wrap-the-actor-call-in-a-try-catch-use-a-stable-string-query-key-e-g-poetry-dua-songs-and-transform-the-candid-response-by-converting-all-bigint-fields-id-likecount-to-number-before-returning-on-error-the-hook-must-set-iserror-true-with-a-user-readable-message-rather-than-throwing-define-usecreatepoetry-usecreatedua-usecreatesong-mutation-hooks-that-pass-no-admin-token-or-authorization-header-they-rely-solely-on-the-anonymous-actor-call-define-usedeletepoetry-usedeletedua-usedeletesong-mutation-hooks-all-hooks-must-use-the-actor-from-the-useactor-hook",
+      "title": "Rewrite frontend/src/hooks/useQueries.ts from scratch. Define useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks that each call the exact matching backend actor method (getAllPoetry, getAllDua, getAllSongs respectively). Each hook must wrap the actor call in a try/catch, use a stable string query key (e.g. ['poetry'], ['dua'], ['songs']), and transform the Candid response by converting all BigInt fields (id, likeCount) to Number before returning. On error, the hook must set isError=true with a user-readable message rather than throwing. Define useCreatePoetry, useCreateDua, useCreateSong mutation hooks that pass no admin token or authorization header — they rely solely on the anonymous actor call. Define useDeletePoetry, useDeleteDua, useDeleteSong mutation hooks. All hooks must use the actor from the useActor hook.",
+      "reqIds": [
+        "REQ-50"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-rewrite-poetrypage-duapage-songspage-and-mixpage-so-their-loading-error-and-empty-states-are-driven-exclusively-by-the-hook-flags-show-loading-skeleton-when-isloading-true-show-error-ui-only-when-iserror-true-show-empty-state-only-when-data-is-a-confirmed-empty-array-length-0-after-a-successful-fetch-and-render-content-cards-when-data-is-a-non-empty-array-remove-all-field-name-mismatches-incorrect-type-coercions-and-any-logic-that-could-treat-valid-data-as-an-error-or-empty-state-mixpage-must-aggregate-the-arrays-from-all-three-hooks-sort-combined-items-by-likecount-descending-and-render-the-unified-trending-feed",
+      "title": "Rewrite PoetryPage, DuaPage, SongsPage, and MixPage so their loading, error, and empty states are driven exclusively by the hook flags: show loading skeleton when isLoading=true, show error UI only when isError=true, show empty state only when data is a confirmed empty array (length === 0) after a successful fetch, and render content cards when data is a non-empty array. Remove all field-name mismatches, incorrect type coercions, and any logic that could treat valid data as an error or empty state. MixPage must aggregate the arrays from all three hooks, sort combined items by likeCount descending, and render the unified trending feed.",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-all-existing-app-features-are-preserved-in-the-rebuild-1-four-category-navigation-mix-as-default-homepage-poetry-dua-songs-in-layout-navbar-2-poetry-posts-with-text-image-display-download-button-like-button-random-like-counts-1000-2000-seeded-on-first-load-if-likecount-is-0-3-dua-posts-with-text-audio-display-download-button-saves-to-indexeddb-and-browser-like-button-4-song-posts-with-inline-play-pause-only-download-option-completely-hidden-5-full-screen-overlay-modal-for-poetry-and-dua-post-cards-with-close-button-6-hybrid-music-player-for-songs-inline-play-pause-on-card-full-screen-now-playing-ui-album-art-placeholder-seeker-bar-elapsed-total-time-play-pause-when-card-body-is-clicked-7-web-audio-api-filters-in-volume-manager-standard-no-filter-clean-sound-high-pass-200hz-peaking-eq-3khz-4db-ultra-clean-sound-band-pass-dynamicscompressor-8-hamburger-menu-top-right-persistent-with-history-50-most-recent-entries-from-indexeddb-downloads-audio-blobs-from-indexeddb-with-play-delete-and-volume-manager-master-volume-slider-filter-toggles-9-be-a-writer-button-opening-https-wa-me-919541525891-text-join-20-e2-80-a2-7c-c2-b0-7c-e2-80-a2program-writter-in-new-tab-10-contact-button-opening-mailto-dariqlas744-gmail-com-11-pin-protected-admin-route-accepting-only-pin-09186114-with-upload-forms-for-poetry-dua-songs-and-full-content-management-view-delete-12-app-name-dard-e-munasif-in-header-navbar-and-browser-tab-title-13-circular-logo-image-dard-e-munasif-logo-dim-200x200-png-displayed-in-header-and-set-as-favicon-14-urdu-hindi-unicode-rendering-in-all-text-fields-15-relaxing-aesthetic-with-dark-mode-pastel-calm-color-palette-smooth-animations-and-responsive-mobile-desktop-layout",
+      "title": "Ensure all existing app features are preserved in the rebuild: (1) Four-category navigation (Mix as default homepage, Poetry, Dua, Songs) in Layout/Navbar. (2) Poetry posts with text/image display, Download button, Like button, random like counts 1000–2000 seeded on first load if likeCount is 0. (3) Dua posts with text/audio display, Download button (saves to IndexedDB and browser), Like button. (4) Song posts with inline Play/Pause only — download option completely hidden. (5) Full-screen overlay modal for Poetry and Dua post cards with ❌ close button. (6) Hybrid Music Player for Songs: inline Play/Pause on card, full-screen Now Playing UI (album art placeholder, seeker bar, elapsed/total time, Play/Pause) when card body is clicked. (7) Web Audio API filters in Volume Manager: Standard (no filter), Clean Sound (High-Pass ~200Hz + Peaking EQ 3kHz +4dB), Ultra Clean Sound (Band-Pass + DynamicsCompressor). (8) Hamburger menu (top-right, persistent) with History (50 most recent entries from IndexedDB), Downloads (audio Blobs from IndexedDB with Play/Delete), and Volume Manager (master volume slider + filter toggles). (9) 'Be a Writer' button opening https://wa.me/919541525891?text=Join%20%E2%80%A2%7C-%C2%B0-%7C%E2%80%A2Program.Writter in new tab. (10) 'Contact' button opening mailto:dariqlas744@gmail.com. (11) PIN-protected /admin route accepting only PIN '09186114', with upload forms for Poetry, Dua, Songs and full content management (view/delete). (12) App name 'Dard-e-munasif' in header, navbar, and browser tab title. (13) Circular logo image (dard-e-munasif-logo.dim_200x200.png) displayed in header and set as favicon. (14) Urdu/Hindi Unicode rendering in all text fields. (15) Relaxing aesthetic with dark mode, pastel/calm color palette, smooth animations, and responsive mobile/desktop layout.",
+      "reqIds": [
+        "REQ-52"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-songuploadform-component-frontend-src-components-admin-songuploadform-tsx-update-the-audio-file-input-element-so-it-opens-the-device-s-local-file-manager-music-library-instead-of-the-voice-recorder-set-the-input-s-accept-attribute-to-audio-or-explicitly-audio-mpeg-audio-mp3-audio-wav-audio-ogg-audio-aac-audio-and-remove-any-capture-attribute-that-may-be-causing-the-voice-recorder-to-open-the-input-must-allow-the-user-to-browse-and-select-mp3-and-other-audio-files-directly-from-their-device-storage",
+      "title": "In the SongUploadForm component (frontend/src/components/admin/SongUploadForm.tsx), update the audio file input element so it opens the device's local file manager/music library instead of the voice recorder. Set the input's `accept` attribute to `audio/*` (or explicitly `audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/aac,audio/*`) and remove any `capture` attribute that may be causing the voice recorder to open. The input must allow the user to browse and select MP3 and other audio files directly from their device storage.",
+      "reqIds": [
+        "REQ-54"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-delete-functionality-in-the-contentmanagement-component-frontend-src-components-admin-contentmanagement-tsx-so-that-1-a-confirm-deletion-dialog-popup-appears-when-the-user-clicks-any-delete-button-asking-the-user-to-confirm-before-proceeding-2-upon-confirmation-the-delete-mutation-usedeletepoetry-usedeletedua-or-usedeletesong-is-called-with-the-correct-post-id-3-after-a-successful-delete-response-from-the-backend-the-react-query-cache-for-the-relevant-category-is-immediately-invalidated-so-the-ui-automatically-re-fetches-and-removes-the-deleted-post-from-the-displayed-list-without-requiring-a-manual-page-refresh-4-if-the-delete-call-fails-show-a-user-friendly-error-toast-notification",
+      "title": "Fix the delete functionality in the ContentManagement component (frontend/src/components/admin/ContentManagement.tsx) so that: (1) A 'Confirm Deletion' dialog/popup appears when the user clicks any Delete button, asking the user to confirm before proceeding. (2) Upon confirmation, the delete mutation (useDeletePoetry, useDeleteDua, or useDeleteSong) is called with the correct post ID. (3) After a successful delete response from the backend, the React Query cache for the relevant category is immediately invalidated so the UI automatically re-fetches and removes the deleted post from the displayed list without requiring a manual page refresh. (4) If the delete call fails, show a user-friendly error toast notification.",
+      "reqIds": [
+        "REQ-55"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-audio-player-in-frontend-src-hooks-useaudioplayback-ts-and-frontend-src-components-audioplayer-tsx-so-that-audio-actually-produces-sound-during-playback-specifically-1-ensure-the-htmlaudioelement-is-never-muted-by-default-set-audioelement-muted-false-explicitly-on-initialization-2-ensure-the-audio-element-s-volume-is-initialized-to-the-current-master-volume-value-defaulting-to-1-0-100-if-no-stored-value-exists-rather-than-0-3-ensure-the-web-audio-api-filter-chain-in-usewebaudiofilters-ts-correctly-connects-the-audio-source-node-through-the-filter-graph-to-the-audiocontext-destination-a-broken-or-disconnected-filter-graph-silently-drops-audio-output-fall-back-to-direct-output-if-web-audio-api-is-unavailable-4-ensure-the-audio-element-s-src-is-set-correctly-from-the-blob-url-or-data-url-before-play-is-called-and-that-the-format-audio-mpeg-audio-mp3-audio-aac-audio-wav-audio-ogg-is-supported-by-setting-the-correct-mime-type-5-on-play-call-audiocontext-resume-first-if-the-audiocontext-state-is-suspended-required-by-browser-autoplay-policies-before-calling-audioelement-play",
+      "title": "Fix the audio player in frontend/src/hooks/useAudioPlayback.ts and frontend/src/components/AudioPlayer.tsx so that audio actually produces sound during playback. Specifically: (1) Ensure the HTMLAudioElement is never muted by default — set audioElement.muted = false explicitly on initialization. (2) Ensure the audio element's volume is initialized to the current master volume value (defaulting to 1.0 / 100% if no stored value exists) rather than 0. (3) Ensure the Web Audio API filter chain in useWebAudioFilters.ts correctly connects the audio source node through the filter graph to the AudioContext destination — a broken or disconnected filter graph silently drops audio output; fall back to direct output if Web Audio API is unavailable. (4) Ensure the audio element's src is set correctly from the Blob URL or data URL before play() is called, and that the format (audio/mpeg, audio/mp3, audio/aac, audio/wav, audio/ogg) is supported by setting the correct MIME type. (5) On play(), call audioContext.resume() first if the AudioContext state is 'suspended' (required by browser autoplay policies) before calling audioElement.play().",
+      "reqIds": [
+        "REQ-58"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-rewrite-useaudioplayback-ts-to-eliminate-all-silent-audio-causes-1-set-htmlaudioelement-muted-false-and-htmlaudioelement-volume-1-0-unconditionally-on-every-new-audio-element-creation-never-read-from-any-stored-volume-preference-or-volume-state-variable-2-remove-all-references-to-any-volume-state-volumelevel-mastervolume-or-similar-variables-that-could-set-volume-to-a-value-other-than-1-0-the-audio-element-volume-must-always-be-hard-coded-to-1-0-3-remove-all-web-audio-api-filter-chain-connections-usewebaudiofilters-integration-from-the-playback-path-bypass-all-filter-nodes-and-connect-the-audio-source-directly-to-the-audiocontext-destination-or-skip-the-audiocontext-entirely-and-play-via-the-raw-htmlaudioelement-to-eliminate-any-broken-filter-graph-that-silently-drops-audio-output-4-before-calling-audioelement-play-always-call-audiocontext-resume-if-the-audiocontext-exists-and-its-state-is-suspended-to-satisfy-browser-autoplay-policies",
+      "title": "Rewrite useAudioPlayback.ts to eliminate all silent-audio causes: (1) Set HTMLAudioElement.muted = false and HTMLAudioElement.volume = 1.0 unconditionally on every new audio element creation — never read from any stored volume preference or volume state variable. (2) Remove all references to any volume state, volumeLevel, masterVolume, or similar variables that could set volume to a value other than 1.0. The audio element volume must always be hard-coded to 1.0. (3) Remove all Web Audio API filter chain connections (useWebAudioFilters integration) from the playback path — bypass all filter nodes and connect the audio source directly to the AudioContext destination, or skip the AudioContext entirely and play via the raw HTMLAudioElement to eliminate any broken filter graph that silently drops audio output. (4) Before calling audioElement.play(), always call audioContext.resume() if the AudioContext exists and its state is 'suspended' to satisfy browser autoplay policies.",
+      "reqIds": [
+        "REQ-59"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-rewrite-nowplayingmodal-tsx-and-songpost-tsx-to-also-enforce-volume-1-0-and-muted-false-on-any-audio-element-they-directly-create-or-reference-remove-any-code-in-these-components-that-reads-a-volume-value-from-context-props-or-localstorage-and-applies-it-to-the-audio-element-ensure-the-audio-src-is-set-from-the-correct-blob-url-before-play-is-called-and-that-the-mime-type-used-when-constructing-the-blob-url-matches-the-stored-audiomimetype-field-from-the-backend-e-g-audio-mpeg-for-mp3-audio-aac-for-aac",
+      "title": "Rewrite NowPlayingModal.tsx and SongPost.tsx to also enforce volume = 1.0 and muted = false on any audio element they directly create or reference. Remove any code in these components that reads a volume value from context, props, or localStorage and applies it to the audio element. Ensure the audio src is set from the correct Blob URL before play() is called, and that the MIME type used when constructing the Blob URL matches the stored audioMimeType field from the backend (e.g. audio/mpeg for MP3, audio/aac for AAC).",
+      "reqIds": [
+        "REQ-60"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-buffering-health-check-to-the-audio-playback-flow-in-useaudioplayback-ts-nowplayingmodal-tsx-and-audioplayer-tsx-attach-a-listener-to-the-htmlaudioelement-waiting-and-stalled-events-if-the-audio-element-fires-stalled-or-if-after-5-seconds-of-a-play-call-the-buffered-timeranges-are-empty-audio-buffered-length-0-display-a-visible-notification-toast-message-to-the-user-audio-data-not-found-this-check-must-not-interrupt-or-pause-otherwise-working-playback",
+      "title": "Add a buffering health check to the audio playback flow in useAudioPlayback.ts, NowPlayingModal.tsx, and AudioPlayer.tsx: attach a listener to the HTMLAudioElement 'waiting' and 'stalled' events. If the audio element fires 'stalled' or if after 5 seconds of a play() call the buffered TimeRanges are empty (audio.buffered.length === 0), display a visible notification/toast message to the user: 'Audio data not found.' This check must not interrupt or pause otherwise-working playback.",
+      "reqIds": [
+        "REQ-61"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-integrate-the-screen-wake-lock-api-into-the-audio-playback-lifecycle-in-useaudioplayback-ts-when-audio-playback-starts-play-is-called-successfully-request-a-wake-lock-using-navigator-wakelock-request-screen-to-prevent-the-device-from-sleeping-and-silencing-audio-when-audio-playback-is-paused-stopped-or-the-component-unmounts-release-the-wake-lock-wrap-the-entire-wake-lock-integration-in-a-try-catch-if-the-browser-does-not-support-the-wake-lock-api-silently-skip-it-without-throwing-an-error-or-showing-any-warning-to-the-user",
+      "title": "Integrate the Screen Wake Lock API into the audio playback lifecycle in useAudioPlayback.ts: when audio playback starts (play() is called successfully), request a wake lock using navigator.wakeLock.request('screen') to prevent the device from sleeping and silencing audio. When audio playback is paused, stopped, or the component unmounts, release the wake lock. Wrap the entire Wake Lock integration in a try/catch — if the browser does not support the Wake Lock API, silently skip it without throwing an error or showing any warning to the user.",
+      "reqIds": [
+        "REQ-62"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-entire-hamburgermenu-volume-manager-section-master-volume-slider-and-filter-toggle-buttons-from-hamburgermenu-tsx-and-remove-all-references-to-volume-state-volume-context-mastervolume-volumelevel-and-filter-mode-selection-standard-clean-sound-ultra-clean-sound-from-hamburgermenu-tsx-and-usewebaudiofilters-ts-do-not-remove-the-history-and-downloads-sections-of-the-hamburger-menu-the-audio-engine-must-play-all-audio-at-a-fixed-volume-of-1-0-with-no-user-controllable-volume-setting-in-the-ui",
+      "title": "Remove the entire HamburgerMenu Volume Manager section (master volume slider and filter toggle buttons) from HamburgerMenu.tsx, and remove all references to volume state, volume context, masterVolume, volumeLevel, and filter mode selection (Standard / Clean Sound / Ultra Clean Sound) from HamburgerMenu.tsx and useWebAudioFilters.ts. Do not remove the History and Downloads sections of the hamburger menu. The audio engine must play all audio at a fixed volume of 1.0 with no user-controllable volume setting in the UI.",
+      "reqIds": [
+        "REQ-63"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-useaudioplayback-ts-before-initiating-any-audio-playback-use-the-web-permissions-api-navigator-permissions-query-navigator-mediadevices-or-equivalent-browser-api-to-check-and-request-permission-for-audio-media-playback-if-the-browser-supports-the-microphone-or-autoplay-permission-query-check-its-state-on-browsers-environments-where-the-permissions-api-reports-denied-set-a-react-state-flag-e-g-permissiondenied-true-wrap-the-entire-permission-request-in-a-try-catch-so-it-silently-skips-on-unsupported-browsers-this-simulates-the-android-allow-music-and-audio-api-33-read-external-storage-permission-request-flow-in-the-web-context",
+      "title": "In useAudioPlayback.ts, before initiating any audio playback, use the Web Permissions API (navigator.permissions.query / navigator.mediaDevices or equivalent browser API) to check and request permission for audio/media playback. If the browser supports the 'microphone' or 'autoplay' permission query, check its state. On browsers/environments where the Permissions API reports 'denied', set a React state flag (e.g. permissionDenied=true). Wrap the entire permission request in a try/catch so it silently skips on unsupported browsers. This simulates the Android 'Allow Music and Audio' (API 33+) / 'READ_EXTERNAL_STORAGE' permission request flow in the web context.",
+      "reqIds": [
+        "REQ-64"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-useaudioplayback-ts-simulate-an-os-audio-focus-request-by-calling-audiocontext-resume-immediately-when-the-user-initiates-playback-and-additionally-dispatch-a-user-activation-gesture-guard-so-the-audiocontext-transitions-from-suspended-to-running-before-audioelement-play-is-called-log-a-console-message-audio-focus-requested-when-audiocontext-resume-is-called-this-ensures-the-browser-os-audio-subsystem-treats-the-app-as-an-active-media-session-rather-than-silencing-it",
+      "title": "In useAudioPlayback.ts, simulate an OS Audio Focus request by calling AudioContext.resume() immediately when the user initiates playback, and additionally dispatch a user-activation gesture guard so the AudioContext transitions from 'suspended' to 'running' before audioElement.play() is called. Log a console message 'Audio focus requested' when AudioContext.resume() is called. This ensures the browser/OS audio subsystem treats the app as an active media session rather than silencing it.",
+      "reqIds": [
+        "REQ-65"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-useaudioplayback-ts-songpost-tsx-nowplayingmodal-tsx-and-audioplayer-tsx-if-the-permissiondenied-flag-from-req-64-is-true-or-if-the-audiocontext-cannot-be-created-or-resumed-do-not-attempt-playback-instead-expose-a-boolean-ispeermissiondenied-or-similar-from-the-hook-and-display-a-visible-inline-message-to-the-user-please-allow-audio-permissions-in-settings-to-hear-the-music-this-message-must-appear-wherever-the-play-pause-control-is-rendered-in-the-song-card-songpost-tsx-the-now-playing-modal-nowplayingmodal-tsx-and-the-dua-audio-player-audioplayer-tsx",
+      "title": "In useAudioPlayback.ts, SongPost.tsx, NowPlayingModal.tsx, and AudioPlayer.tsx: if the permissionDenied flag from REQ-64 is true (or if the AudioContext cannot be created or resumed), do not attempt playback. Instead, expose a boolean isPeermissionDenied (or similar) from the hook and display a visible inline message to the user: 'Please allow audio permissions in settings to hear the music.' This message must appear wherever the play/pause control is rendered — in the song card (SongPost.tsx), the Now Playing modal (NowPlayingModal.tsx), and the Dua audio player (AudioPlayer.tsx).",
+      "reqIds": [
+        "REQ-66"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-useaudioplayback-ts-and-audioplayer-tsx-set-the-htmlaudioelement-to-target-the-media-music-audio-output-channel-by-applying-the-following-1-set-audio-setattribute-x-webkit-airplay-allow-for-safari-ios-compatibility-2-ensure-no-web-audio-api-nodes-route-output-to-a-gain-node-with-value-0-or-to-a-disconnected-destination-the-audio-graph-must-terminate-at-audiocontext-destination-3-do-not-set-any-stream-type-that-maps-to-a-system-ui-or-ringer-channel-4-if-the-mediasession-api-is-available-navigator-mediasession-set-navigator-mediasession-metadata-with-the-song-title-and-artist-so-the-os-registers-the-app-as-a-media-player-on-the-lock-screen-notification-shade-which-routes-audio-through-the-media-stream-rather-than-the-ringer-stream",
+      "title": "In useAudioPlayback.ts and AudioPlayer.tsx, set the HTMLAudioElement to target the media/music audio output channel by applying the following: (1) Set audio.setAttribute('x-webkit-airplay', 'allow') for Safari/iOS compatibility. (2) Ensure no Web Audio API nodes route output to a gain node with value 0 or to a disconnected destination — the audio graph must terminate at AudioContext.destination. (3) Do not set any stream type that maps to a system UI or ringer channel. (4) If the MediaSession API is available (navigator.mediaSession), set navigator.mediaSession.metadata with the song title and artist so the OS registers the app as a media player on the lock screen/notification shade, which routes audio through the media stream rather than the ringer stream.",
+      "reqIds": [
+        "REQ-67"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-useaudioplayback-ts-nowplayingmodal-tsx-songpost-tsx-and-audioplayer-tsx-immediately-after-a-successful-audiocontext-resume-and-before-audioelement-play-is-called-unconditionally-set-audioelement-volume-1-0-and-audioelement-muted-false-additionally-if-the-mediasession-api-is-available-set-navigator-mediasession-playbackstate-playing-after-play-resolves-these-assignments-must-happen-on-every-play-invocation-not-just-on-first-initialization-to-prevent-any-os-level-or-software-volume-reset-from-silencing-audio",
+      "title": "In useAudioPlayback.ts, NowPlayingModal.tsx, SongPost.tsx, and AudioPlayer.tsx: immediately after a successful AudioContext.resume() and before audioElement.play() is called, unconditionally set audioElement.volume = 1.0 and audioElement.muted = false. Additionally, if the MediaSession API is available, set navigator.mediaSession.playbackState = 'playing' after play() resolves. These assignments must happen on every play() invocation, not just on first initialization, to prevent any OS-level or software volume reset from silencing audio.",
+      "reqIds": [
+        "REQ-68"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-loginpage-component-frontend-src-pages-loginpage-tsx-with-a-centered-layout-matching-the-app-s-existing-dark-pastel-aesthetic-it-must-contain-1-a-text-input-field-labeled-enter-your-name-that-accepts-the-user-s-display-name-2-a-connect-with-server-button-that-when-clicked-with-a-non-empty-name-reveals-two-server-option-buttons-v-99-kashmir-2hz-world-and-developer-99hz-ikhlas-java-3-when-the-user-clicks-either-server-option-store-the-entered-name-and-selected-server-in-localstorage-keys-dmuser-name-and-dmuser-server-and-navigate-to-the-home-page-4-the-name-input-must-be-validated-the-connect-with-server-button-must-be-disabled-or-show-an-inline-error-if-the-name-field-is-empty-5-the-server-selection-step-must-only-appear-after-the-name-is-submitted-via-the-button-click",
+      "title": "Create a LoginPage component (frontend/src/pages/LoginPage.tsx) with a centered layout matching the app's existing dark/pastel aesthetic. It must contain: (1) A text input field labeled 'Enter Your Name' that accepts the user's display name. (2) A 'Connect with Server' button that, when clicked with a non-empty name, reveals two server option buttons: 'V.99.kashmir.2HZ.World' and 'Developer.99Hz/ikhlas.Java'. (3) When the user clicks either server option, store the entered name and selected server in localStorage (keys: 'dmUser_name' and 'dmUser_server') and navigate to the home page (/). (4) The name input must be validated — the 'Connect with Server' button must be disabled or show an inline error if the name field is empty. (5) The server selection step must only appear after the name is submitted via the button click.",
+      "reqIds": [
+        "REQ-69"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-register-a-login-route-in-app-tsx-pointing-to-the-new-loginpage-component-implement-a-route-guard-on-every-route-render-in-app-tsx-or-in-the-layout-component-check-if-localstorage-keys-dmuser-name-and-dmuser-server-are-both-present-and-non-empty-if-either-is-missing-redirect-the-user-to-login-immediately-the-login-route-itself-must-be-accessible-without-the-guard-applying-to-it-all-other-existing-routes-poetry-dua-songs-admin-must-be-protected-by-this-guard-users-cannot-reach-them-without-completing-the-login-flow",
+      "title": "Register a /login route in App.tsx pointing to the new LoginPage component. Implement a route guard: on every route render in App.tsx (or in the Layout component), check if localStorage keys 'dmUser_name' and 'dmUser_server' are both present and non-empty. If either is missing, redirect the user to /login immediately. The /login route itself must be accessible without the guard applying to it. All other existing routes (/, /poetry, /dua, /songs, /admin) must be protected by this guard — users cannot reach them without completing the login flow.",
+      "reqIds": [
+        "REQ-70"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-loginpage-frontend-src-pages-loginpage-tsx-after-the-user-enters-their-name-and-selects-a-server-before-navigating-to-the-home-page-1-generate-or-retrieve-a-device-id-hwid-for-the-browser-using-a-fingerprint-composed-of-navigator-useragent-screen-width-screen-height-navigator-language-navigator-hardwareconcurrency-hashed-or-concatenated-into-a-stable-string-and-stored-in-localstorage-under-key-dmuser-deviceid-so-it-persists-across-sessions-2-call-the-backend-registeruser-name-server-deviceid-actor-method-3-store-the-returned-uniquecode-in-localstorage-under-key-dmuser-uniquecode-4-also-store-the-deviceid-in-localstorage-under-key-dmuser-deviceid-if-not-already-stored-5-after-successful-registration-navigate-to-the-home-page-as-before-wrap-the-actor-call-in-a-try-catch-if-the-call-fails-show-an-inline-error-message-and-do-not-navigate",
+      "title": "On the LoginPage (frontend/src/pages/LoginPage.tsx), after the user enters their name and selects a server, before navigating to the home page: (1) Generate or retrieve a Device ID (HWID) for the browser using a fingerprint composed of navigator.userAgent + screen.width + screen.height + navigator.language + navigator.hardwareConcurrency, hashed or concatenated into a stable string, and stored in localStorage under key 'dmUser_deviceId' so it persists across sessions. (2) Call the backend registerUser(name, server, deviceId) actor method. (3) Store the returned uniqueCode in localStorage under key 'dmUser_uniqueCode'. (4) Also store the deviceId in localStorage under key 'dmUser_deviceId' if not already stored. (5) After successful registration, navigate to the home page as before. Wrap the actor call in a try/catch — if the call fails, show an inline error message and do not navigate.",
+      "reqIds": [
+        "REQ-72"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-home-page-mixpage-or-the-root-route-component-rendered-by-layout-add-a-display-section-at-the-very-top-center-of-the-page-content-area-above-the-feed-grid-1-show-the-user-s-unique-code-from-localstorage-dmuser-uniquecode-in-a-styled-read-only-text-box-or-chip-it-must-be-selectable-and-copyable-e-g-via-a-copy-to-clipboard-button-or-selectable-text-but-must-not-be-editable-use-readonly-input-or-non-input-display-with-user-select-all-2-directly-below-the-unique-code-display-the-user-s-name-from-localstorage-dmuser-name-in-a-slightly-smaller-calming-typography-style-matching-the-app-s-dark-pastel-aesthetic-both-elements-must-be-visible-on-all-screen-sizes",
+      "title": "On the Home Page (MixPage or the root '/' route component rendered by Layout), add a display section at the very top center of the page content area (above the feed grid): (1) Show the user's Unique Code from localStorage ('dmUser_uniqueCode') in a styled read-only text box or chip — it must be selectable and copyable (e.g. via a copy-to-clipboard button or selectable text) but must not be editable (use readOnly input or non-input display with user-select: all). (2) Directly below the Unique Code, display the user's Name from localStorage ('dmUser_name') in a slightly smaller, calming typography style matching the app's dark/pastel aesthetic. Both elements must be visible on all screen sizes.",
+      "reqIds": [
+        "REQ-73"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-app-s-route-guard-logic-layout-tsx-or-app-tsx-add-a-maintenance-mode-and-ban-check-that-runs-on-every-route-render-for-all-protected-routes-1-on-app-load-and-before-rendering-any-page-content-call-the-backend-query-getuserbydeviceid-deviceid-using-the-deviceid-from-localstorage-dmuser-deviceid-if-the-returned-user-record-has-isblocked-true-immediately-redirect-to-a-full-screen-ban-screen-component-do-not-render-any-app-content-2-also-call-the-backend-query-getmaintenancemode-if-it-returns-true-immediately-redirect-to-a-full-screen-maintenance-screen-component-do-not-render-any-app-content-3-these-checks-must-happen-before-the-main-content-renders-show-a-brief-loading-indicator-while-the-checks-are-in-progress-4-both-checks-must-re-run-on-every-page-navigation-so-a-blocked-or-maintenance-mode-user-cannot-bypass-the-screen-by-navigating-to-another-route-5-if-the-backend-call-fails-e-g-network-error-allow-the-user-through-rather-than-blocking-them-to-avoid-false-positives",
+      "title": "In the app's route guard logic (Layout.tsx or App.tsx), add a maintenance mode and ban check that runs on every route render for all protected routes: (1) On app load (and before rendering any page content), call the backend query getUserByDeviceId(deviceId) using the deviceId from localStorage ('dmUser_deviceId'). If the returned user record has isBlocked=true, immediately redirect to a full-screen Ban Screen component (do not render any app content). (2) Also call the backend query getMaintenanceMode(). If it returns true, immediately redirect to a full-screen Maintenance Screen component (do not render any app content). (3) These checks must happen before the main content renders — show a brief loading indicator while the checks are in progress. (4) Both checks must re-run on every page navigation so a blocked or maintenance-mode user cannot bypass the screen by navigating to another route. (5) If the backend call fails (e.g. network error), allow the user through rather than blocking them, to avoid false positives.",
+      "reqIds": [
+        "REQ-74"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-banscreen-component-frontend-src-components-banscreen-tsx-that-renders-a-full-screen-centered-layout-matching-the-app-s-dark-aesthetic-it-must-display-a-prominent-warning-icon-or-visual-element-the-message-your-account-has-been-suspended-please-contact-support-and-no-navigation-links-back-buttons-or-any-other-app-content-the-component-must-fill-the-entire-viewport-and-prevent-any-interaction-with-the-rest-of-the-app",
+      "title": "Create a BanScreen component (frontend/src/components/BanScreen.tsx) that renders a full-screen centered layout matching the app's dark aesthetic. It must display: a prominent warning icon or visual element, the message 'Your account has been suspended. Please contact support.', and no navigation links, back buttons, or any other app content. The component must fill the entire viewport and prevent any interaction with the rest of the app.",
+      "reqIds": [
+        "REQ-75"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-maintenancescreen-component-frontend-src-components-maintenancescreen-tsx-that-renders-a-full-screen-centered-layout-matching-the-app-s-dark-aesthetic-it-must-display-exactly-the-following-message-app-is-currently-under-maintenance-for-a-better-experience-we-will-be-back-online-shortly-developer-ikhlas-no-navigation-links-back-buttons-or-any-other-app-content-should-be-present-the-component-must-fill-the-entire-viewport",
+      "title": "Create a MaintenanceScreen component (frontend/src/components/MaintenanceScreen.tsx) that renders a full-screen centered layout matching the app's dark aesthetic. It must display exactly the following message: 'App is currently under maintenance for a better experience. We will be back online shortly – Developer Ikhlas.' No navigation links, back buttons, or any other app content should be present. The component must fill the entire viewport.",
+      "reqIds": [
+        "REQ-76"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-admin-panel-frontend-src-pages-adminpage-tsx-add-a-new-users-controls-tab-alongside-the-existing-content-tabs-this-tab-must-contain-1-a-maintenance-mode-toggle-switch-labeled-clearly-as-maintenance-mode-when-toggled-on-it-calls-the-backend-setmaintenancemode-true-when-toggled-off-it-calls-setmaintenancemode-false-the-toggle-must-reflect-the-current-state-by-calling-getmaintenancemode-on-tab-load-show-a-success-toast-when-the-state-is-changed-2-a-user-list-table-below-the-toggle-that-calls-getallusers-to-display-all-registered-users-each-row-must-show-name-server-unique-code-device-id-truncated-and-a-block-button-clicking-block-calls-blockuser-uniquecode-and-refreshes-the-list-if-a-user-is-already-blocked-show-an-unblock-button-instead-that-calls-unblockuser-uniquecode-show-a-confirmation-dialog-before-blocking-or-unblocking",
+      "title": "In the Admin Panel (frontend/src/pages/AdminPage.tsx), add a new 'Users & Controls' tab alongside the existing content tabs. This tab must contain: (1) A 'Maintenance Mode' toggle switch labeled clearly as 'Maintenance Mode'. When toggled ON, it calls the backend setMaintenanceMode(true); when toggled OFF, it calls setMaintenanceMode(false). The toggle must reflect the current state by calling getMaintenanceMode() on tab load. Show a success toast when the state is changed. (2) A user list table below the toggle that calls getAllUsers() to display all registered users. Each row must show: Name, Server, Unique Code, Device ID (truncated), and a 'Block' button. Clicking 'Block' calls blockUser(uniqueCode) and refreshes the list. If a user is already blocked, show an 'Unblock' button instead that calls unblockUser(uniqueCode). Show a confirmation dialog before blocking or unblocking.",
+      "reqIds": [
+        "REQ-77"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-to-frontend-src-hooks-usequeries-ts-for-the-new-user-management-backend-functions-1-useregisteruser-a-mutation-hook-that-calls-the-backend-registeruser-name-server-deviceid-method-and-returns-the-uniquecode-2-usegetuserbydeviceid-a-query-hook-that-calls-getuserbydeviceid-deviceid-and-returns-the-optional-user-record-3-usegetmaintenancemode-a-query-hook-that-calls-getmaintenancemode-and-returns-a-boolean-4-usesetmaintenancemode-a-mutation-hook-that-calls-setmaintenancemode-enabled-5-usegetallusers-a-query-hook-that-calls-getallusers-and-returns-the-array-of-user-records-6-useblockuser-a-mutation-hook-that-calls-blockuser-uniquecode-7-useunblockuser-a-mutation-hook-that-calls-unblockuser-uniquecode-all-hooks-must-use-the-actor-from-the-useactor-hook-and-follow-the-same-error-handling-and-query-key-patterns-as-the-existing-hooks",
+      "title": "Add React Query hooks to frontend/src/hooks/useQueries.ts for the new user management backend functions: (1) useRegisterUser — a mutation hook that calls the backend registerUser(name, server, deviceId) method and returns the uniqueCode. (2) useGetUserByDeviceId — a query hook that calls getUserByDeviceId(deviceId) and returns the optional user record. (3) useGetMaintenanceMode — a query hook that calls getMaintenanceMode() and returns a boolean. (4) useSetMaintenanceMode — a mutation hook that calls setMaintenanceMode(enabled). (5) useGetAllUsers — a query hook that calls getAllUsers() and returns the array of user records. (6) useBlockUser — a mutation hook that calls blockUser(uniqueCode). (7) useUnblockUser — a mutation hook that calls unblockUser(uniqueCode). All hooks must use the actor from the useActor hook and follow the same error-handling and query-key patterns as the existing hooks.",
+      "reqIds": [
+        "REQ-78"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-userscontrolspanel-component-frontend-src-components-admin-userscontrolspanel-tsx-so-that-the-user-list-table-correctly-fetches-and-renders-all-registered-users-by-properly-calling-the-usegetallusers-hook-ensure-the-table-displays-each-user-s-name-server-unique-code-device-id-truncated-isblocked-status-and-block-unblock-buttons-the-table-must-show-data-as-soon-as-the-users-controls-tab-is-active-with-a-loading-skeleton-while-fetching-and-an-empty-state-message-if-no-users-are-registered-yet",
+      "title": "Fix the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) so that the user list table correctly fetches and renders all registered users by properly calling the useGetAllUsers hook. Ensure the table displays each user's Name, Server, Unique Code, Device ID (truncated), isBlocked status, and Block/Unblock buttons. The table must show data as soon as the 'Users & Controls' tab is active, with a loading skeleton while fetching and an empty-state message if no users are registered yet.",
+      "reqIds": [
+        "REQ-79"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-search-filter-input-bar-above-the-users-table-in-the-userscontrolspanel-component-frontend-src-components-admin-userscontrolspanel-tsx-labeled-search-by-unique-id-as-the-admin-types-into-this-field-the-displayed-user-rows-must-be-filtered-client-side-to-only-show-entries-whose-unique-code-contains-the-entered-string-case-insensitive-clearing-the-input-restores-the-full-unfiltered-list",
+      "title": "Add a search/filter input bar above the users table in the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) labeled 'Search by Unique ID'. As the admin types into this field, the displayed user rows must be filtered client-side to only show entries whose Unique Code contains the entered string (case-insensitive). Clearing the input restores the full unfiltered list.",
+      "reqIds": [
+        "REQ-80"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -442,6 +679,142 @@
       "summary": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs query functions have correct function signatures, return types, and stable variable access. Ensure each function returns an Array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields) without trapping or rejecting. Fix any issues found so all three query functions execute successfully.",
       "reqIds": [
         "REQ-41"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Fix 'No contents available' issue: audit Motoko stable variables initialization and data persistence, verify getAllPoetry/getAllDua/getAllSongs return stored entries correctly, and fix frontend rendering logic distinguishing empty vs error states.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Audit the backend Motoko actor in backend/main.mo and verify that all stable variables (for poetry, dua, and songs) are correctly declared with the `stable` keyword, properly initialized, and that data written via createPoetry, createDua, and createSong is actually persisted to those stable stores. Fix any missing `stable` keyword, incorrect variable shadowing, or re-initialization logic that would cause stored entries to be lost or invisible to query functions.",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Verify and fix the getAllPoetry, getAllDua, and getAllSongs query functions in backend/main.mo so each correctly iterates over the stable storage variable and returns all stored entries as an array. Ensure the return type annotation matches the actual record shape (id, title, content, category, likeCount, and media blob/reference fields) and that no trap or rejection occurs during iteration or field access.",
+      "reqIds": [
+        "REQ-46"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Rewrite backend/main.mo from scratch with a minimal, clean Motoko actor. Declare three stable variables using TrieMap or a simple Array-backed approach: one each for poetry, dua, and songs. Each poetry entry must have fields: id (Nat), title (Text), content (Text), category (Text), likeCount (Nat), imageData (Blob), imageMimeType (Text). Each dua entry must have fields: id (Nat), title (Text), content (Text), category (Text), likeCount (Nat), audioData (Blob), audioMimeType (Text). Each song entry must have fields: id (Nat), title (Text), artist (Text), category (Text), likeCount (Nat), audioData (Blob), audioMimeType (Text). Expose public query functions getAllPoetry, getAllDua, getAllSongs that return arrays of the respective record types. Expose public update functions createPoetry, createDua, createSong with no authorization checks — any caller may invoke them. Expose deletePoetry, deleteDua, deleteSong by id. Expose incrementPoetryLike, incrementDuaLike, incrementSongLike by id. Use simple Nat counters for auto-incrementing IDs. Ensure all stable variables are declared with the `stable` keyword and are never re-initialized on upgrade.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-33",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the createPoetry, createDua, and createSong update functions. These functions must accept calls from any caller (including anonymous) without throwing or returning an 'Unauthorized' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these three functions.",
+      "reqIds": [
+        "REQ-53"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Fix admin panel song upload to open device file manager/local storage for MP3 selection instead of voice recorder. Input must accept audio files from device music library.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Fix admin panel delete function: ensure delete removes post from backend database, UI refreshes automatically after deletion, and add a 'Confirm Deletion' popup to prevent accidental deletes.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-38",
+      "summary": "Audit the backend delete functions (deletePoetry, deleteDua, deleteSong) in backend/main.mo to ensure they correctly remove entries from their respective stable storage variables by ID and return a success/failure result. Verify that after a delete call the entry is no longer returned by getAllPoetry, getAllDua, or getAllSongs respectively.",
+      "reqIds": [
+        "REQ-56"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-39",
+      "summary": "Fix audio player: music shows as playing but no sound comes out. Ensure correct audio stream initialization, unmute by default, volume synced to 100%, MP3/AAC format support, and proper audio focus handling.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-40",
+      "summary": "Fix 'Only admins can delete' error on delete: backend delete functions should not enforce admin/identity checks — any caller (including anonymous) must be able to delete content since the admin PIN gate is the sole auth.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-41",
+      "summary": "In backend/main.mo, remove all authorization/identity checks from the deletePoetry, deleteDua, and deleteSong functions. These functions must accept calls from any caller (including anonymous) without throwing or returning an 'Unauthorized: Only admins can delete' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these three delete functions.",
+      "reqIds": [
+        "REQ-57"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-42",
+      "summary": "Deep fix audio engine: force HTMLAudioElement volume to 1.0, remove all leftover volume=0 variables, add buffering listener with 'Audio data not found' notification if buffer is empty, enable Wake Lock API to prevent processor sleep silencing audio, and ensure audio output targets media/music stream with no software mutes.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-43",
+      "summary": "Fix silent audio via permissions and audio focus: request system-level audio/media permissions (Android 13+ 'Allow Music and Audio', older 'Read External Storage'), request OS Audio Focus, show permission guard message if denied, route audio to Media/Music stream (not System/Ringer), and hard-code initial playback volume to 1.0 immediately after permission granted.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-44",
+      "summary": "Mandatory login page with 'Enter Your Name' input and 'Connect with Server' button. Shows two server options ('V.99.kashmir.2HZ.World' and 'Developer.99Hz/ikhlas.Java') after name entry. User must select a server to access the Home Page — no bypass allowed.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-45",
+      "summary": "On login, generate a Unique Code for each user and capture their Device ID (HWID). Store both in the backend database linked to their name. On the Home Page, display the Unique Code at top center (copyable but not editable) and their Name directly below it.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-46",
+      "summary": "Add a global 'Maintenance Mode' toggle in the Admin Panel. When ON, all users are redirected to a maintenance screen ('App is currently under maintenance for a better experience. We will be back online shortly – Developer Ikhlas.') and cannot access any app content until the admin turns it OFF.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-47",
+      "summary": "In the Admin Panel, add a 'Block' button next to each user's Unique ID. Blocking a user must instantly log them out in real-time. Even after restart or reinstall, the app must recognize their Device ID (HWID) and keep them on a permanent Ban Screen.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-48",
+      "summary": "In backend/main.mo, add the following new stable data structures and functions: (1) A stable variable to store user records with fields: uniqueCode (Text), deviceId (Text), name (Text), server (Text), isBlocked (Bool). (2) A stable variable for a single maintenanceMode flag (Bool), defaulting to false. (3) A public update function registerUser(name: Text, server: Text, deviceId: Text) that checks if a record with the given deviceId already exists — if yes, return the existing uniqueCode; if no, generate a new unique code (e.g. a short alphanumeric string derived from a Nat counter prefixed with 'DM-'), create a new user record with isBlocked=false, store it, and return the new uniqueCode. (4) A public query function getUserByDeviceId(deviceId: Text) returning an optional user record so the frontend can check block status and retrieve uniqueCode on app start. (5) A public query function getMaintenanceMode() returning Bool. (6) A public update function setMaintenanceMode(enabled: Bool) with no authorization check. (7) A public update function blockUser(uniqueCode: Text) that sets isBlocked=true for the matching user record. (8) A public update function unblockUser(uniqueCode: Text) that sets isBlocked=false. (9) A public query function getAllUsers() returning an array of all user records (uniqueCode, deviceId, name, server, isBlocked) for the Admin Panel user list.",
+      "reqIds": [
+        "REQ-71"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-49",
+      "summary": "Fix admin panel Users & Controls tab: user list table not showing registered/logged-in users, and missing search by Unique ID bar. Ensure getAllUsers() data renders in the table and add a search/filter input for Unique ID.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-52",
+      "summary": "Verify the backend getAllUsers() query function in backend/main.mo correctly iterates over the stable users variable and returns all stored user records as an array. Ensure the return type matches the frontend's expected shape (uniqueCode: Text, deviceId: Text, name: Text, server: Text, isBlocked: Bool) and that no trap or rejection occurs. If any issue is found, fix it so the function reliably returns all registered users.",
+      "reqIds": [
+        "REQ-81"
       ],
       "status": "pending"
     }

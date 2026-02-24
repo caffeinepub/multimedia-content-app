@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-in-frontend-src-hooks-usequeries-ts-ensure-each-hook-calls-the-exact-backend-actor-method-name-as-defined-in-the-motoko-actor-uses-a-stable-query-key-and-correctly-transforms-the-backend-candid-response-by-mapping-motoko-record-field-names-to-the-matching-typescript-type-field-names-add-try-catch-error-handling-so-a-failed-fetch-returns-a-user-friendly-error-state-instead-of-crashing-the-ui",
-      "featureTitle": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the exact backend actor method name as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names. Add try/catch error handling so a failed fetch returns a user-friendly error state instead of crashing the UI.",
+      "featureId": "feature-fix-the-userscontrolspanel-component-frontend-src-components-admin-userscontrolspanel-tsx-so-that-the-user-list-table-correctly-fetches-and-renders-all-registered-users-by-properly-calling-the-usegetallusers-hook-ensure-the-table-displays-each-user-s-name-server-unique-code-device-id-truncated-isblocked-status-and-block-unblock-buttons-the-table-must-show-data-as-soon-as-the-users-controls-tab-is-active-with-a-loading-skeleton-while-fetching-and-an-empty-state-message-if-no-users-are-registered-yet",
+      "featureTitle": "Fix the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) so that the user list table correctly fetches and renders all registered users by properly calling the useGetAllUsers hook. Ensure the table displays each user's Name, Server, Unique Code, Device ID (truncated), isBlocked status, and Block/Unblock buttons. The table must show data as soon as the 'Users & Controls' tab is active, with a loading skeleton while fetching and an empty-state message if no users are registered yet.",
       "files": [
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/components/admin/UsersControlsPanel.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,15 +17,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-42"
+        "REQ-79"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-verify-and-fix-poetrypage-duapage-and-songspage-components-so-their-loading-error-and-empty-states-are-triggered-correctly-based-on-the-actual-data-shapes-returned-by-the-fixed-hooks-remove-any-field-name-mismatches-or-incorrect-type-assumptions-that-cause-a-valid-response-to-be-rendered-as-an-error-state-ensure-content-renders-when-the-backend-returns-valid-data",
-      "featureTitle": "Verify and fix PoetryPage, DuaPage, and SongsPage components so their loading, error, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any field-name mismatches or incorrect type assumptions that cause a valid response to be rendered as an error state. Ensure content renders when the backend returns valid data.",
+      "featureId": "feature-add-a-search-filter-input-bar-above-the-users-table-in-the-userscontrolspanel-component-frontend-src-components-admin-userscontrolspanel-tsx-labeled-search-by-unique-id-as-the-admin-types-into-this-field-the-displayed-user-rows-must-be-filtered-client-side-to-only-show-entries-whose-unique-code-contains-the-entered-string-case-insensitive-clearing-the-input-restores-the-full-unfiltered-list",
+      "featureTitle": "Add a search/filter input bar above the users table in the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) labeled 'Search by Unique ID'. As the admin types into this field, the displayed user rows must be filtered client-side to only show entries whose Unique Code contains the entered string (case-insensitive). Clearing the input restores the full unfiltered list.",
       "files": [
-        "frontend/src/pages/DuaPage.tsx"
+        "frontend/src/components/admin/UsersControlsPanel.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -37,27 +37,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-43"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-fix-the-mixpage-component-to-correctly-aggregate-data-from-the-usegetallpoetry-usegetalldua-and-usegetallsongs-hooks-after-the-hook-fixes-in-req-42-ensure-the-combined-trending-feed-renders-content-from-all-three-categories-when-any-category-has-available-posts-and-shows-appropriate-loading-error-states",
-      "featureTitle": "Fix the MixPage component to correctly aggregate data from the useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks after the hook fixes in REQ-42. Ensure the combined trending feed renders content from all three categories when any category has available posts, and shows appropriate loading/error states.",
-      "files": [
-        "frontend/src/pages/MixPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-44"
+        "REQ-80"
       ],
       "confidence": "high"
     }

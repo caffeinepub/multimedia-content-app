@@ -1,16 +1,80 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { Link, useRouterState, useNavigate } from '@tanstack/react-router';
 import { Music, BookHeart, Sparkles, LayoutGrid } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
 import HamburgerMenu from './HamburgerMenu';
+import BanScreen from './BanScreen';
+import MaintenanceScreen from './MaintenanceScreen';
+import { useGetUserByDeviceId, useGetMaintenanceMode } from '../hooks/useQueries';
+
+function isLoggedIn(): boolean {
+  const name = localStorage.getItem('dmUser_name');
+  const server = localStorage.getItem('dmUser_server');
+  return !!(name && name.trim() && server && server.trim());
+}
+
+function getDeviceId(): string {
+  return localStorage.getItem('dmUser_deviceId') ?? '';
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
   const isActive = (path: string) => currentPath === path;
+  const isLoginPage = currentPath === '/login';
+
+  const deviceId = getDeviceId();
+
+  // Check user block status and maintenance mode on every render
+  // Only poll when not on login page and deviceId is available
+  const { data: userRecord, isLoading: userLoading } = useGetUserByDeviceId(
+    !isLoginPage ? deviceId : ''
+  );
+  const { data: maintenanceMode, isLoading: maintenanceLoading } = useGetMaintenanceMode();
+
+  useEffect(() => {
+    if (!isLoginPage && !isLoggedIn()) {
+      navigate({ to: '/login' });
+    }
+  }, [currentPath, isLoginPage, navigate]);
+
+  // If not logged in and not on login page, render nothing while redirect happens
+  if (!isLoginPage && !isLoggedIn()) {
+    return null;
+  }
+
+  // On the login page, render children without the full layout chrome
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  // Show loading indicator while checking status
+  const isChecking = userLoading || maintenanceLoading;
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is blocked, show ban screen (takes priority over maintenance)
+  if (userRecord && userRecord.isBlocked) {
+    return <BanScreen />;
+  }
+
+  // If maintenance mode is on, show maintenance screen
+  if (maintenanceMode === true) {
+    return <MaintenanceScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">

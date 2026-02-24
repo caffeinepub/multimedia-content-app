@@ -1,96 +1,79 @@
 {
   "kind": "build_request",
-  "title": "Fix 'Failed to load' error across Poetry, Dua, and Songs sections",
+  "title": "Fix Admin Panel Users Table and Add Unique ID Search Bar",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-41",
-      "text": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs query functions have correct function signatures, return types, and stable variable access. Ensure each function returns an Array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields) without trapping or rejecting. Fix any issues found so all three query functions execute successfully.",
+      "id": "REQ-79",
+      "text": "Fix the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) so that the user list table correctly fetches and renders all registered users by properly calling the useGetAllUsers hook. Ensure the table displays each user's Name, Server, Unique Code, Device ID (truncated), isBlocked status, and Block/Unblock buttons. The table must show data as soon as the 'Users & Controls' tab is active, with a loading skeleton while fetching and an empty-state message if no users are registered yet.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "not showing successfull login users"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Opening the 'Users & Controls' tab in the admin panel triggers the useGetAllUsers hook fetch",
+        "All registered users appear in the table with Name, Server, Unique Code, Device ID (truncated), and Block/Unblock button",
+        "A loading skeleton is shown while the fetch is in progress",
+        "An 'No users registered yet' empty-state message is shown when the array is empty (length === 0)",
+        "The table data updates automatically after a Block or Unblock action invalidates the query cache"
+      ]
+    },
+    {
+      "id": "REQ-80",
+      "text": "Add a search/filter input bar above the users table in the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) labeled 'Search by Unique ID'. As the admin types into this field, the displayed user rows must be filtered client-side to only show entries whose Unique Code contains the entered string (case-insensitive). Clearing the input restores the full unfiltered list.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "not showing search unique id bar"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A text input field labeled 'Search by Unique ID' appears above the users table",
+        "Typing any string filters the table rows to only those whose Unique Code contains the input value (case-insensitive)",
+        "Clearing the search input restores all rows",
+        "The search filter works purely client-side with no additional backend calls",
+        "The search bar is visible and functional on both mobile and desktop layouts"
+      ]
+    },
+    {
+      "id": "REQ-81",
+      "text": "Verify the backend getAllUsers() query function in backend/main.mo correctly iterates over the stable users variable and returns all stored user records as an array. Ensure the return type matches the frontend's expected shape (uniqueCode: Text, deviceId: Text, name: Text, server: Text, isBlocked: Bool) and that no trap or rejection occurs. If any issue is found, fix it so the function reliably returns all registered users.",
       "target": "backend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Again show failed to load"
+          "not showing successfull login users"
         ]
       },
       "acceptanceCriteria": [
-        "getAllPoetry query can be invoked and returns an array without trapping",
-        "getAllDua query can be invoked and returns an array without trapping",
-        "getAllSongs query can be invoked and returns an array without trapping",
-        "All returned records include the expected fields: id, title, content, category, likeCount, and any media blob fields"
-      ]
-    },
-    {
-      "id": "REQ-42",
-      "text": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the exact backend actor method name as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names. Add try/catch error handling so a failed fetch returns a user-friendly error state instead of crashing the UI.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Again show failed to load"
-        ]
-      },
-      "acceptanceCriteria": [
-        "useGetAllPoetry calls the correct Motoko method name and maps Candid fields to TypeScript types",
-        "useGetAllDua calls the correct Motoko method name and maps Candid fields to TypeScript types",
-        "useGetAllSongs calls the correct Motoko method name and maps Candid fields to TypeScript types",
-        "A network or canister error sets isError=true and does not throw an unhandled exception",
-        "Each hook uses a stable, unique query key"
-      ]
-    },
-    {
-      "id": "REQ-43",
-      "text": "Verify and fix PoetryPage, DuaPage, and SongsPage components so their loading, error, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any field-name mismatches or incorrect type assumptions that cause a valid response to be rendered as an error state. Ensure content renders when the backend returns valid data.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Again show failed to load"
-        ]
-      },
-      "acceptanceCriteria": [
-        "PoetryPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
-        "DuaPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
-        "SongsPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
-        "No valid backend response is incorrectly treated as an error due to field-name mismatches"
-      ]
-    },
-    {
-      "id": "REQ-44",
-      "text": "Fix the MixPage component to correctly aggregate data from the useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks after the hook fixes in REQ-42. Ensure the combined trending feed renders content from all three categories when any category has available posts, and shows appropriate loading/error states.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Again show failed to load"
-        ]
-      },
-      "acceptanceCriteria": [
-        "MixPage shows a loading state while any of the three data sources are loading",
-        "MixPage renders a unified feed of posts sorted by like count when data is available",
-        "MixPage shows an error state only when all three data sources fail"
+        "Calling getAllUsers() from the frontend returns an array of all user records registered via registerUser()",
+        "Each returned record contains uniqueCode, deviceId, name, server, and isBlocked fields",
+        "The function does not trap or reject on any valid state",
+        "A user registered via registerUser() appears in the next getAllUsers() call"
       ]
     }
   ],
   "constraints": [
-    "Do not change the PIN value for the admin panel (09186114)",
-    "Do not modify files listed under frontend.immutablePaths",
-    "Keep all Motoko logic in backend/main.mo (single-actor architecture)"
+    "Do not modify any files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "Do not remove or alter the existing History and Downloads sections of the Hamburger Menu",
+    "The PIN for admin access remains '09186114' and must not be changed"
   ],
   "nonGoals": [
-    "Adding new content categories or post types",
-    "Changing the app visual design or branding",
-    "Modifying the hamburger menu, audio filters, or IndexedDB features",
-    "Altering the admin upload forms or content management interface"
+    "Changing the login flow or user registration logic",
+    "Modifying the maintenance mode toggle functionality",
+    "Altering the content upload or delete forms",
+    "Adding new backend data fields beyond what is already defined for user records"
   ],
   "imageRequirements": {
     "required": [],

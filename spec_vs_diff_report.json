@@ -1,34 +1,24 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T13:44:34.037Z",
-  "summary": "The diff addresses all four requirements (REQ-41 through REQ-44). The backend main.mo is audited and updated, the useQueries.ts hooks are fixed with correct method names and error handling, DuaPage/MixPage components are updated, and loading/error/empty states are implemented. However, the Song type in backend/main.mo lacks a 'content' and 'likeCount' field (uses 'artist' instead of 'content', and has no 'likes' field), which may cause field-name mismatches. The hooks do not explicitly map/transform Candid field names to TypeScript type field names.",
+  "generatedAt": "2026-02-24T18:41:03.419Z",
+  "summary": "The diff implements REQ-79 and REQ-80 in UsersControlsPanel.tsx with proper useGetAllUsers hook usage, loading skeleton, empty-state message, search bar, and block/unblock with cache invalidation. REQ-81 (backend main.mo fix) is not evidenced in the diff.",
   "missing_requirements": [
     {
-      "id": "REQ-41",
-      "requirement": "All returned records include the expected fields: id, title, content, category, likeCount, and any media blob fields",
-      "reason": "The Song type in backend/main.mo uses 'artist' instead of 'content', has no 'category' field, and has no 'likes'/'likeCount' field. This means getAllSongs does not return records with all expected fields (content, category, likeCount).",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-42",
-      "requirement": "correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names",
-      "reason": "The hooks in useQueries.ts return raw actor results without explicit field mapping or transformation. If Motoko field names differ from TypeScript type field names, no mapping is performed.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts"
-      ]
+      "id": "REQ-81",
+      "requirement": "Verify and fix the backend getAllUsers() query function in backend/main.mo to correctly iterate over the stable users variable and return all stored user records with the correct shape (uniqueCode, deviceId, name, server, isBlocked), without trapping or rejecting.",
+      "reason": "No changes to backend/main.mo are present in the diff. The diff only modifies frontend files. There is no evidence that the backend function was verified or fixed.",
+      "evidence": []
     }
   ],
   "hallucinated_features": [],
-  "confidence": 0.72,
+  "confidence": 0.88,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/components/admin/ContentManagement.tsx",
+    "frontend/src/components/admin/UsersControlsPanel.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/DuaPage.tsx",
-    "frontend/src/pages/MixPage.tsx",
     "project_state.json"
   ]
 }

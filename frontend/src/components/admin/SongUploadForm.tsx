@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExternalBlob } from '../../backend';
 
@@ -21,7 +21,7 @@ export default function SongUploadForm() {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('audio/')) {
-        toast.error('Please select an audio file');
+        toast.error('Please select an audio file (MP3, WAV, OGG, AAC, etc.)');
         return;
       }
       setAudioFile(file);
@@ -99,16 +99,28 @@ export default function SongUploadForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="song-audio">Audio File *</Label>
+            <Label htmlFor="song-audio">Audio File * (MP3, WAV, OGG, AAC, FLAC)</Label>
+            {/* 
+              Using explicit MIME types to open the device file manager/music library
+              instead of the voice recorder on mobile devices.
+              No `capture` attribute is set intentionally.
+            */}
             <Input
               id="song-audio"
               type="file"
-              accept="audio/*"
+              accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/aac,audio/flac,audio/x-m4a,audio/mp4,audio/webm,audio/*"
               onChange={handleAudioChange}
               disabled={isUploading}
             />
-            {audioFile && (
-              <p className="text-sm text-muted-foreground">Selected: {audioFile.name}</p>
+            {audioFile ? (
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <Music className="h-3 w-3" />
+                Selected: {audioFile.name}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Browse your device's music library to select an audio file
+              </p>
             )}
           </div>
 

@@ -67,6 +67,13 @@ export const Song = IDL.Record({
   'category' : IDL.Text,
   'artist' : IDL.Text,
 });
+export const UserRecord = IDL.Record({
+  'isBlocked' : IDL.Bool,
+  'name' : IDL.Text,
+  'server' : IDL.Text,
+  'uniqueCode' : IDL.Text,
+  'deviceId' : IDL.Text,
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 
 export const idlService = IDL.Service({
@@ -98,6 +105,7 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'blockUser' : IDL.Func([IDL.Text], [], []),
   'createDua' : IDL.Func([CreateDuaInput], [IDL.Text], []),
   'createPoetry' : IDL.Func([CreatePoetryInput], [IDL.Text], []),
   'createSong' : IDL.Func([CreateSongInput], [IDL.Text], []),
@@ -107,13 +115,16 @@ export const idlService = IDL.Service({
   'getAllDua' : IDL.Func([], [IDL.Vec(Dua)], ['query']),
   'getAllPoetry' : IDL.Func([], [IDL.Vec(Poetry)], ['query']),
   'getAllSongs' : IDL.Func([], [IDL.Vec(Song)], ['query']),
+  'getAllUsers' : IDL.Func([], [IDL.Vec(UserRecord)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDuaById' : IDL.Func([IDL.Text], [IDL.Opt(Dua)], ['query']),
   'getDuaLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
+  'getMaintenanceMode' : IDL.Func([], [IDL.Bool], ['query']),
   'getPoetryById' : IDL.Func([IDL.Text], [IDL.Opt(Poetry)], ['query']),
   'getPoetryLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
   'getSongById' : IDL.Func([IDL.Text], [IDL.Opt(Song)], ['query']),
+  'getUserByDeviceId' : IDL.Func([IDL.Text], [IDL.Opt(UserRecord)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -122,7 +133,10 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'likeDua' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
   'likePoetry' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+  'registerUser' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setMaintenanceMode' : IDL.Func([IDL.Bool], [], []),
+  'unblockUser' : IDL.Func([IDL.Text], [], []),
 });
 
 export const idlInitArgs = [];
@@ -187,6 +201,13 @@ export const idlFactory = ({ IDL }) => {
     'category' : IDL.Text,
     'artist' : IDL.Text,
   });
+  const UserRecord = IDL.Record({
+    'isBlocked' : IDL.Bool,
+    'name' : IDL.Text,
+    'server' : IDL.Text,
+    'uniqueCode' : IDL.Text,
+    'deviceId' : IDL.Text,
+  });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   
   return IDL.Service({
@@ -218,6 +239,7 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'blockUser' : IDL.Func([IDL.Text], [], []),
     'createDua' : IDL.Func([CreateDuaInput], [IDL.Text], []),
     'createPoetry' : IDL.Func([CreatePoetryInput], [IDL.Text], []),
     'createSong' : IDL.Func([CreateSongInput], [IDL.Text], []),
@@ -227,13 +249,20 @@ export const idlFactory = ({ IDL }) => {
     'getAllDua' : IDL.Func([], [IDL.Vec(Dua)], ['query']),
     'getAllPoetry' : IDL.Func([], [IDL.Vec(Poetry)], ['query']),
     'getAllSongs' : IDL.Func([], [IDL.Vec(Song)], ['query']),
+    'getAllUsers' : IDL.Func([], [IDL.Vec(UserRecord)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDuaById' : IDL.Func([IDL.Text], [IDL.Opt(Dua)], ['query']),
     'getDuaLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
+    'getMaintenanceMode' : IDL.Func([], [IDL.Bool], ['query']),
     'getPoetryById' : IDL.Func([IDL.Text], [IDL.Opt(Poetry)], ['query']),
     'getPoetryLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
     'getSongById' : IDL.Func([IDL.Text], [IDL.Opt(Song)], ['query']),
+    'getUserByDeviceId' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(UserRecord)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -242,7 +271,10 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'likeDua' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
     'likePoetry' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+    'registerUser' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setMaintenanceMode' : IDL.Func([IDL.Bool], [], []),
+    'unblockUser' : IDL.Func([IDL.Text], [], []),
   });
 };
 

@@ -1,8 +1,10 @@
-import { useGetAllPoetry, useGetAllDuas, useGetAllSongs, useDeletePoetry, useDeleteDua, useDeleteSong } from '../../hooks/useQueries';
+import { useState } from 'react';
+import { useGetAllPoetry, useGetAllDua, useGetAllSongs, useDeletePoetry, useDeleteDua, useDeleteSong } from '../../hooks/useQueries';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Trash2, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -13,43 +15,75 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
+type ContentItem =
+  | { type: 'poetry'; data: { id: string; title: string; likes: { count: bigint } } }
+  | { type: 'dua'; data: { id: string; title: string; likes: { count: bigint } } }
+  | { type: 'song'; data: { id: string; title: string; artist: string } };
+
 export default function ContentManagement() {
-  const { data: poetry, isLoading: poetryLoading } = useGetAllPoetry();
-  const { data: duas, isLoading: duasLoading } = useGetAllDuas();
-  const { data: songs, isLoading: songsLoading } = useGetAllSongs();
+  const queryClient = useQueryClient();
+  const { data: poetry, isLoading: poetryLoading, refetch: refetchPoetry } = useGetAllPoetry();
+  const { data: duas, isLoading: duasLoading, refetch: refetchDuas } = useGetAllDua();
+  const { data: songs, isLoading: songsLoading, refetch: refetchSongs } = useGetAllSongs();
 
   const deletePoetry = useDeletePoetry();
   const deleteDua = useDeleteDua();
   const deleteSong = useDeleteSong();
 
-  const handleDeletePoetry = async (id: string, title: string) => {
-    try {
-      await deletePoetry.mutateAsync(id);
-      toast.success(`Poetry "${title}" deleted successfully`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete poetry');
-    }
+  // Track which specific item is pending deletion
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Track which item the confirmation dialog is open for
+  const [confirmItem, setConfirmItem] = useState<ContentItem | null>(null);
+
+  const handleRefreshAll = () => {
+    refetchPoetry();
+    refetchDuas();
+    refetchSongs();
   };
 
-  const handleDeleteDua = async (id: string, title: string) => {
-    try {
-      await deleteDua.mutateAsync(id);
-      toast.success(`Dua "${title}" deleted successfully`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete dua');
-    }
-  };
+  const handleConfirmDelete = async () => {
+    if (!confirmItem) return;
 
-  const handleDeleteSong = async (id: string, title: string) => {
+    const { type, data } = confirmItem;
+    setDeletingId(data.id);
+    setConfirmItem(null);
+
     try {
-      await deleteSong.mutateAsync(id);
-      toast.success(`Song "${title}" deleted successfully`);
+      let success = false;
+
+      if (type === 'poetry') {
+        success = await deletePoetry.mutateAsync(data.id);
+      } else if (type === 'dua') {
+        success = await deleteDua.mutateAsync(data.id);
+      } else if (type === 'song') {
+        success = await deleteSong.mutateAsync(data.id);
+      }
+
+      if (success) {
+        toast.success(`"${data.title}" deleted successfully`);
+        // Immediately invalidate and refetch to update the UI
+        if (type === 'poetry') {
+          await queryClient.invalidateQueries({ queryKey: ['poetry'] });
+          refetchPoetry();
+        } else if (type === 'dua') {
+          await queryClient.invalidateQueries({ queryKey: ['dua'] });
+          refetchDuas();
+        } else if (type === 'song') {
+          await queryClient.invalidateQueries({ queryKey: ['songs'] });
+          refetchSongs();
+        }
+      } else {
+        toast.error(`Could not delete "${data.title}". It may have already been removed.`);
+      }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete song');
+      const msg: string = error?.message || String(error);
+      toast.error(msg || 'Failed to delete. Please try again.');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -65,112 +99,105 @@ export default function ContentManagement() {
     );
   }
 
-  const allContent = [
+  const allContent: ContentItem[] = [
     ...(poetry || []).map((p) => ({ type: 'poetry' as const, data: p })),
     ...(duas || []).map((d) => ({ type: 'dua' as const, data: d })),
     ...(songs || []).map((s) => ({ type: 'song' as const, data: s })),
   ];
 
-  if (allContent.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-16 text-center">
-          <p className="text-muted-foreground">No content available to manage</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Content Management</CardTitle>
-          <CardDescription>View and delete existing content</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Content Management</CardTitle>
+              <CardDescription>View and delete existing content ({allContent.length} items)</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleRefreshAll} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {allContent.map((item, index) => {
-            const isDeleting =
-              (item.type === 'poetry' && deletePoetry.isPending) ||
-              (item.type === 'dua' && deleteDua.isPending) ||
-              (item.type === 'song' && deleteSong.isPending);
+          {allContent.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-muted-foreground">No content available to manage</p>
+            </div>
+          ) : (
+            allContent.map((item, index) => {
+              const isThisItemDeleting = deletingId === item.data.id;
 
-            return (
-              <div
-                key={`${item.type}-${item.data.id}-${index}`}
-                className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-              >
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium truncate urdu-text">{item.data.title}</h3>
-                    <Badge variant="outline" className="shrink-0 capitalize">
-                      {item.type}
-                    </Badge>
+              return (
+                <div
+                  key={`${item.type}-${item.data.id}-${index}`}
+                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                >
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium truncate urdu-text">{item.data.title}</h3>
+                      <Badge variant="outline" className="shrink-0 capitalize">
+                        {item.type}
+                      </Badge>
+                    </div>
+                    {(item.type === 'poetry' || item.type === 'dua') && (
+                      <p className="text-sm text-muted-foreground">
+                        {Number(item.data.likes.count).toLocaleString()} likes
+                      </p>
+                    )}
+                    {item.type === 'song' && (
+                      <p className="text-sm text-muted-foreground urdu-text">
+                        {item.data.artist}
+                      </p>
+                    )}
                   </div>
-                  {item.type === 'poetry' && (
-                    <p className="text-sm text-muted-foreground">
-                      {Number(item.data.likes.count).toLocaleString()} likes
-                    </p>
-                  )}
-                  {item.type === 'dua' && (
-                    <p className="text-sm text-muted-foreground">
-                      {Number(item.data.likes.count).toLocaleString()} likes
-                    </p>
-                  )}
-                  {item.type === 'song' && (
-                    <p className="text-sm text-muted-foreground urdu-text">
-                      {item.data.artist}
-                    </p>
-                  )}
-                </div>
 
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="gap-2 shrink-0"
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will permanently delete "{item.data.title}". This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => {
-                          if (item.type === 'poetry') {
-                            handleDeletePoetry(item.data.id, item.data.title);
-                          } else if (item.type === 'dua') {
-                            handleDeleteDua(item.data.id, item.data.title);
-                          } else if (item.type === 'song') {
-                            handleDeleteSong(item.data.id, item.data.title);
-                          }
-                        }}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            );
-          })}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2 shrink-0 ml-3"
+                    disabled={isThisItemDeleting || deletingId !== null}
+                    onClick={() => setConfirmItem(item)}
+                  >
+                    {isThisItemDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    {isThisItemDeleting ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </div>
+              );
+            })
+          )}
         </CardContent>
       </Card>
+
+      {/* Single shared confirmation dialog */}
+      <AlertDialog open={!!confirmItem} onOpenChange={(open) => { if (!open) setConfirmItem(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete{' '}
+              <span className="font-semibold">&quot;{confirmItem?.data.title}&quot;</span>?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmItem(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

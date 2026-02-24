@@ -1,5 +1,5 @@
-import { useEffect, useCallback } from 'react';
-import { X, Play, Pause, Music } from 'lucide-react';
+import { useEffect, useCallback, useRef } from 'react';
+import { X, Play, Pause, Music, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Song } from '../backend';
@@ -19,9 +19,10 @@ function formatTime(time: number): string {
 }
 
 export default function NowPlayingModal({ song, onClose }: NowPlayingModalProps) {
-  const { currentTrack, isPlaying, currentTime, duration, togglePlayPause, seek, play } =
+  const { currentTrack, isPlaying, currentTime, duration, togglePlayPause, seek, play, isPermissionDenied } =
     useAudioPlayback();
   const { addHistoryEntry } = useHistory();
+  const bufferCheckRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!song) return;
@@ -35,8 +36,8 @@ export default function NowPlayingModal({ song, onClose }: NowPlayingModalProps)
       category: 'song',
     });
 
-    // Auto-play when modal opens
-    if (song.audio) {
+    // Auto-play when modal opens (only if permissions are not denied)
+    if (song.audio && !isPermissionDenied) {
       const audioUrl = song.audio.getDirectURL();
       const track = {
         id: song.id,
@@ -53,6 +54,10 @@ export default function NowPlayingModal({ song, onClose }: NowPlayingModalProps)
 
     return () => {
       document.body.style.overflow = '';
+      if (bufferCheckRef.current !== null) {
+        clearTimeout(bufferCheckRef.current);
+        bufferCheckRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [song]);
@@ -74,9 +79,9 @@ export default function NowPlayingModal({ song, onClose }: NowPlayingModalProps)
   const isCurrentSongPlaying = currentTrack?.id === song.id && isPlaying;
   const displayTime = currentTrack?.id === song.id ? currentTime : 0;
   const displayDuration = currentTrack?.id === song.id ? duration : 0;
-  const progress = displayDuration > 0 ? (displayTime / displayDuration) * 100 : 0;
 
   const handlePlayPause = () => {
+    if (isPermissionDenied) return;
     if (song.audio) {
       const audioUrl = song.audio.getDirectURL();
       togglePlayPause({
@@ -119,55 +124,57 @@ export default function NowPlayingModal({ song, onClose }: NowPlayingModalProps)
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 gap-8">
         {/* Album Art */}
-        <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-2xl overflow-hidden shadow-2xl border border-border/30 bg-gradient-to-br from-primary/30 via-accent/20 to-secondary/30 flex items-center justify-center">
+        <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-2xl overflow-hidden shadow-2xl border border-border/30 bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
           <div
-            className={`absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 ${isCurrentSongPlaying ? 'animate-pulse' : ''}`}
-          />
-          <Music className="h-24 w-24 text-primary/60 relative z-10" />
-          {/* Vinyl record effect */}
-          <div
-            className={`absolute inset-0 rounded-full border-4 border-primary/10 m-8 ${isCurrentSongPlaying ? 'animate-spin' : ''}`}
-            style={{ animationDuration: '3s' }}
-          />
+            className={`flex items-center justify-center w-full h-full ${isCurrentSongPlaying ? 'animate-spin' : ''}`}
+            style={{ animationDuration: '8s' }}
+          >
+            <Music className="h-24 w-24 text-primary/60" />
+          </div>
+          {/* Vinyl center dot */}
+          <div className="absolute w-8 h-8 rounded-full bg-background border-2 border-border/40 shadow-inner" />
         </div>
 
         {/* Song Info */}
-        <div className="text-center space-y-2 w-full max-w-sm">
-          <h2 className="text-2xl font-bold urdu-text leading-tight text-foreground line-clamp-2">
-            {song.title}
-          </h2>
+        <div className="text-center space-y-1 w-full max-w-xs">
+          <h2 className="text-2xl font-bold truncate urdu-text">{song.title}</h2>
           <p className="text-muted-foreground urdu-text">{song.artist}</p>
         </div>
 
+        {/* Permission Denied Guard */}
+        {isPermissionDenied && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm max-w-xs w-full">
+            <ShieldAlert className="h-5 w-5 shrink-0" />
+            <span>Please allow audio permissions in settings to hear the music.</span>
+          </div>
+        )}
+
         {/* Progress Bar */}
-        <div className="w-full max-w-sm space-y-2">
-          <Slider
-            value={[displayTime]}
-            max={displayDuration || 100}
-            step={0.1}
-            onValueChange={handleSeek}
-            className="cursor-pointer"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{formatTime(displayTime)}</span>
-            <span>{formatTime(displayDuration)}</span>
-          </div>
-          {/* Visual progress bar */}
-          <div className="h-1 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
+        {!isPermissionDenied && (
+          <div className="w-full max-w-xs space-y-2">
+            <Slider
+              value={[displayTime]}
+              max={displayDuration || 100}
+              step={0.1}
+              onValueChange={handleSeek}
+              className="cursor-pointer"
             />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{formatTime(displayTime)}</span>
+              <span>{formatTime(displayDuration)}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Controls */}
         <div className="flex items-center gap-6">
           <Button
             onClick={handlePlayPause}
             size="icon"
-            className="h-16 w-16 rounded-full shadow-lg text-primary-foreground"
+            variant="default"
+            className="h-16 w-16 rounded-full shadow-lg"
             aria-label={isCurrentSongPlaying ? 'Pause' : 'Play'}
+            disabled={!song.audio || isPermissionDenied}
           >
             {isCurrentSongPlaying ? (
               <Pause className="h-7 w-7" />
@@ -176,10 +183,14 @@ export default function NowPlayingModal({ song, onClose }: NowPlayingModalProps)
             )}
           </Button>
         </div>
+
+        {!song.audio && (
+          <p className="text-sm text-muted-foreground">No audio available for this song.</p>
+        )}
       </div>
 
       {/* Bottom padding */}
-      <div className="h-12" />
+      <div className="h-8" />
     </div>
   );
 }

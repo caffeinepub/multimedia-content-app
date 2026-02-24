@@ -1,72 +1,55 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T13:44:34.040Z",
+  "generatedAt": "2026-02-24T18:41:03.424Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 3,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-41",
-        "summary": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs query functions have correct function signatures, return types, and stable variable access. Ensure each function returns an Array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields) without trapping or rejecting. Fix any issues found so all three query functions execute successfully.",
+        "id": "REQ-79",
+        "summary": "Fix the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) so that the user list table correctly fetches and renders all registered users by properly calling the useGetAllUsers hook. Ensure the table displays each user's Name, Server, Unique Code, Device ID (truncated), isBlocked status, and Block/Unblock buttons. The table must show data as soon as the 'Users & Controls' tab is active, with a loading skeleton while fetching and an empty-state message if no users are registered yet.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/UsersControlsPanel.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/UsersControlsPanel.tsx"
+        ]
+      },
+      {
+        "id": "REQ-80",
+        "summary": "Add a search/filter input bar above the users table in the UsersControlsPanel component (frontend/src/components/admin/UsersControlsPanel.tsx) labeled 'Search by Unique ID'. As the admin types into this field, the displayed user rows must be filtered client-side to only show entries whose Unique Code contains the entered string (case-insensitive). Clearing the input restores the full unfiltered list.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/UsersControlsPanel.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/UsersControlsPanel.tsx"
+        ]
+      },
+      {
+        "id": "REQ-81",
+        "summary": "Verify the backend getAllUsers() query function in backend/main.mo correctly iterates over the stable users variable and returns all stored user records as an array. Ensure the return type matches the frontend's expected shape (uniqueCode: Text, deviceId: Text, name: Text, server: Text, isBlocked: Bool) and that no trap or rejection occurs. If any issue is found, fix it so the function reliably returns all registered users.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
-      },
-      {
-        "id": "REQ-42",
-        "summary": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the exact backend actor method name as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names. Add try/catch error handling so a failed fetch returns a user-friendly error state instead of crashing the UI.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts"
-        ]
-      },
-      {
-        "id": "REQ-43",
-        "summary": "Verify and fix PoetryPage, DuaPage, and SongsPage components so their loading, error, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any field-name mismatches or incorrect type assumptions that cause a valid response to be rendered as an error state. Ensure content renders when the backend returns valid data.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/PoetryPage.tsx",
-          "frontend/src/pages/DuaPage.tsx",
-          "frontend/src/pages/SongsPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/DuaPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-44",
-        "summary": "Fix the MixPage component to correctly aggregate data from the useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks after the hook fixes in REQ-42. Ensure the combined trending feed renders content from all three categories when any category has available posts, and shows appropriate loading/error states.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/MixPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/MixPage.tsx"
-        ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/components/admin/ContentManagement.tsx",
+    "frontend/src/components/admin/UsersControlsPanel.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/DuaPage.tsx",
-    "frontend/src/pages/MixPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

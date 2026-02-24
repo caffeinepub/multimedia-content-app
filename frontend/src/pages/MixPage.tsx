@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useGetAllPoetry, useGetAllDua, useGetAllSongs } from '../hooks/useQueries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useActor } from '../hooks/useActor';
@@ -5,7 +6,7 @@ import PoetryPost from '../components/PoetryPost';
 import DuaPost from '../components/DuaPost';
 import SongPost from '../components/SongPost';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Copy, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
@@ -15,14 +16,112 @@ type ContentItem = {
   likes: number;
 };
 
+function UserIdentityCard() {
+  const uniqueCode = localStorage.getItem('dmUser_uniqueCode') || '';
+  const userName = localStorage.getItem('dmUser_name') || '';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!uniqueCode) return;
+    try {
+      await navigator.clipboard.writeText(uniqueCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const el = document.createElement('textarea');
+      el.value = uniqueCode;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  if (!uniqueCode && !userName) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-6 px-4">
+      {/* Unique Code */}
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+          Your Unique Code
+        </p>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <input
+              type="text"
+              readOnly
+              value={uniqueCode}
+              className="text-center font-mono text-lg font-bold tracking-widest bg-primary/10 border border-primary/30 rounded-xl px-4 py-2 text-primary cursor-default select-all focus:outline-none focus:ring-2 focus:ring-primary/40 min-w-[140px]"
+              onFocus={(e) => e.target.select()}
+            />
+          </div>
+          <button
+            onClick={handleCopy}
+            title="Copy code"
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all hover:scale-105 active:scale-95"
+          >
+            {copied ? (
+              <Check className="h-4 w-4 text-primary" />
+            ) : (
+              <Copy className="h-4 w-4 text-primary" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* User Name */}
+      {userName && (
+        <p className="text-base text-muted-foreground font-medium">
+          Welcome, <span className="text-foreground font-semibold">{userName}</span>
+        </p>
+      )}
+
+      {/* Divider */}
+      <div className="w-24 h-px bg-border/60 mt-1" />
+    </div>
+  );
+}
+
 export default function MixPage() {
   const { isFetching: actorFetching } = useActor();
-  const { data: poetry, isLoading: poetryLoading, error: poetryError, refetch: refetchPoetry } = useGetAllPoetry();
-  const { data: duas, isLoading: duasLoading, error: duasError, refetch: refetchDuas } = useGetAllDua();
-  const { data: songs, isLoading: songsLoading, error: songsError, refetch: refetchSongs } = useGetAllSongs();
+  const {
+    data: poetry,
+    isLoading: poetryLoading,
+    isFetching: poetryFetching,
+    isError: poetryError,
+    refetch: refetchPoetry,
+  } = useGetAllPoetry();
+  const {
+    data: duas,
+    isLoading: duasLoading,
+    isFetching: duasFetching,
+    isError: duasError,
+    refetch: refetchDuas,
+  } = useGetAllDua();
+  const {
+    data: songs,
+    isLoading: songsLoading,
+    isFetching: songsFetching,
+    isError: songsError,
+    refetch: refetchSongs,
+  } = useGetAllSongs();
   const queryClient = useQueryClient();
 
-  const isLoading = actorFetching || poetryLoading || duasLoading || songsLoading;
+  // Show loading while actor is initializing or any query is still in flight without data
+  const isLoading =
+    actorFetching ||
+    poetryLoading ||
+    duasLoading ||
+    songsLoading ||
+    (poetryFetching && poetry === undefined) ||
+    (duasFetching && duas === undefined) ||
+    (songsFetching && songs === undefined);
+
+  // Only show error state when ALL three queries have failed
   const allFailed = poetryError && duasError && songsError;
 
   const handleRetry = () => {
@@ -37,6 +136,7 @@ export default function MixPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
+        <UserIdentityCard />
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
             Trending Content
@@ -55,6 +155,7 @@ export default function MixPage() {
   if (allFailed) {
     return (
       <div className="space-y-4">
+        <UserIdentityCard />
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
@@ -92,17 +193,23 @@ export default function MixPage() {
 
   if (sortedContent.length === 0) {
     return (
-      <div className="text-center py-16 space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
-          Trending Content
-        </h1>
-        <p className="text-muted-foreground text-lg">No content available yet. Check back soon!</p>
+      <div className="space-y-6">
+        <UserIdentityCard />
+        <div className="text-center py-10 space-y-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
+            Trending Content
+          </h1>
+          <p className="text-muted-foreground text-lg">No content available yet. Check back soon!</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
+      {/* User Identity Card at top center */}
+      <UserIdentityCard />
+
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
           Trending Content

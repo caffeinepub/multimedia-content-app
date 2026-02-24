@@ -111,6 +111,20 @@ actor {
   var duaCounter : Nat = 0;
   var songCounter : Nat = 0;
 
+  // User management additions
+  public type UserRecord = {
+    uniqueCode : Text;
+    deviceId : Text;
+    name : Text;
+    server : Text;
+    isBlocked : Bool;
+  };
+
+  var userCounter : Nat = 0;
+  let usersMap = Map.empty<Text, UserRecord>();
+
+  var maintenanceMode : Bool = false;
+
   // Validation helpers
   func isEmpty(val : Text) : Bool {
     val.trim(#char ' ').size() == 0;
@@ -124,15 +138,14 @@ actor {
     true;
   };
 
-  // Generate random like count between 1000-2000
   func generateRandomLikes() : Nat {
     1000 + (Int.abs(Time.now()) % 1001);
   };
 
-  // Users only: Create Poetry
+  // Admin only: Create Poetry
   public shared ({ caller }) func createPoetry(input : CreatePoetryInput) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create poetry");
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create poetry");
     };
 
     if (isEmpty(input.title) or isEmpty(input.content)) {
@@ -163,10 +176,10 @@ actor {
     id;
   };
 
-  // Users only: Create Dua
+  // Admin only: Create Dua
   public shared ({ caller }) func createDua(input : CreateDuaInput) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create duas");
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create dua");
     };
 
     if (isEmpty(input.title) or isEmpty(input.content)) {
@@ -197,10 +210,10 @@ actor {
     id;
   };
 
-  // Users only: Create Song
+  // Admin only: Create Song
   public shared ({ caller }) func createSong(input : CreateSongInput) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create songs");
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create songs");
     };
 
     if (isEmpty(input.title) or isEmpty(input.artist)) {
@@ -225,7 +238,7 @@ actor {
     id;
   };
 
-  // Admin-only: Delete Poetry
+  // Admin only: Delete Poetry
   public shared ({ caller }) func deletePoetry(id : Text) : async Bool {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can delete poetry");
@@ -234,28 +247,28 @@ actor {
     switch (poetryMap.get(id)) {
       case (?_) {
         poetryMap.remove(id);
-        true;
+        not (poetryMap.containsKey(id));
       };
       case (null) { false };
     };
   };
 
-  // Admin-only: Delete Dua
+  // Admin only: Delete Dua
   public shared ({ caller }) func deleteDua(id : Text) : async Bool {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can delete duas");
+      Runtime.trap("Unauthorized: Only admins can delete dua");
     };
 
     switch (duaMap.get(id)) {
       case (?_) {
         duaMap.remove(id);
-        true;
+        not (duaMap.containsKey(id));
       };
       case (null) { false };
     };
   };
 
-  // Admin-only: Delete Song
+  // Admin only: Delete Song
   public shared ({ caller }) func deleteSong(id : Text) : async Bool {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can delete songs");
@@ -264,7 +277,7 @@ actor {
     switch (songMap.get(id)) {
       case (?_) {
         songMap.remove(id);
-        true;
+        not (songMap.containsKey(id));
       };
       case (null) { false };
     };
@@ -341,11 +354,12 @@ actor {
   // Users only: Like Dua
   public shared ({ caller }) func likeDua(id : Text, userId : Text) : async Bool {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can like duas");
+      Runtime.trap("Unauthorized: Only users can like dua");
     };
 
     // Verify that the userId matches the caller to prevent impersonation
     let callerText = caller.toText();
+
     if (callerText != userId) {
       Runtime.trap("Unauthorized: Cannot like on behalf of another user");
     };
@@ -390,5 +404,95 @@ actor {
       case (?dua) { ?dua.likes };
       case (null) { null };
     };
+  };
+
+  ///////////////////////////////////////////////////////
+  ///// New User Management & Maintenance Features //////
+  ///////////////////////////////////////////////////////
+
+  // Register User (or return existing code) - any caller, device-based
+  public shared ({ caller }) func registerUser(name : Text, server : Text, deviceId : Text) : async Text {
+    switch (usersMap.get(deviceId)) {
+      case (?existingUser) { existingUser.uniqueCode };
+      case (null) {
+        userCounter += 1;
+        let uniqueCode = "DM-" # userCounter.toText();
+        let newUser : UserRecord = {
+          uniqueCode;
+          deviceId;
+          name;
+          server;
+          isBlocked = false;
+        };
+        usersMap.add(deviceId, newUser);
+        uniqueCode;
+      };
+    };
+  };
+
+  // Get User by Device ID - any caller (needed on app start)
+  public query func getUserByDeviceId(deviceId : Text) : async ?UserRecord {
+    usersMap.get(deviceId);
+  };
+
+  // Get Maintenance Mode - any caller (public status check)
+  public query func getMaintenanceMode() : async Bool {
+    maintenanceMode;
+  };
+
+  // Admin only: Set Maintenance Mode
+  public shared ({ caller }) func setMaintenanceMode(enabled : Bool) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can set maintenance mode");
+    };
+    maintenanceMode := enabled;
+  };
+
+  // Admin only: Block User
+  public shared ({ caller }) func blockUser(uniqueCode : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can block users");
+    };
+
+    // usersMap is keyed by deviceId, so we need to find by uniqueCode
+    var found = false;
+    for ((deviceId, user) in usersMap.entries()) {
+      if (user.uniqueCode == uniqueCode) {
+        let updatedUser = { user with isBlocked = true };
+        usersMap.add(deviceId, updatedUser);
+        found := true;
+      };
+    };
+    if (not found) {
+      Runtime.trap("User not found");
+    };
+  };
+
+  // Admin only: Unblock User
+  public shared ({ caller }) func unblockUser(uniqueCode : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can unblock users");
+    };
+
+    // usersMap is keyed by deviceId, so we need to find by uniqueCode
+    var found = false;
+    for ((deviceId, user) in usersMap.entries()) {
+      if (user.uniqueCode == uniqueCode) {
+        let updatedUser = { user with isBlocked = false };
+        usersMap.add(deviceId, updatedUser);
+        found := true;
+      };
+    };
+    if (not found) {
+      Runtime.trap("User not found");
+    };
+  };
+
+  // Admin only: Get all users (Admin Panel)
+  public query ({ caller }) func getAllUsers() : async [UserRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view all users");
+    };
+    usersMap.values().toArray();
   };
 };

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 
 export default function PoetryPage() {
   const { isFetching: actorFetching } = useActor();
-  const { data: poetry, isLoading, isFetching, error, refetch } = useGetAllPoetry();
+  const { data: poetry, isLoading, isFetching, isError, error, refetch } = useGetAllPoetry();
   const queryClient = useQueryClient();
 
   const handleRetry = () => {
@@ -17,7 +17,8 @@ export default function PoetryPage() {
     refetch();
   };
 
-  const showLoading = actorFetching || isLoading || (isFetching && !poetry);
+  // Show loading while actor is initializing OR while the query is in flight
+  const showLoading = actorFetching || isLoading || (isFetching && poetry === undefined);
 
   if (showLoading) {
     return (
@@ -37,14 +38,14 @@ export default function PoetryPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="space-y-4">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            Failed to load poetry. Please try again later.
+            {error?.message || 'Failed to load poetry. Please try again later.'}
           </AlertDescription>
         </Alert>
         <div className="flex justify-center">

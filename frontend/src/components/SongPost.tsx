@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, ShieldAlert } from 'lucide-react';
 import { Song } from '../backend';
 import NowPlayingModal from './NowPlayingModal';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
@@ -13,13 +13,15 @@ interface SongPostProps {
 
 export default function SongPost({ song }: SongPostProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { togglePlayPause, isTrackPlaying } = useAudioPlayback();
+  const { togglePlayPause, isTrackPlaying, isPermissionDenied } = useAudioPlayback();
 
   const isCurrentlyPlaying = isTrackPlaying(song.id);
 
   const handleInlinePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!song.audio) return;
+    if (isPermissionDenied) return;
+    // Use getDirectURL() — volume is always 1.0 inside useAudioPlayback
     const audioUrl = song.audio.getDirectURL();
     togglePlayPause({
       id: song.id,
@@ -50,26 +52,35 @@ export default function SongPost({ song }: SongPostProps) {
 
         <CardContent>
           {song.audio && (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
-              <Button
-                onClick={handleInlinePlayPause}
-                size="icon"
-                variant="default"
-                className="h-10 w-10 rounded-full shrink-0"
-                aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}
-              >
-                {isCurrentlyPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4 ml-0.5" />
-                )}
-              </Button>
-              <div className="flex-1">
-                <p className="text-sm font-medium truncate urdu-text">{song.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {isCurrentlyPlaying ? 'Playing...' : 'Tap card to open full player'}
-                </p>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                <Button
+                  onClick={handleInlinePlayPause}
+                  size="icon"
+                  variant="default"
+                  className="h-10 w-10 rounded-full shrink-0"
+                  aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}
+                  disabled={isPermissionDenied}
+                >
+                  {isCurrentlyPlaying ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4 ml-0.5" />
+                  )}
+                </Button>
+                <div className="flex-1">
+                  <p className="text-sm font-medium truncate urdu-text">{song.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isCurrentlyPlaying ? 'Playing...' : 'Tap card to open full player'}
+                  </p>
+                </div>
               </div>
+              {isPermissionDenied && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+                  <ShieldAlert className="h-4 w-4 shrink-0" />
+                  <span>Please allow audio permissions in settings to hear the music.</span>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

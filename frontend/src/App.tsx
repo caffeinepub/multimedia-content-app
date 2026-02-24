@@ -6,6 +6,7 @@ import PoetryPage from './pages/PoetryPage';
 import DuaPage from './pages/DuaPage';
 import SongsPage from './pages/SongsPage';
 import AdminPage from './pages/AdminPage';
+import LoginPage from './pages/LoginPage';
 import { Toaster } from '@/components/ui/sonner';
 
 const rootRoute = createRootRoute({
@@ -14,6 +15,12 @@ const rootRoute = createRootRoute({
       <Outlet />
     </Layout>
   ),
+});
+
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: LoginPage,
 });
 
 const indexRoute = createRoute({
@@ -47,6 +54,7 @@ const adminRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
+  loginRoute,
   indexRoute,
   poetryRoute,
   duaRoute,
