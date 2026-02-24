@@ -1,89 +1,96 @@
 {
   "kind": "build_request",
-  "title": "Fix all content fetch hooks — Poetry, Dua, and Songs failing to load",
+  "title": "Fix 'Failed to load' error across Poetry, Dua, and Songs sections",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-38",
-      "text": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs (or their equivalent query functions) have correct function signatures, return types, and can be called without trapping or rejecting. Ensure each function returns an array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields).",
+      "id": "REQ-41",
+      "text": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs query functions have correct function signatures, return types, and stable variable access. Ensure each function returns an Array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields) without trapping or rejecting. Fix any issues found so all three query functions execute successfully.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "Showing failed to load content please try again later",
-          "auditing and correcting all three fetch hooks (useGetAllPoetry, useGetAllDua, useGetAllSongs) in useQueries.ts",
-          "Verify the backend Motoko query functions return the correct types"
+          "Again show failed to load"
         ]
       },
       "acceptanceCriteria": [
-        "getAllPoetry, getAllDua, and getAllSongs backend query functions return valid arrays without trapping",
-        "Each function's return type matches the data shape expected by the frontend",
-        "Functions are callable by anonymous principals without authorization errors",
-        "Empty arrays are returned gracefully when no content has been uploaded yet"
+        "getAllPoetry query can be invoked and returns an array without trapping",
+        "getAllDua query can be invoked and returns an array without trapping",
+        "getAllSongs query can be invoked and returns an array without trapping",
+        "All returned records include the expected fields: id, title, content, category, likeCount, and any media blob fields"
       ]
     },
     {
-      "id": "REQ-39",
-      "text": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the correct backend actor method name exactly as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend response (mapping Motoko record field names to frontend TypeScript type field names). Add graceful error handling so a failed fetch shows a user-friendly error state rather than crashing the UI.",
+      "id": "REQ-42",
+      "text": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the exact backend actor method name as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names. Add try/catch error handling so a failed fetch returns a user-friendly error state instead of crashing the UI.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "Showing failed to load content please try again later",
-          "auditing and correcting all three fetch hooks (useGetAllPoetry, useGetAllDua, useGetAllSongs) in useQueries.ts",
-          "Ensuring the frontend data transformation maps backend fields to frontend types correctly"
+          "Again show failed to load"
         ]
       },
       "acceptanceCriteria": [
-        "useGetAllPoetry calls the correct Motoko function name and returns Poetry array without error",
-        "useGetAllDua calls the correct Motoko function name and returns Dua array without error",
-        "useGetAllSongs calls the correct Motoko function name and returns Song array without error",
-        "All field names in the data transformation match the actual Motoko record fields (e.g., likeCount vs like_count, etc.)",
-        "When the backend returns an empty array, the UI shows an empty state, not an error",
-        "When the backend call genuinely fails, the UI shows a user-friendly error message with a retry option"
+        "useGetAllPoetry calls the correct Motoko method name and maps Candid fields to TypeScript types",
+        "useGetAllDua calls the correct Motoko method name and maps Candid fields to TypeScript types",
+        "useGetAllSongs calls the correct Motoko method name and maps Candid fields to TypeScript types",
+        "A network or canister error sets isError=true and does not throw an unhandled exception",
+        "Each hook uses a stable, unique query key"
       ]
     },
     {
-      "id": "REQ-40",
-      "text": "Verify and fix the PoetryPage, DuaPage, and SongsPage components to ensure their loading skeleton states, error states, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any code that incorrectly maps field names or makes incorrect type assumptions that could cause a valid response to be treated as an error.",
+      "id": "REQ-43",
+      "text": "Verify and fix PoetryPage, DuaPage, and SongsPage components so their loading, error, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any field-name mismatches or incorrect type assumptions that cause a valid response to be rendered as an error state. Ensure content renders when the backend returns valid data.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "Showing failed to load content please try again later",
-          "ensure the error boundary and loading skeleton states work correctly, and that the error alert is not triggered due to incorrect data shape mapping"
+          "Again show failed to load"
         ]
       },
       "acceptanceCriteria": [
-        "PoetryPage, DuaPage, and SongsPage display loading skeletons while data is being fetched",
-        "Content renders correctly once data is returned from the backend",
-        "Error state is only shown when the backend call actually fails, not due to a data shape mismatch",
-        "Empty state is shown when the backend returns a valid empty array",
-        "MixPage also renders all three content types correctly after the fetch fixes are applied"
+        "PoetryPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
+        "DuaPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
+        "SongsPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
+        "No valid backend response is incorrectly treated as an error due to field-name mismatches"
+      ]
+    },
+    {
+      "id": "REQ-44",
+      "text": "Fix the MixPage component to correctly aggregate data from the useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks after the hook fixes in REQ-42. Ensure the combined trending feed renders content from all three categories when any category has available posts, and shows appropriate loading/error states.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Again show failed to load"
+        ]
+      },
+      "acceptanceCriteria": [
+        "MixPage shows a loading state while any of the three data sources are loading",
+        "MixPage renders a unified feed of posts sorted by like count when data is available",
+        "MixPage shows an error state only when all three data sources fail"
       ]
     }
   ],
   "constraints": [
-    "Do not change the PIN authentication logic (PIN: 09186114) or admin route structure",
-    "Do not modify files listed in frontend.immutablePaths",
-    "All backend changes must remain within the single-actor architecture in backend/main.mo"
+    "Do not change the PIN value for the admin panel (09186114)",
+    "Do not modify files listed under frontend.immutablePaths",
+    "Keep all Motoko logic in backend/main.mo (single-actor architecture)"
   ],
   "nonGoals": [
-    "Adding new content features or UI sections beyond fixing the broken fetch hooks",
-    "Changing the visual design or layout of any page",
-    "Modifying the IndexedDB history/downloads utilities",
-    "Altering the Web Audio filter implementation",
-    "Changing the hamburger menu or its sections"
+    "Adding new content categories or post types",
+    "Changing the app visual design or branding",
+    "Modifying the hamburger menu, audio filters, or IndexedDB features",
+    "Altering the admin upload forms or content management interface"
   ],
   "imageRequirements": {
     "required": [],

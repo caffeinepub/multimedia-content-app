@@ -72,7 +72,7 @@ export interface backendInterface {
     deleteDua(id: string): Promise<boolean>;
     deletePoetry(id: string): Promise<boolean>;
     deleteSong(id: string): Promise<boolean>;
-    getAllDuas(): Promise<Array<Dua>>;
+    getAllDua(): Promise<Array<Dua>>;
     getAllPoetry(): Promise<Array<Poetry>>;
     getAllSongs(): Promise<Array<Song>>;
     getCallerUserProfile(): Promise<UserProfile | null>;

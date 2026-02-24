@@ -1,4 +1,4 @@
-import { useGetAllDuas } from '../hooks/useQueries';
+import { useGetAllDua } from '../hooks/useQueries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useActor } from '../hooks/useActor';
 import DuaPost from '../components/DuaPost';
@@ -9,11 +9,11 @@ import { Button } from '@/components/ui/button';
 
 export default function DuaPage() {
   const { isFetching: actorFetching } = useActor();
-  const { data: duas, isLoading, isFetching, error, refetch } = useGetAllDuas();
+  const { data: duas, isLoading, isFetching, error, refetch } = useGetAllDua();
   const queryClient = useQueryClient();
 
   const handleRetry = () => {
-    queryClient.invalidateQueries({ queryKey: ['duas'] });
+    queryClient.invalidateQueries({ queryKey: ['dua'] });
     refetch();
   };
 

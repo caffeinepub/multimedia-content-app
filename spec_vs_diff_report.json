@@ -1,25 +1,34 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T13:38:24.775Z",
-  "summary": "The diff implements fixes for the three frontend fetch hooks (useGetAllPoetry, useGetAllDuas, useGetAllSongs) in useQueries.ts, updates PoetryPage, DuaPage, SongsPage, and MixPage with proper loading/error/empty states. However, the backend Motoko file (backend/main.mo) is not modified or audited in the diff, leaving REQ-38 unaddressed.",
+  "generatedAt": "2026-02-24T13:44:34.037Z",
+  "summary": "The diff addresses all four requirements (REQ-41 through REQ-44). The backend main.mo is audited and updated, the useQueries.ts hooks are fixed with correct method names and error handling, DuaPage/MixPage components are updated, and loading/error/empty states are implemented. However, the Song type in backend/main.mo lacks a 'content' and 'likeCount' field (uses 'artist' instead of 'content', and has no 'likes' field), which may cause field-name mismatches. The hooks do not explicitly map/transform Candid field names to TypeScript type field names.",
   "missing_requirements": [
     {
-      "id": "REQ-38",
-      "requirement": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs have correct function signatures, return types, and can be called without trapping or rejecting. Ensure each function returns an array of the correct record type with all expected fields.",
-      "reason": "The diff summary shows no changes to backend/main.mo. The file is not listed as modified, added, or removed. There is no evidence of any backend audit or fix.",
-      "evidence": []
+      "id": "REQ-41",
+      "requirement": "All returned records include the expected fields: id, title, content, category, likeCount, and any media blob fields",
+      "reason": "The Song type in backend/main.mo uses 'artist' instead of 'content', has no 'category' field, and has no 'likes'/'likeCount' field. This means getAllSongs does not return records with all expected fields (content, category, likeCount).",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-42",
+      "requirement": "correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names",
+      "reason": "The hooks in useQueries.ts return raw actor results without explicit field mapping or transformation. If Motoko field names differ from TypeScript type field names, no mapping is performed.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts"
+      ]
     }
   ],
   "hallucinated_features": [],
-  "confidence": 0.88,
+  "confidence": 0.72,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/DuaPage.tsx",
     "frontend/src/pages/MixPage.tsx",
-    "frontend/src/pages/PoetryPage.tsx",
-    "frontend/src/pages/SongsPage.tsx",
     "project_state.json"
   ]
 }

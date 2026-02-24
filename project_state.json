@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 19,
+  "projectStateVersion": 21,
   "summary": "Multimedia content app 'Dard-e-munasif' with categorized content (Dua, Poetry, Songs, Mix). Features PIN-protected admin panel (PIN: 09186114), auto-generated like counts, download buttons for Poetry/Dua, protected audio streaming for Songs, and clean aesthetic design. Custom logo (black & white circular image with blindfolded figure) applied across navbar, header, and favicon. New features: full-screen modal for Poetry/Dua posts, hybrid Music Player (inline preview + full-screen Now Playing UI), Web Audio API filters (Standard/Clean Sound/Ultra Clean Sound), IndexedDB-based History and Downloads, hamburger menu (top right) with History/Downloads/Volume Manager, external redirects for 'Be a Writer' (WhatsApp) and 'Contact' (Gmail).",
   "architectural_notes": [
     "Separate /admin route with PIN-only authentication (09186114)",
@@ -298,6 +298,30 @@
         "REQ-40"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-fix-the-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-in-frontend-src-hooks-usequeries-ts-ensure-each-hook-calls-the-exact-backend-actor-method-name-as-defined-in-the-motoko-actor-uses-a-stable-query-key-and-correctly-transforms-the-backend-candid-response-by-mapping-motoko-record-field-names-to-the-matching-typescript-type-field-names-add-try-catch-error-handling-so-a-failed-fetch-returns-a-user-friendly-error-state-instead-of-crashing-the-ui",
+      "title": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the exact backend actor method name as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names. Add try/catch error handling so a failed fetch returns a user-friendly error state instead of crashing the UI.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-and-fix-poetrypage-duapage-and-songspage-components-so-their-loading-error-and-empty-states-are-triggered-correctly-based-on-the-actual-data-shapes-returned-by-the-fixed-hooks-remove-any-field-name-mismatches-or-incorrect-type-assumptions-that-cause-a-valid-response-to-be-rendered-as-an-error-state-ensure-content-renders-when-the-backend-returns-valid-data",
+      "title": "Verify and fix PoetryPage, DuaPage, and SongsPage components so their loading, error, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any field-name mismatches or incorrect type assumptions that cause a valid response to be rendered as an error state. Ensure content renders when the backend returns valid data.",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-mixpage-component-to-correctly-aggregate-data-from-the-usegetallpoetry-usegetalldua-and-usegetallsongs-hooks-after-the-hook-fixes-in-req-42-ensure-the-combined-trending-feed-renders-content-from-all-three-categories-when-any-category-has-available-posts-and-shows-appropriate-loading-error-states",
+      "title": "Fix the MixPage component to correctly aggregate data from the useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks after the hook fixes in REQ-42. Ensure the combined trending feed renders content from all three categories when any category has available posts, and shows appropriate loading/error states.",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -410,6 +434,14 @@
       "summary": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs (or their equivalent query functions) have correct function signatures, return types, and can be called without trapping or rejecting. Ensure each function returns an array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields).",
       "reqIds": [
         "REQ-38"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Audit the backend Motoko actor in backend/main.mo and verify that getAllPoetry, getAllDua, and getAllSongs query functions have correct function signatures, return types, and stable variable access. Ensure each function returns an Array of the correct record type with all expected fields (id, title, content, category, likeCount, and any media blob fields) without trapping or rejecting. Fix any issues found so all three query functions execute successfully.",
+      "reqIds": [
+        "REQ-41"
       ],
       "status": "pending"
     }

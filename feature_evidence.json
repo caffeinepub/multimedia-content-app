@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-in-frontend-src-hooks-usequeries-ts-ensure-each-hook-calls-the-correct-backend-actor-method-name-exactly-as-defined-in-the-motoko-actor-uses-a-stable-query-key-and-correctly-transforms-the-backend-response-mapping-motoko-record-field-names-to-frontend-typescript-type-field-names-add-graceful-error-handling-so-a-failed-fetch-shows-a-user-friendly-error-state-rather-than-crashing-the-ui",
-      "featureTitle": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the correct backend actor method name exactly as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend response (mapping Motoko record field names to frontend TypeScript type field names). Add graceful error handling so a failed fetch shows a user-friendly error state rather than crashing the UI.",
+      "featureId": "feature-fix-the-usegetallpoetry-usegetalldua-and-usegetallsongs-react-query-hooks-in-frontend-src-hooks-usequeries-ts-ensure-each-hook-calls-the-exact-backend-actor-method-name-as-defined-in-the-motoko-actor-uses-a-stable-query-key-and-correctly-transforms-the-backend-candid-response-by-mapping-motoko-record-field-names-to-the-matching-typescript-type-field-names-add-try-catch-error-handling-so-a-failed-fetch-returns-a-user-friendly-error-state-instead-of-crashing-the-ui",
+      "featureTitle": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts. Ensure each hook calls the exact backend actor method name as defined in the Motoko actor, uses a stable query key, and correctly transforms the backend Candid response by mapping Motoko record field names to the matching TypeScript type field names. Add try/catch error handling so a failed fetch returns a user-friendly error state instead of crashing the UI.",
       "files": [
         "frontend/src/hooks/useQueries.ts"
       ],
@@ -17,18 +17,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-39"
+        "REQ-42"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-verify-and-fix-the-poetrypage-duapage-and-songspage-components-to-ensure-their-loading-skeleton-states-error-states-and-empty-states-are-triggered-correctly-based-on-the-actual-data-shapes-returned-by-the-fixed-hooks-remove-any-code-that-incorrectly-maps-field-names-or-makes-incorrect-type-assumptions-that-could-cause-a-valid-response-to-be-treated-as-an-error",
-      "featureTitle": "Verify and fix the PoetryPage, DuaPage, and SongsPage components to ensure their loading skeleton states, error states, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any code that incorrectly maps field names or makes incorrect type assumptions that could cause a valid response to be treated as an error.",
+      "featureId": "feature-verify-and-fix-poetrypage-duapage-and-songspage-components-so-their-loading-error-and-empty-states-are-triggered-correctly-based-on-the-actual-data-shapes-returned-by-the-fixed-hooks-remove-any-field-name-mismatches-or-incorrect-type-assumptions-that-cause-a-valid-response-to-be-rendered-as-an-error-state-ensure-content-renders-when-the-backend-returns-valid-data",
+      "featureTitle": "Verify and fix PoetryPage, DuaPage, and SongsPage components so their loading, error, and empty states are triggered correctly based on the actual data shapes returned by the fixed hooks. Remove any field-name mismatches or incorrect type assumptions that cause a valid response to be rendered as an error state. Ensure content renders when the backend returns valid data.",
       "files": [
-        "frontend/src/pages/DuaPage.tsx",
-        "frontend/src/pages/MixPage.tsx",
-        "frontend/src/pages/PoetryPage.tsx",
-        "frontend/src/pages/SongsPage.tsx"
+        "frontend/src/pages/DuaPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -40,7 +37,27 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-40"
+        "REQ-43"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-the-mixpage-component-to-correctly-aggregate-data-from-the-usegetallpoetry-usegetalldua-and-usegetallsongs-hooks-after-the-hook-fixes-in-req-42-ensure-the-combined-trending-feed-renders-content-from-all-three-categories-when-any-category-has-available-posts-and-shows-appropriate-loading-error-states",
+      "featureTitle": "Fix the MixPage component to correctly aggregate data from the useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks after the hook fixes in REQ-42. Ensure the combined trending feed renders content from all three categories when any category has available posts, and shows appropriate loading/error states.",
+      "files": [
+        "frontend/src/pages/MixPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-44"
       ],
       "confidence": "high"
     }

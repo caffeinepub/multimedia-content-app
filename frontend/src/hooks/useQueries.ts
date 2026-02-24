@@ -29,15 +29,15 @@ export function useGetAllPoetry() {
   });
 }
 
-export function useGetAllDuas() {
+export function useGetAllDua() {
   const { actor, isFetching } = useActor();
 
   return useQuery<Dua[]>({
-    queryKey: ['duas'],
+    queryKey: ['dua'],
     queryFn: async () => {
       if (!actor) return [];
       try {
-        const result = await actor.getAllDuas();
+        const result = await actor.getAllDua();
         return Array.isArray(result) ? result : [];
       } catch (err: unknown) {
         throw new Error(extractErrorMessage(err));
@@ -48,6 +48,9 @@ export function useGetAllDuas() {
     staleTime: 30_000,
   });
 }
+
+// Keep backward-compatible alias
+export const useGetAllDuas = useGetAllDua;
 
 export function useGetAllSongs() {
   const { actor, isFetching } = useActor();
@@ -102,7 +105,7 @@ export function useCreateDua() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['duas'] });
+      queryClient.invalidateQueries({ queryKey: ['dua'] });
     },
   });
 }
@@ -151,7 +154,7 @@ export function useDeleteDua() {
       return actor.deleteDua(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['duas'] });
+      queryClient.invalidateQueries({ queryKey: ['dua'] });
     },
   });
 }

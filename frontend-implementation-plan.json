@@ -1,57 +1,66 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix all content fetch hooks — Poetry, Dua, and Songs failing to load",
+  "title": "Fix 'Failed to load' error across Poetry, Dua, and Songs sections",
   "requirements": [
     {
-      "id": "REQ-39",
-      "summary": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks in frontend/src/hooks/useQueries.ts to call correct backend methods with proper field mapping and error handling",
+      "id": "REQ-42",
+      "summary": "Fix the useGetAllPoetry, useGetAllDua, and useGetAllSongs React Query hooks to correctly call backend methods, transform Candid responses, and handle errors gracefully",
       "acceptanceCriteria": [
-        "useGetAllPoetry calls the correct Motoko function name and returns Poetry array without error",
-        "useGetAllDua calls the correct Motoko function name and returns Dua array without error",
-        "useGetAllSongs calls the correct Motoko function name and returns Song array without error",
-        "All field names in the data transformation match the actual Motoko record fields (e.g., likeCount vs like_count, etc.)",
-        "When the backend returns an empty array, the UI shows an empty state, not an error",
-        "When the backend call genuinely fails, the UI shows a user-friendly error message with a retry option"
+        "useGetAllPoetry calls the correct Motoko method name and maps Candid fields to TypeScript types",
+        "useGetAllDua calls the correct Motoko method name and maps Candid fields to TypeScript types",
+        "useGetAllSongs calls the correct Motoko method name and maps Candid fields to TypeScript types",
+        "A network or canister error sets isError=true and does not throw an unhandled exception",
+        "Each hook uses a stable, unique query key"
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Fix useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks to call the correct backend actor methods (getAllPoetry, getAllDuas, getAllSongs per backend interface), use stable query keys, and ensure data transformation maps backend response fields correctly to frontend TypeScript types. The backend returns Poetry with a 'likes' field (containing count and likedBy), and Dua with a 'likes' field, but frontend types may expect 'likeCount'. Map backend 'likes.count' to frontend 'likeCount' if needed. Add graceful error handling with retry: false to prevent endless retries on data shape mismatches, and ensure empty arrays are treated as valid success responses."
+          "description": "Fix useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks to call the exact backend method names (getAllPoetry, getAllDua, getAllSongs) as defined in backend-interface. Ensure each hook uses a stable, unique query key. Add explicit try/catch error handling in queryFn to return user-friendly error states instead of throwing unhandled exceptions. Verify that the Candid response field names (id, title, content, likes, category, image/audio) match the TypeScript type definitions and map them correctly if needed. Ensure the likes field is properly transformed from the backend Likes type (count: bigint, likedBy: Array<string>) to match frontend expectations."
         }
       ]
     },
     {
-      "id": "REQ-40",
-      "summary": "Verify and fix PoetryPage, DuaPage, and SongsPage components to correctly handle loading, error, and empty states based on actual hook response shapes",
+      "id": "REQ-43",
+      "summary": "Verify and fix PoetryPage, DuaPage, and SongsPage components to correctly handle loading, error, and empty states based on actual data shapes from fixed hooks",
       "acceptanceCriteria": [
-        "PoetryPage, DuaPage, and SongsPage display loading skeletons while data is being fetched",
-        "Content renders correctly once data is returned from the backend",
-        "Error state is only shown when the backend call actually fails, not due to a data shape mismatch",
-        "Empty state is shown when the backend returns a valid empty array",
-        "MixPage also renders all three content types correctly after the fetch fixes are applied"
+        "PoetryPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
+        "DuaPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
+        "SongsPage displays a loading skeleton while fetching, shows error message on failure, and renders post cards on success",
+        "No valid backend response is incorrectly treated as an error due to field-name mismatches"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/PoetryPage.tsx",
           "operation": "modify",
-          "description": "Review and fix the PoetryPage component to correctly interpret the data, isLoading, isError, and error states from the useGetAllPoetry hook. Ensure loading skeletons are shown during fetch, error state is only triggered on actual fetch failures (not data shape issues), and an empty state is displayed when data is an empty array. Remove any code that incorrectly assumes field names or treats valid responses as errors."
+          "description": "Review the PoetryPage component to ensure it correctly handles the data shape returned by useGetAllPoetry after REQ-42 fixes. Verify that loading state shows skeletons, error state displays error message with retry button, and success state renders PoetryPost cards. Remove any field-name assumptions or type mismatches that cause valid responses to be treated as errors. Ensure the component correctly accesses poetry.likes.count for display."
         },
         {
           "path": "frontend/src/pages/DuaPage.tsx",
           "operation": "modify",
-          "description": "Review and fix the DuaPage component to correctly interpret the data, isLoading, isError, and error states from the useGetAllDua hook. Ensure loading skeletons are shown during fetch, error state is only triggered on actual fetch failures (not data shape issues), and an empty state is displayed when data is an empty array. Remove any code that incorrectly assumes field names or treats valid responses as errors."
+          "description": "Review the DuaPage component to ensure it correctly handles the data shape returned by useGetAllDua after REQ-42 fixes. Verify that loading state shows skeletons, error state displays error message with retry button, and success state renders DuaPost cards. Remove any field-name assumptions or type mismatches that cause valid responses to be treated as errors. Ensure the component correctly accesses dua.likes.count for display."
         },
         {
           "path": "frontend/src/pages/SongsPage.tsx",
           "operation": "modify",
-          "description": "Review and fix the SongsPage component to correctly interpret the data, isLoading, isError, and error states from the useGetAllSongs hook. Ensure loading skeletons are shown during fetch, error state is only triggered on actual fetch failures (not data shape issues), and an empty state is displayed when data is an empty array. Remove any code that incorrectly assumes field names or treats valid responses as errors."
-        },
+          "description": "Review the SongsPage component to ensure it correctly handles the data shape returned by useGetAllSongs after REQ-42 fixes. Verify that loading state shows skeletons, error state displays error message with retry button, and success state renders SongPost cards. Remove any field-name assumptions or type mismatches that cause valid responses to be treated as errors. Note that Song type does not have a likes field according to backend-interface, so ensure the component does not expect one."
+        }
+      ]
+    },
+    {
+      "id": "REQ-44",
+      "summary": "Fix the MixPage component to correctly aggregate data from all three hooks after REQ-42 fixes and render a unified trending feed with appropriate loading and error states",
+      "acceptanceCriteria": [
+        "MixPage shows a loading state while any of the three data sources are loading",
+        "MixPage renders a unified feed of posts sorted by like count when data is available",
+        "MixPage shows an error state only when all three data sources fail"
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/pages/MixPage.tsx",
           "operation": "modify",
-          "description": "Verify that MixPage correctly aggregates poetry, duas, and songs from all three fixed hooks. Ensure loading states are coordinated (show loading until all three queries complete), error handling gracefully degrades if one query fails, and the sorting by likes works correctly with the fixed field mappings. After the fetch fixes in REQ-39 are applied, MixPage should render all three content types without issues."
+          "description": "Fix the MixPage component to correctly aggregate Poetry, Dua, and Song data from useGetAllPoetry, useGetAllDua, and useGetAllSongs hooks after REQ-42 fixes. Ensure loading state is shown while any query is loading. Combine available data from all three sources and sort by like count (note: songs do not have likes, so handle them separately or sort them to the end). Render PoetryPost, DuaPost, and SongPost components appropriately. Show error state only when all three queries fail. Ensure the component correctly accesses likes.count for Poetry and Dua items when sorting."
         }
       ]
     }

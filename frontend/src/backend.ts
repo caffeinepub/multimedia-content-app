@@ -165,7 +165,7 @@ export interface backendInterface {
     deleteDua(id: string): Promise<boolean>;
     deletePoetry(id: string): Promise<boolean>;
     deleteSong(id: string): Promise<boolean>;
-    getAllDuas(): Promise<Array<Dua>>;
+    getAllDua(): Promise<Array<Dua>>;
     getAllPoetry(): Promise<Array<Poetry>>;
     getAllSongs(): Promise<Array<Song>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -380,17 +380,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getAllDuas(): Promise<Array<Dua>> {
+    async getAllDua(): Promise<Array<Dua>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getAllDuas();
+                const result = await this.actor.getAllDua();
                 return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getAllDuas();
+            const result = await this.actor.getAllDua();
             return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
         }
     }

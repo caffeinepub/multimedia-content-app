@@ -89,7 +89,7 @@ export interface _SERVICE {
   'deleteDua' : ActorMethod<[string], boolean>,
   'deletePoetry' : ActorMethod<[string], boolean>,
   'deleteSong' : ActorMethod<[string], boolean>,
-  'getAllDuas' : ActorMethod<[], Array<Dua>>,
+  'getAllDua' : ActorMethod<[], Array<Dua>>,
   'getAllPoetry' : ActorMethod<[], Array<Poetry>>,
   'getAllSongs' : ActorMethod<[], Array<Song>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,

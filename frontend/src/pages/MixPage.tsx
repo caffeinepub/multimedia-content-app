@@ -1,4 +1,4 @@
-import { useGetAllPoetry, useGetAllDuas, useGetAllSongs } from '../hooks/useQueries';
+import { useGetAllPoetry, useGetAllDua, useGetAllSongs } from '../hooks/useQueries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useActor } from '../hooks/useActor';
 import PoetryPost from '../components/PoetryPost';
@@ -18,16 +18,16 @@ type ContentItem = {
 export default function MixPage() {
   const { isFetching: actorFetching } = useActor();
   const { data: poetry, isLoading: poetryLoading, error: poetryError, refetch: refetchPoetry } = useGetAllPoetry();
-  const { data: duas, isLoading: duasLoading, error: duasError, refetch: refetchDuas } = useGetAllDuas();
+  const { data: duas, isLoading: duasLoading, error: duasError, refetch: refetchDuas } = useGetAllDua();
   const { data: songs, isLoading: songsLoading, error: songsError, refetch: refetchSongs } = useGetAllSongs();
   const queryClient = useQueryClient();
 
   const isLoading = actorFetching || poetryLoading || duasLoading || songsLoading;
-  const hasError = poetryError || duasError || songsError;
+  const allFailed = poetryError && duasError && songsError;
 
   const handleRetry = () => {
     queryClient.invalidateQueries({ queryKey: ['poetry'] });
-    queryClient.invalidateQueries({ queryKey: ['duas'] });
+    queryClient.invalidateQueries({ queryKey: ['dua'] });
     queryClient.invalidateQueries({ queryKey: ['songs'] });
     refetchPoetry();
     refetchDuas();
@@ -52,7 +52,7 @@ export default function MixPage() {
     );
   }
 
-  if (hasError) {
+  if (allFailed) {
     return (
       <div className="space-y-4">
         <Alert variant="destructive">

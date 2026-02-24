@@ -1,7 +1,6 @@
 import Map "mo:core/Map";
 import Text "mo:core/Text";
 import Array "mo:core/Array";
-import Order "mo:core/Order";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
@@ -292,7 +291,7 @@ actor {
   };
 
   // Public: Get all Duas
-  public query func getAllDuas() : async [Dua] {
+  public query func getAllDua() : async [Dua] {
     duaMap.values().toArray();
   };
 
