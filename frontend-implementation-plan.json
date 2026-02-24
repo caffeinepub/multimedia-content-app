@@ -1,0 +1,50 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Rename app to Dard-e-munasif and apply custom logo across branding",
+  "requirements": [
+    {
+      "id": "REQ-27",
+      "summary": "Update the app name from 'Spiritual Hub' to 'Dard-e-munasif' in all visible branding locations",
+      "acceptanceCriteria": [
+        "The browser tab title reads 'Dard-e-munasif'",
+        "The navbar/header displays 'Dard-e-munasif' as the app name",
+        "No instance of 'Spiritual Hub' remains visible in the UI"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Update the <title> tag from 'Spiritual Hub' to 'Dard-e-munasif' to change the browser tab title"
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Replace 'Spiritual Hub' text in the header/navbar with 'Dard-e-munasif'"
+        }
+      ]
+    },
+    {
+      "id": "REQ-28",
+      "summary": "Replace the current logo/icon with the uploaded circular black & white logo image in navbar, header, and favicon",
+      "acceptanceCriteria": [
+        "The circular black & white logo appears in the navbar/header next to the app name",
+        "The favicon in the browser tab uses the same logo image",
+        "The logo renders correctly on both mobile and desktop viewports",
+        "The logo image is served from frontend/public/assets/generated/"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Add a <link rel=\"icon\"> tag in the <head> section pointing to frontend/public/assets/generated/dard-e-munasif-logo.dim_200x200.png to set the favicon"
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Add an <img> element displaying the circular logo from frontend/public/assets/generated/dard-e-munasif-logo.dim_200x200.png in the header/navbar next to the app name, styled as a circular image with appropriate sizing for mobile and desktop viewports"
+        }
+      ]
+    }
+  ]
+}

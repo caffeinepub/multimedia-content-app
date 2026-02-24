@@ -1,0 +1,65 @@
+{
+  "kind": "build_request",
+  "title": "Rename app to Dard-e-munasif and apply custom logo across branding",
+  "projectName": "Dard-e-munasif",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-27",
+      "text": "Update the app name from 'Spiritual Hub' to 'Dard-e-munasif' everywhere it appears in the frontend — including the navbar/header title text, browser tab title (index.html <title>), and any other visible branding locations.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-12"
+        ],
+        "quotes": [
+          "Change name spritual hub to Dard-e-munasif with this logo",
+          "update the app name to Dard-e-munasif"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The browser tab title reads 'Dard-e-munasif'",
+        "The navbar/header displays 'Dard-e-munasif' as the app name",
+        "No instance of 'Spiritual Hub' remains visible in the UI"
+      ]
+    },
+    {
+      "id": "REQ-28",
+      "text": "Replace the current logo/icon in the navbar, header, and favicon with the uploaded circular black & white logo image (dard-e-munasif-logo.dim_200x200.png) saved to frontend/public/assets/generated/. Display it as a circular image next to the app name in the header and set it as the browser favicon.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-12"
+        ],
+        "quotes": [
+          "Change name spritual hub to Dard-e-munasif with this logo",
+          "replace the branding with the uploaded logo (the black & white circular image with the blindfolded figure)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The circular black & white logo appears in the navbar/header next to the app name",
+        "The favicon in the browser tab uses the same logo image",
+        "The logo renders correctly on both mobile and desktop viewports",
+        "The logo image is served from frontend/public/assets/generated/"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify any files listed in frontend.immutablePaths",
+    "Do not change the backend schema or any backend logic",
+    "PIN authentication (09186114) and all existing functionality must remain intact"
+  ],
+  "nonGoals": [
+    "Changing the visual theme, color palette, or layout",
+    "Adding new features or modifying existing content management",
+    "Modifying backend data models or CRUD operations"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": [
+      "Crop and optimize the uploaded black & white circular photo of a blindfolded man with 'dard-e-munasif' written on the blindfold into a clean circular logo with transparent or white background (FB_IMG_1771696316080.jpg > dard-e-munasif-logo.dim_200x200.png)"
+    ]
+  }
+}

@@ -1,0 +1,291 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 13,
+  "summary": "Multimedia content app with categorized content (Dua, Poetry, Songs, Mix). Features PIN-protected admin panel (PIN: 09186114), auto-generated like counts, download buttons for Poetry/Dua, protected audio streaming for Songs, and clean aesthetic design. App name changed to 'Dard-e-munasif' with custom logo (black & white circular image with blindfolded figure) applied across navbar, header, and favicon.",
+  "architectural_notes": [
+    "Separate /admin route with PIN-only authentication (09186114)",
+    "Content categorization system: Dua, Poetry, Songs, Mix",
+    "Audio streaming without download capability for Songs",
+    "File upload system for images and audio files",
+    "Auto-generation of like counts (1,000-2,000 range) for social proof",
+    "Backend data persistence for all content types",
+    "Backend upload functions had redundant admin authorization check separate from PIN auth - fix: remove backend admin check and rely on PIN-protected frontend guard"
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Edit Images\n- Crop and optimize the uploaded black & white circular photo of a blindfolded man with 'dard-e-munasif' written on the blindfold into a clean circular logo with transparent or white background (FB_IMG_1771696316080.jpg > dard-e-munasif-logo.dim_200x200.png)",
+  "existing_features": [
+    {
+      "id": "feature-create-main-navigation-with-four-categories-dua-spiritual-prayers-poetry-poetic-text-images-songs-relaxing-music-sounds-and-mix-combined-feed-showing-trending-content-from-all-three-categories-homepage-must-display-mix-section-by-default",
+      "title": "Create main navigation with four categories: Dua (spiritual prayers), Poetry (poetic text/images), Songs (relaxing music/sounds), and Mix (combined feed showing trending content from all three categories). Homepage must display Mix section by default.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-poetry-posts-with-text-image-content-display-download-button-like-button-and-auto-generated-random-like-counts-between-1-000-2-000-for-social-proof-display-category-tag-on-each-post",
+      "title": "Implement Poetry posts with text/image content display, Download button, Like button, and auto-generated random like counts between 1,000-2,000 for social proof. Display category tag on each post.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-dua-posts-with-text-audio-content-display-download-button-like-button-and-auto-generated-random-like-counts-between-1-000-2-000-for-social-proof-display-category-tag-on-each-post",
+      "title": "Implement Dua posts with text/audio content display, Download button, Like button, and auto-generated random like counts between 1,000-2,000 for social proof. Display category tag on each post.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-song-posts-with-play-pause-audio-player-controls-only-completely-disable-and-hide-download-option-for-all-song-audio-posts-display-category-tag-on-each-post",
+      "title": "Implement Song posts with Play/Pause audio player controls only. Completely disable and hide download option for all song/audio posts. Display category tag on each post.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-secured-admin-route-hidden-from-normal-navigation-implement-pin-authentication-that-only-accepts-the-exact-pin-09186114-do-not-allow-any-access-to-admin-panel-without-correct-pin-entry",
+      "title": "Create a secured /admin route hidden from normal navigation. Implement PIN authentication that ONLY accepts the exact PIN '09186114'. Do not allow any access to admin panel without correct PIN entry.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-admin-panel-functionality-to-upload-new-poetry-content-with-text-image-title-and-content-fields-assign-poetry-category-automatically",
+      "title": "Implement admin panel functionality to upload new Poetry content with text/image, title, and content fields. Assign Poetry category automatically.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-admin-panel-functionality-to-upload-new-dua-content-with-text-audio-title-and-content-fields-assign-dua-category-automatically",
+      "title": "Implement admin panel functionality to upload new Dua content with text/audio, title, and content fields. Assign Dua category automatically.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-admin-panel-functionality-to-upload-new-songs-with-audio-files-title-and-artist-fields-assign-songs-category-automatically",
+      "title": "Implement admin panel functionality to upload new Songs with audio files, title, and artist fields. Assign Songs category automatically.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-admin-panel-content-management-interface-to-view-all-posts-and-delete-or-manage-existing-content-across-all-categories",
+      "title": "Implement admin panel content management interface to view all posts and delete or manage existing content across all categories.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-design-frontend-with-relaxing-aesthetic-using-minimalist-pastel-colors-or-elegant-dark-mode-option-modern-calming-typography-smooth-animations-and-transitions-and-responsive-design-for-mobile-and-desktop",
+      "title": "Design frontend with relaxing aesthetic using minimalist pastel colors or elegant dark mode option, modern calming typography, smooth animations and transitions, and responsive design for mobile and desktop.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-audio-playback-functionality-for-dua-and-song-posts-with-proper-streaming-and-play-pause-controls",
+      "title": "Implement audio playback functionality for Dua and Song posts with proper streaming and play/pause controls.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-support-display-of-urdu-and-hindi-content-in-all-text-fields-titles-content-artist-names-with-proper-unicode-rendering",
+      "title": "Support display of Urdu and Hindi content in all text fields (titles, content, artist names) with proper Unicode rendering.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-investigate-and-fix-the-admin-route-so-it-displays-correctly-verify-that-the-route-is-properly-registered-in-the-tanstack-router-configuration-in-app-tsx-and-that-the-adminpage-component-is-being-rendered-without-errors",
+      "title": "Investigate and fix the /admin route so it displays correctly. Verify that the route is properly registered in the TanStack Router configuration in App.tsx and that the AdminPage component is being rendered without errors.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-pinauthguard-component-in-adminpage-tsx-is-functioning-correctly-and-properly-validates-the-pin-09186114-before-showing-the-admin-panel-content",
+      "title": "Ensure the PINAuthGuard component in AdminPage.tsx is functioning correctly and properly validates the PIN '09186114' before showing the admin panel content.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-that-all-admin-panel-components-contentmanagement-poetryuploadform-duauploadform-songuploadform-are-properly-imported-and-rendered-without-breaking-the-page",
+      "title": "Verify that all admin panel components (ContentManagement, PoetryUploadForm, DuaUploadForm, SongUploadForm) are properly imported and rendered without breaking the page.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-check-for-any-routing-conflicts-missing-imports-or-javascript-errors-that-might-prevent-the-admin-panel-from-rendering-review-browser-console-logs-and-network-requests-for-any-failures",
+      "title": "Check for any routing conflicts, missing imports, or JavaScript errors that might prevent the admin panel from rendering. Review browser console logs and network requests for any failures.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-all-admin-panel-components-pinauthguard-contentmanagement-poetryuploadform-duauploadform-songuploadform-are-correctly-imported-and-render-without-breaking-the-page",
+      "title": "Ensure all admin panel components (PINAuthGuard, ContentManagement, PoetryUploadForm, DuaUploadForm, SongUploadForm) are correctly imported and render without breaking the page",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-that-the-admin-route-is-properly-registered-in-the-tanstack-router-configuration-in-app-tsx-with-correct-path-and-component-mappings-to-ensure-adminpage-renders-without-errors",
+      "title": "Verify that the /admin route is properly registered in the TanStack Router configuration in App.tsx with correct path and component mappings to ensure AdminPage renders without errors",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-pinauthguard-component-in-adminpage-tsx-correctly-validates-the-hardcoded-pin-09186114-and-properly-manages-authentication-state-in-sessionstorage-before-rendering-admin-panel-content",
+      "title": "Ensure the PINAuthGuard component in AdminPage.tsx correctly validates the hardcoded PIN '09186114' and properly manages authentication state in sessionStorage before rendering admin panel content",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-that-all-admin-panel-components-contentmanagement-poetryuploadform-duauploadform-songuploadform-are-correctly-imported-in-adminpage-tsx-with-proper-import-paths-and-render-without-breaking-the-page",
+      "title": "Verify that all admin panel components (ContentManagement, PoetryUploadForm, DuaUploadForm, SongUploadForm) are correctly imported in AdminPage.tsx with proper import paths and render without breaking the page",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-investigate-and-resolve-any-routing-conflicts-missing-imports-or-javascript-runtime-errors-that-prevent-the-admin-panel-from-rendering-by-checking-browser-console-logs-network-requests-and-component-lifecycle-errors",
+      "title": "Investigate and resolve any routing conflicts, missing imports, or JavaScript runtime errors that prevent the admin panel from rendering by checking browser console logs, network requests, and component lifecycle errors",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admin-panel-page-at-admin-is-accessible-by-direct-url-navigation-and-displays-the-full-admin-interface-including-pin-authentication-content-upload-forms-and-content-management-sections",
+      "title": "Ensure the admin panel page at /admin is accessible by direct URL navigation and displays the full admin interface including PIN authentication, content upload forms, and content management sections",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-upload-mutation-hooks-usecreatepoetry-usecreatedua-usecreatesong-in-usequeries-ts-and-their-corresponding-form-components-poetryuploadform-duauploadform-songuploadform-to-ensure-they-do-not-pass-any-admin-token-or-special-authorization-header-that-could-be-mismatched-or-missing-relying-solely-on-the-anonymous-actor-call-after-pin-authentication-passes",
+      "title": "Update the frontend upload mutation hooks (useCreatePoetry, useCreateDua, useCreateSong in useQueries.ts) and their corresponding form components (PoetryUploadForm, DuaUploadForm, SongUploadForm) to ensure they do not pass any admin token or special authorization header that could be mismatched or missing, relying solely on the anonymous actor call after PIN authentication passes.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-app-name-from-spiritual-hub-to-dard-e-munasif-everywhere-it-appears-in-the-frontend-including-the-navbar-header-title-text-browser-tab-title-index-html-title-and-any-other-visible-branding-locations",
+      "title": "Update the app name from 'Spiritual Hub' to 'Dard-e-munasif' everywhere it appears in the frontend — including the navbar/header title text, browser tab title (index.html <title>), and any other visible branding locations.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-current-logo-icon-in-the-navbar-header-and-favicon-with-the-uploaded-circular-black-white-logo-image-dard-e-munasif-logo-dim-200x200-png-saved-to-frontend-public-assets-generated-display-it-as-a-circular-image-next-to-the-app-name-in-the-header-and-set-it-as-the-browser-favicon",
+      "title": "Replace the current logo/icon in the navbar, header, and favicon with the uploaded circular black & white logo image (dard-e-munasif-logo.dim_200x200.png) saved to frontend/public/assets/generated/. Display it as a circular image next to the app name in the header and set it as the browser favicon.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Main navigation with four categories: Dua, Poetry, Songs, and Mix (default homepage showing trending content from all categories)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Poetry & Dua posts with Download button, Like button, and auto-generated like counts (1,000-2,000)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Song posts with Play/Pause audio player only (download completely disabled and hidden)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Secured /admin route with PIN authentication (PIN: 09186114) - no access without correct PIN",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Admin panel features: upload Poetry (text/image), Dua (text/audio), Songs (audio), assign categories, delete/manage content, view all posts",
+      "reqIds": [
+        "AR-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Relaxing aesthetic UI with minimalist pastel colors or elegant dark mode, modern typography, smooth animations, responsive design",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Backend with data persistence, file uploads (images/audio), audio playback, secure PIN validation, Urdu/Hindi content support",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Implement backend data models and persistence for storing Poetry (text, image, title, content, category, like count), Dua (text, audio, title, content, category, like count), and Songs (audio, title, artist, category) with proper file upload handling for images and audio files.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Remove or bypass the backend admin authorization check in the Motoko main actor for the createPoetry, createDua, and createSong functions so that any caller can successfully upload content. The PIN-protected frontend admin panel is the only authentication gate required — the backend should not reject upload calls with 'Unauthorized: Only admins can create poetry' (or equivalent messages for Dua/Song). All three upload functions must accept requests without requiring a separate admin identity or token.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Rename app from 'Spiritual Hub' to 'Dard-e-munasif' and replace branding with the uploaded black & white circular logo (blindfolded figure) across navbar, header, and favicon.",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Multimedia Content App",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

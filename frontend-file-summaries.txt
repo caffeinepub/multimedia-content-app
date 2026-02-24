@@ -1,0 +1,22 @@
+{
+  "frontend/src/App.tsx": "Main application component with TanStack Router setup for Mix, Poetry, Dua, Songs, and Admin routes, wrapped with ThemeProvider and Toaster for notifications with proper router configuration.",
+  "frontend/src/components/Layout.tsx": "Layout wrapper component with sticky header navigation showing the Dard-e-munasif circular logo image and updated app name, theme toggle, responsive mobile menu, and footer with updated branding and caffeine.ai attribution.",
+  "frontend/src/pages/MixPage.tsx": "Homepage displaying trending content from all three categories (Poetry, Dua, Songs) sorted by like count in a unified grid.",
+  "frontend/src/pages/PoetryPage.tsx": "Poetry category page fetching and displaying all poetry posts in a responsive grid with loading and error states.",
+  "frontend/src/pages/DuaPage.tsx": "Dua category page fetching and displaying all dua posts in a responsive grid with loading and error states.",
+  "frontend/src/pages/SongsPage.tsx": "Songs category page fetching and displaying all song posts in a responsive grid with loading and error states.",
+  "frontend/src/pages/AdminPage.tsx": "Admin panel page with PIN authentication guard, featuring tabbed interface for uploading content and managing existing posts across Poetry, Dua, and Song categories.",
+  "frontend/src/components/PINAuthGuard.tsx": "PIN authentication component that validates exact PIN '09186114' and stores authentication state in sessionStorage with error handling for storage operations.",
+  "frontend/src/components/PoetryPost.tsx": "Poetry post card component displaying title, image, content, like count, category badge, and download button using ExternalBlob.getDirectURL() for display and getBytes() for downloads.",
+  "frontend/src/components/DuaPost.tsx": "Dua post card component displaying title, content, audio player, like count, category badge, and download button using ExternalBlob methods.",
+  "frontend/src/components/SongPost.tsx": "Song post card component displaying title, artist, audio player, and category badge with no download option using ExternalBlob.getDirectURL() for streaming.",
+  "frontend/src/components/AudioPlayer.tsx": "Reusable audio player component with play/pause controls, seek slider, volume control, and time display using ExternalBlob.getDirectURL() for audio source.",
+  "frontend/src/components/admin/PoetryUploadForm.tsx": "Admin form for uploading poetry with title, content, and optional image fields; resets progress state before each submission and shows upload progress using ExternalBlob with trimmed input values.",
+  "frontend/src/components/admin/DuaUploadForm.tsx": "Admin form for uploading dua with title, content, and optional audio fields; resets progress state before each submission and shows upload progress using ExternalBlob with trimmed input values.",
+  "frontend/src/components/admin/SongUploadForm.tsx": "Admin form for uploading songs with title, artist, and required audio fields; resets progress state before each submission and shows upload progress using ExternalBlob with trimmed input values.",
+  "frontend/src/components/admin/ContentManagement.tsx": "Admin interface for viewing and deleting all content across categories with confirmation dialogs.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations (Poetry, Dua, Song CRUD) with improved error handling that extracts clean messages from IC canister trap errors, and proper cache invalidation on mutations.",
+  "frontend/src/index.css": "Global styles with soft purple/lavender OKLCH color palette, Urdu/Hindi font support, smooth animations, and light/dark mode themes.",
+  "frontend/tailwind.config.js": "Tailwind configuration with custom purple-tinted color palette, Urdu font family, and extended design tokens.",
+  "frontend/index.html": "HTML entry point with updated title \"Dard-e-munasif\" and favicon pointing to the custom circular logo image."
+}

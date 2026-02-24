@@ -1,0 +1,47 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-update-the-app-name-from-spiritual-hub-to-dard-e-munasif-everywhere-it-appears-in-the-frontend-including-the-navbar-header-title-text-browser-tab-title-index-html-title-and-any-other-visible-branding-locations",
+      "featureTitle": "Update the app name from 'Spiritual Hub' to 'Dard-e-munasif' everywhere it appears in the frontend — including the navbar/header title text, browser tab title (index.html <title>), and any other visible branding locations.",
+      "files": [
+        "frontend/index.html",
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-27"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-replace-the-current-logo-icon-in-the-navbar-header-and-favicon-with-the-uploaded-circular-black-white-logo-image-dard-e-munasif-logo-dim-200x200-png-saved-to-frontend-public-assets-generated-display-it-as-a-circular-image-next-to-the-app-name-in-the-header-and-set-it-as-the-browser-favicon",
+      "featureTitle": "Replace the current logo/icon in the navbar, header, and favicon with the uploaded circular black & white logo image (dard-e-munasif-logo.dim_200x200.png) saved to frontend/public/assets/generated/. Display it as a circular image next to the app name in the header and set it as the browser favicon.",
+      "files": [
+        "frontend/index.html",
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-28"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
