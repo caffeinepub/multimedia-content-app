@@ -1,70 +1,75 @@
 {
   "kind": "build_request",
-  "title": "Fix admin panel: remove backend auth checks for maintenance mode, getAllUsers, blockUser, and unblockUser",
+  "title": "Fix maintenance mode toggle error in admin panel",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-93",
-      "text": "In backend/main.mo, remove all authorization/identity checks from the setMaintenanceMode function. This function must accept calls from any caller (including anonymous) without throwing or returning any 'Unauthorized: Only admins can set maintenance mode' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on setMaintenanceMode.",
+      "id": "REQ-103",
+      "text": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. Verify the stable variable holding the maintenance mode flag persists across canister upgrades and is never re-initialized to false on restart.",
       "target": "backend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Failed to update maintenance mode: Unauthorized: Only admins can set maintenance mode"
+          "In admin panel if I click on maintenance mode button it shows error"
         ]
       },
       "acceptanceCriteria": [
-        "Toggling Maintenance Mode in the admin panel does not produce an 'Unauthorized' error toast.",
-        "setMaintenanceMode(true) and setMaintenanceMode(false) succeed when called from an anonymous caller.",
-        "The Maintenance Mode toggle in the admin panel reflects the updated state after toggling."
+        "The setMaintenanceMode function in backend/main.mo has no caller identity check, no require statement, and no 'Unauthorized' throw or return of any kind.",
+        "Calling setMaintenanceMode(true) or setMaintenanceMode(false) from an anonymous identity succeeds without error.",
+        "The maintenanceMode stable variable is declared with the `stable` keyword and retains its value across canister upgrades.",
+        "The function does not re-initialize the stable variable to false on canister restart or upgrade."
       ]
     },
     {
-      "id": "REQ-94",
-      "text": "In backend/main.mo, remove all authorization/identity checks from the getAllUsers query function. This function must return all registered user records to any caller (including anonymous) without throwing or returning any 'Unauthorized' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on getAllUsers.",
-      "target": "backend",
+      "id": "REQ-104",
+      "text": "In frontend/src/components/admin/UsersControlsPanel.tsx, update the useSetMaintenanceMode mutation's onError handler to display only a user-friendly toast error message such as 'Failed to update maintenance mode. Please try again.' Never display raw IC rejection error strings, replica error bodies, Request IDs, reject codes, or HTTP details on screen.",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Failed to load users. Please try again."
+          "In admin panel if I click on maintenance mode button it shows error"
         ]
       },
       "acceptanceCriteria": [
-        "Calling getAllUsers() from an anonymous caller returns the full array of registered user records without error.",
-        "The 'Registered Users' table in the admin panel loads and displays users without showing the 'Failed to load users. Please try again.' error.",
-        "A loading skeleton is shown while the data is being fetched, and the table populates once the data is returned."
+        "When the setMaintenanceMode mutation fails, only the message 'Failed to update maintenance mode. Please try again.' is shown to the admin — no raw IC error string is displayed.",
+        "The toast notification is dismissible and does not block the admin panel UI.",
+        "On success, the toggle reflects the updated state and a success toast is shown."
       ]
     },
     {
-      "id": "REQ-95",
-      "text": "In backend/main.mo, remove all authorization/identity checks from the blockUser and unblockUser functions. These functions must accept calls from any caller (including anonymous) without throwing or returning any 'Unauthorized: Only admins can block users' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these two functions.",
-      "target": "backend",
+      "id": "REQ-105",
+      "text": "In frontend/src/hooks/useQueries.ts, verify and fix the useSetMaintenanceMode mutation hook to correctly call the backend actor's setMaintenanceMode(enabled: Bool) method. Ensure the hook uses the actor from the useActor hook, wraps the call in a try/catch, and on error throws a user-readable error string rather than the raw IC rejection. Invalidate the 'maintenanceMode' query key on success so the toggle immediately reflects the new state.",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
+        ],
+        "quotes": [
+          "In admin panel if I click on maintenance mode button it shows error"
         ]
       },
       "acceptanceCriteria": [
-        "Calling blockUser(uniqueCode) from an anonymous caller successfully sets the user's isBlocked=true without error.",
-        "Calling unblockUser(uniqueCode) from an anonymous caller successfully sets the user's isBlocked=false without error.",
-        "The Block/Unblock buttons in the admin panel user table function without producing an 'Unauthorized' error."
+        "useSetMaintenanceMode calls actor.setMaintenanceMode(enabled) with the correct boolean argument.",
+        "On error, the hook's onError callback receives a human-readable string, not a raw IC rejection object.",
+        "On success, the React Query cache for the maintenanceMode query key is invalidated so the toggle UI updates automatically.",
+        "The hook uses the actor returned by the useActor hook."
       ]
     }
   ],
   "constraints": [
-    "Do not change any frontend immutable paths.",
-    "Do not add any new authorization checks to any backend functions.",
-    "Do not alter the data schema or stable variable structure of existing user, poetry, dua, or song records."
+    "Do not add any authorization or identity checks to setMaintenanceMode in backend/main.mo.",
+    "Do not modify frontend/src/hooks/useActor.ts or any file under frontend/src/components/ui.",
+    "Do not remove the History or Downloads sections from the HamburgerMenu."
   ],
   "nonGoals": [
-    "Do not modify any frontend components beyond what is strictly necessary.",
-    "Do not change the PIN authentication logic in PINAuthGuard.tsx.",
-    "Do not alter upload, delete, or like functions in the backend."
+    "Changing the PIN authentication flow for the admin panel.",
+    "Modifying any other admin panel tab (Poetry, Dua, Songs, Content Management).",
+    "Altering the block/unblock or getAllUsers functionality."
   ],
   "imageRequirements": {
     "required": [],

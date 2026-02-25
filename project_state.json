@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 51,
+  "projectStateVersion": 59,
   "summary": "Multimedia content app 'Dard-e-munasif' undergoing complete rebuild from scratch due to persistent 'failed to load content' errors across Poetry, Dua, and Songs sections. Backend Motoko stable variables and query functions (getAllPoetry, getAllDua, getAllSongs) will be rewritten with minimal, clean implementation. All existing features will be preserved: four-category navigation, admin panel (PIN: 09186114), full-screen modals, hybrid music player, Web Audio API filters, hamburger menu with History/Downloads/Volume Manager, IndexedDB storage, and external links.",
   "architectural_notes": [
     "Separate /admin route with PIN-only authentication (09186114)",
@@ -23,7 +23,8 @@
     "App stuck on loading screen — taking a long time to open; likely backend canister initialization delay or route guard backend checks (getUserByDeviceId/getMaintenanceMode) hanging on slow network",
     "Admin panel shows 'Only admin can set maintenance mode' error when toggling maintenance mode — backend setMaintenanceMode enforcing unauthorized identity check that must be removed",
     "Admin panel Users & Controls tab shows 'Failed to load users, make sure you are admin' — backend getAllUsers enforcing unauthorized identity check that must be removed",
-    "Admin panel block/unblock user shows 'Only admin can block users' error — backend blockUser/unblockUser enforcing unauthorized identity check that must be removed"
+    "Admin panel block/unblock user shows 'Only admin can block users' error — backend blockUser/unblockUser enforcing unauthorized identity check that must be removed",
+    "Maintenance mode toggle not working in admin panel — setMaintenanceMode backend call may still have authorization check or state not persisting"
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -610,6 +611,46 @@
         "REQ-91"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-banscreen-component-frontend-src-components-banscreen-tsx-to-add-a-prominent-contact-admin-button-centered-directly-below-the-suspension-message-when-clicked-this-button-must-open-whatsapp-by-navigating-to-https-wa-me-919541525891-text-blocked-api-9-0-in-a-new-tab-the-button-must-be-the-main-visual-focus-of-the-page-styled-to-match-the-app-s-dark-aesthetic-with-high-contrast-and-clear-visibility-no-other-navigation-links-back-buttons-or-app-content-should-be-added",
+      "title": "Update the BanScreen component (frontend/src/components/BanScreen.tsx) to add a prominent 'Contact Admin' button centered directly below the suspension message. When clicked, this button must open WhatsApp by navigating to 'https://wa.me/919541525891?text=Blocked.API.9.0' in a new tab. The button must be the main visual focus of the page, styled to match the app's dark aesthetic with high contrast and clear visibility. No other navigation links, back buttons, or app content should be added.",
+      "reqIds": [
+        "REQ-96"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-update-the-usegetallusers-hook-call-and-its-error-handling-so-that-when-the-backend-returns-a-canister-stopped-or-ic0508-error-the-component-displays-a-clear-error-message-failed-to-load-users-please-try-again-with-a-visible-retry-button-that-re-runs-the-query-do-not-show-any-loading-spinner-indefinitely-if-the-query-errors-show-the-error-state-immediately",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, update the useGetAllUsers hook call and its error handling so that when the backend returns a canister-stopped or IC0508 error, the component displays a clear error message 'Failed to load users. Please try again.' with a visible Retry button that re-runs the query. Do not show any loading spinner indefinitely — if the query errors, show the error state immediately.",
+      "reqIds": [
+        "REQ-100"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-update-the-usesetmaintenancemode-mutation-s-onerror-handler-to-display-a-user-friendly-toast-error-message-such-as-failed-to-update-maintenance-mode-please-try-again-instead-of-displaying-the-raw-ic-rejection-error-string-which-currently-shows-the-full-replica-error-body-including-request-id-reject-code-and-http-details-on-screen",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, update the useSetMaintenanceMode mutation's onError handler to display a user-friendly toast error message such as 'Failed to update maintenance mode. Please try again.' instead of displaying the raw IC rejection error string (which currently shows the full replica error body including Request ID, reject code, and HTTP details on screen).",
+      "reqIds": [
+        "REQ-101"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-update-the-usesetmaintenancemode-mutation-s-onerror-handler-to-display-only-a-user-friendly-toast-error-message-such-as-failed-to-update-maintenance-mode-please-try-again-never-display-raw-ic-rejection-error-strings-replica-error-bodies-request-ids-reject-codes-or-http-details-on-screen",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, update the useSetMaintenanceMode mutation's onError handler to display only a user-friendly toast error message such as 'Failed to update maintenance mode. Please try again.' Never display raw IC rejection error strings, replica error bodies, Request IDs, reject codes, or HTTP details on screen.",
+      "reqIds": [
+        "REQ-104"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-hooks-usequeries-ts-verify-and-fix-the-usesetmaintenancemode-mutation-hook-to-correctly-call-the-backend-actor-s-setmaintenancemode-enabled-bool-method-ensure-the-hook-uses-the-actor-from-the-useactor-hook-wraps-the-call-in-a-try-catch-and-on-error-throws-a-user-readable-error-string-rather-than-the-raw-ic-rejection-invalidate-the-maintenancemode-query-key-on-success-so-the-toggle-immediately-reflects-the-new-state",
+      "title": "In frontend/src/hooks/useQueries.ts, verify and fix the useSetMaintenanceMode mutation hook to correctly call the backend actor's setMaintenanceMode(enabled: Bool) method. Ensure the hook uses the actor from the useActor hook, wraps the call in a try/catch, and on error throws a user-readable error string rather than the raw IC rejection. Invalidate the 'maintenanceMode' query key on success so the toggle immediately reflects the new state.",
+      "reqIds": [
+        "REQ-105"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -936,6 +977,64 @@
       "summary": "In backend/main.mo, remove all authorization/identity checks from the blockUser and unblockUser functions. These functions must accept calls from any caller (including anonymous) without throwing or returning any 'Unauthorized: Only admins can block users' error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these two functions.",
       "reqIds": [
         "REQ-95"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-62",
+      "summary": "Update BanScreen component: add a prominent 'Contact Admin'/'Support' button centered below the suspension message that redirects to WhatsApp (+91 9541525891) with prefilled message 'Blocked.API.9.0'.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-63",
+      "summary": "Fix maintenance mode toggle not working in admin panel — setMaintenanceMode backend calls failing or not reflecting state correctly.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-64",
+      "summary": "Fix 'Failed to load users' error in the Users & Controls tab registered users section — getAllUsers backend call failing or not returning data.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-65",
+      "summary": "In backend/main.mo, audit the entire actor for any condition or pattern that could cause the canister to become 'stopped' or enter a state where it rejects all incoming calls with IC0508 / reject code 5 ('Canister is stopped'). Ensure the actor has no self-stop calls, no unhandled traps in system functions (preupgrade, postupgrade), and no infinite loops or memory exhaustion in stable variable initialization. The actor must remain running and accept all query and update calls at all times.",
+      "reqIds": [
+        "REQ-97"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-66",
+      "summary": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check — no caller validation, no admin principal check, no 'Unauthorized' guard of any kind. The function must accept calls from any caller including anonymous and update the stable maintenanceMode variable, then return without error. Additionally, verify the stable variable holding the maintenance mode flag persists across canister upgrades and is not re-initialized to false on every restart.",
+      "reqIds": [
+        "REQ-98"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-67",
+      "summary": "In backend/main.mo, ensure the getAllUsers() query function has absolutely no authorization or identity check — no caller validation, no admin principal check, no 'Unauthorized' guard. The function must return all registered user records (uniqueCode, deviceId, name, server, isBlocked) to any caller including anonymous. Verify the stable users storage variable is correctly iterated and all stored entries are returned as an array without any trap or rejection.",
+      "reqIds": [
+        "REQ-99"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-68",
+      "summary": "In backend/main.mo, remove all authorization and identity checks from the createPoetry, createDua, and createSong update functions. These functions must accept calls from any caller including anonymous without throwing or returning any 'Unauthorized: Only admins can create poetry' (or equivalent Dua/Song) error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on these three create functions.",
+      "reqIds": [
+        "REQ-102"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-69",
+      "summary": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. Verify the stable variable holding the maintenance mode flag persists across canister upgrades and is never re-initialized to false on restart.",
+      "reqIds": [
+        "REQ-103"
       ],
       "status": "pending"
     }

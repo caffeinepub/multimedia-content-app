@@ -179,8 +179,12 @@ export function useSetMaintenanceMode() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (enabled: boolean) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.setMaintenanceMode(enabled);
+      if (!actor) throw new Error('Failed to update maintenance mode. Please try again.');
+      try {
+        await actor.setMaintenanceMode(enabled);
+      } catch {
+        throw new Error('Failed to update maintenance mode. Please try again.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenanceMode'] });
@@ -194,16 +198,11 @@ export function useGetAllUsers() {
     queryKey: ['allUsers'],
     queryFn: async () => {
       if (!actor) return [];
-      try {
-        const result = await actor.getAllUsers();
-        return result;
-      } catch (err: any) {
-        // If unauthorized (anonymous actor), return empty array with error
-        throw err;
-      }
+      return actor.getAllUsers();
     },
     enabled: !!actor && !isFetching,
-    retry: 1,
+    // No retries — fail fast so the error UI with Retry button shows immediately
+    retry: 0,
   });
 }
 
@@ -213,7 +212,11 @@ export function useBlockUser() {
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.blockUser(uniqueCode);
+      try {
+        await actor.blockUser(uniqueCode);
+      } catch {
+        throw new Error('Failed to block user. Please try again.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
@@ -227,7 +230,11 @@ export function useUnblockUser() {
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.unblockUser(uniqueCode);
+      try {
+        await actor.unblockUser(uniqueCode);
+      } catch {
+        throw new Error('Failed to unblock user. Please try again.');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });

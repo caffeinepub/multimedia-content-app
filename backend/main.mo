@@ -11,7 +11,9 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -123,7 +125,7 @@ actor {
   var userCounter : Nat = 0;
   let usersMap = Map.empty<Text, UserRecord>();
 
-  var maintenanceMode : Bool = false;
+  stable var maintenanceMode : Bool = false;
 
   // Validation helpers
   func isEmpty(val : Text) : Bool {
@@ -142,12 +144,8 @@ actor {
     1000 + (Int.abs(Time.now()) % 1001);
   };
 
-  // Admin only: Create Poetry
+  // Anyone (including anonymous): Create Poetry
   public shared ({ caller }) func createPoetry(input : CreatePoetryInput) : async Text {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can create poetry");
-    };
-
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
@@ -176,12 +174,8 @@ actor {
     id;
   };
 
-  // Admin only: Create Dua
+  // Anyone (including anonymous): Create Dua
   public shared ({ caller }) func createDua(input : CreateDuaInput) : async Text {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can create dua");
-    };
-
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
@@ -210,12 +204,8 @@ actor {
     id;
   };
 
-  // Admin only: Create Song
+  // Anyone (including anonymous): Create Song
   public shared ({ caller }) func createSong(input : CreateSongInput) : async Text {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can create songs");
-    };
-
     if (isEmpty(input.title) or isEmpty(input.artist)) {
       Runtime.trap("Title and artist must not be empty");
     };
@@ -433,18 +423,24 @@ actor {
     usersMap.get(deviceId);
   };
 
-  // Get Maintenance Mode - any caller (public status check)
+  // Public: Get Maintenance Mode - any caller (public status check)
   public query func getMaintenanceMode() : async Bool {
     maintenanceMode;
   };
 
-  // Maintenance Mode can be enabled by any caller (admin check moved to frontend)
+  // Admin only: Set Maintenance Mode
   public shared ({ caller }) func setMaintenanceMode(enabled : Bool) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can set maintenance mode");
+    };
     maintenanceMode := enabled;
   };
 
-  // Block User - any caller (admin check moved to frontend)
+  // Admin only: Block User
   public shared ({ caller }) func blockUser(uniqueCode : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can block users");
+    };
     var found = false;
     for ((deviceId, user) in usersMap.entries()) {
       if (user.uniqueCode == uniqueCode) {
@@ -458,8 +454,11 @@ actor {
     };
   };
 
-  // Unblock User - any caller (admin check moved to frontend)
+  // Admin only: Unblock User
   public shared ({ caller }) func unblockUser(uniqueCode : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can unblock users");
+    };
     var found = false;
     for ((deviceId, user) in usersMap.entries()) {
       if (user.uniqueCode == uniqueCode) {
@@ -473,8 +472,8 @@ actor {
     };
   };
 
-  // Get all Users can be called by any caller (admin check moved to frontend)
-  public query ({ caller }) func getAllUsers() : async [UserRecord] {
+  // Get all Users - any caller
+  public query func getAllUsers() : async [UserRecord] {
     usersMap.values().toArray();
   };
 };

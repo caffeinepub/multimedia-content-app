@@ -1,6 +1,40 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix admin panel: remove backend auth checks for maintenance mode, getAllUsers, blockUser, and unblockUser",
-  "requirements": []
+  "title": "Fix maintenance mode toggle error in admin panel",
+  "requirements": [
+    {
+      "id": "REQ-104",
+      "summary": "Display user-friendly error messages for maintenance mode toggle failures in admin panel",
+      "acceptanceCriteria": [
+        "When the setMaintenanceMode mutation fails, only the message 'Failed to update maintenance mode. Please try again.' is shown to the admin — no raw IC error string is displayed.",
+        "The toast notification is dismissible and does not block the admin panel UI.",
+        "On success, the toggle reflects the updated state and a success toast is shown."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/UsersControlsPanel.tsx",
+          "operation": "modify",
+          "description": "Update the useSetMaintenanceMode mutation's onError handler to display only the user-friendly message 'Failed to update maintenance mode. Please try again.' instead of raw IC rejection error strings, Request IDs, reject codes, or HTTP details. Ensure the error toast is dismissible and does not block the UI. Verify the onSuccess handler shows a success toast and that the toggle reflects the updated state."
+        }
+      ]
+    },
+    {
+      "id": "REQ-105",
+      "summary": "Fix useSetMaintenanceMode mutation to correctly call backend and handle errors gracefully",
+      "acceptanceCriteria": [
+        "useSetMaintenanceMode calls actor.setMaintenanceMode(enabled) with the correct boolean argument.",
+        "On error, the hook's onError callback receives a human-readable string, not a raw IC rejection object.",
+        "On success, the React Query cache for the maintenanceMode query key is invalidated so the toggle UI updates automatically.",
+        "The hook uses the actor returned by the useActor hook."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Verify and fix the useSetMaintenanceMode mutation hook to correctly call actor.setMaintenanceMode(enabled) with a boolean argument. Ensure the mutation uses the actor from useActor, wraps the backend call in try/catch, and on error throws a user-readable error string (e.g., 'Failed to update maintenance mode') rather than exposing the raw IC rejection object. On success, invalidate the 'maintenanceMode' query key using queryClient.invalidateQueries so the toggle UI immediately reflects the new state."
+        }
+      ]
+    }
+  ]
 }

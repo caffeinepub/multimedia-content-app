@@ -1,38 +1,43 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T19:32:36.442Z",
-  "summary": "The diff modifies backend/main.mo and project_state.json. The truncated backend/main.mo content shows the file structure but does not reveal the implementations of setMaintenanceMode, getAllUsers, blockUser, or unblockUser functions — the critical functions for REQ-93, REQ-94, and REQ-95. The visible portion shows other functions still retain authorization checks (e.g., createPoetry, getCallerUserProfile, getUserProfile, saveCallerUserProfile). Without seeing the full diff of the target functions, we cannot confirm any of the three requirements are satisfied.",
+  "generatedAt": "2026-02-24T20:37:13.047Z",
+  "summary": "All three requirements (REQ-103, REQ-104, REQ-105) appear to be implemented in the diff. The backend main.mo declares stable var maintenanceMode without any visible authorization check. UsersControlsPanel.tsx implements a clean onError handler showing only a user-friendly toast. useQueries.ts is truncated before the useSetMaintenanceMode hook is visible. A migration.mo file was added which was not requested.",
   "missing_requirements": [
     {
-      "id": "REQ-93",
-      "requirement": "Remove all authorization/identity checks from setMaintenanceMode in backend/main.mo so any caller including anonymous can invoke it without error.",
-      "reason": "The diff of backend/main.mo is truncated and the setMaintenanceMode function body is not visible. There is no evidence that authorization checks were removed from this function.",
+      "id": "REQ-103",
+      "requirement": "The setMaintenanceMode function must have no authorization or identity check and the stable variable must not be re-initialized to false on upgrade.",
+      "reason": "The backend/main.mo diff is truncated before the setMaintenanceMode function body is visible, so it cannot be fully verified that the function exists with no auth guard.",
       "evidence": [
         "backend/main.mo"
       ]
     },
     {
-      "id": "REQ-94",
-      "requirement": "Remove all authorization/identity checks from the getAllUsers query function in backend/main.mo so any caller including anonymous receives all user records without error.",
-      "reason": "The diff of backend/main.mo is truncated and the getAllUsers function body is not visible. There is no evidence that authorization checks were removed from this function.",
+      "id": "REQ-105",
+      "requirement": "The useSetMaintenanceMode mutation hook must wrap the call in a try/catch and throw a user-readable error string, and invalidate the maintenanceMode query key on success.",
+      "reason": "The useQueries.ts file is truncated before the useSetMaintenanceMode hook implementation is visible, making it impossible to confirm the hook throws a human-readable string on error and invalidates the maintenanceMode query key on success.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/hooks/useQueries.ts"
       ]
-    },
+    }
+  ],
+  "hallucinated_features": [
     {
-      "id": "REQ-95",
-      "requirement": "Remove all authorization/identity checks from blockUser and unblockUser in backend/main.mo so any caller including anonymous can invoke them without error.",
-      "reason": "The diff of backend/main.mo is truncated and neither blockUser nor unblockUser function bodies are visible. There is no evidence that authorization checks were removed from these functions.",
+      "description": "A new backend/migration.mo module was added with a Migration.run function for canister state migration.",
+      "reason": "The build request requirements do not mention adding a migration module. This is an extra feature not requested by any of REQ-103, REQ-104, or REQ-105.",
       "evidence": [
+        "backend/migration.mo",
         "backend/main.mo"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.35,
+  "confidence": 0.58,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/admin/UsersControlsPanel.tsx",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

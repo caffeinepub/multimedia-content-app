@@ -1,11 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the backend authorization checks that are blocking the admin panel from toggling maintenance mode, loading users, and blocking/unblocking users.
+**Goal:** Fix the maintenance mode toggle in the admin panel so it works without errors.
 
 **Planned changes:**
-- Remove all caller identity/authorization checks from `setMaintenanceMode` in `backend/main.mo` so any caller (including anonymous) can invoke it without an "Unauthorized" error.
-- Remove all caller identity/authorization checks from `getAllUsers` in `backend/main.mo` so it returns all user records to any caller without error.
-- Remove all caller identity/authorization checks from `blockUser` and `unblockUser` in `backend/main.mo` so they can be called by any caller without an "Unauthorized" error.
+- Remove all authorization/identity checks from the `setMaintenanceMode` function in `backend/main.mo` so it accepts calls from any caller, and ensure the `stable` variable persists across upgrades without re-initializing to false.
+- Update the `useSetMaintenanceMode` mutation hook in `frontend/src/hooks/useQueries.ts` to correctly call `actor.setMaintenanceMode(enabled)`, wrap it in a try/catch that throws a human-readable error, and invalidate the `maintenanceMode` query cache on success.
+- Update the `onError` handler in `frontend/src/components/admin/UsersControlsPanel.tsx` to show only a friendly toast message ("Failed to update maintenance mode. Please try again.") instead of raw IC rejection details.
 
-**User-visible outcome:** The admin panel can successfully toggle Maintenance Mode, load and display the Registered Users table, and block/unblock users without any "Unauthorized" error messages.
+**User-visible outcome:** Clicking the maintenance mode toggle in the admin panel succeeds without showing an error, and the toggle immediately reflects the updated state with a success or user-friendly error toast.

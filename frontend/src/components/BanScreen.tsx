@@ -1,4 +1,6 @@
-import { ShieldX } from 'lucide-react';
+import { ShieldX, MessageCircle } from 'lucide-react';
+
+const WHATSAPP_URL = `https://wa.me/919541525891?text=${encodeURIComponent('Blocked.API.9.0')}`;
 
 export default function BanScreen() {
   return (
@@ -16,6 +18,17 @@ export default function BanScreen() {
             Your account has been suspended. Please contact support.
           </p>
         </div>
+
+        {/* Contact Admin Button */}
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#25D366] hover:bg-[#1ebe5d] active:bg-[#17a852] text-white font-semibold text-base shadow-lg shadow-[#25D366]/30 transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          <MessageCircle className="h-5 w-5 flex-shrink-0" />
+          Contact Admin
+        </a>
 
         {/* Decorative divider */}
         <div className="w-16 h-0.5 rounded-full bg-destructive/30" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Search, Users, ShieldOff, ShieldCheck, Wrench } from 'lucide-react';
+import { Search, Users, ShieldOff, ShieldCheck, Wrench, RefreshCw } from 'lucide-react';
 import {
   useGetMaintenanceMode,
   useSetMaintenanceMode,
@@ -36,23 +36,46 @@ import {
 export default function UsersControlsPanel() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Maintenance mode
+  // Maintenance mode — track local optimistic state to allow visual revert on error
   const { data: maintenanceMode, isLoading: maintenanceLoading } = useGetMaintenanceMode();
   const setMaintenanceMutation = useSetMaintenanceMode();
 
+  // Local optimistic value for the switch; syncs with server value when it arrives
+  const [localMaintenance, setLocalMaintenance] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (maintenanceMode !== undefined) {
+      setLocalMaintenance(maintenanceMode);
+    }
+  }, [maintenanceMode]);
+
+  // Effective displayed value: use local optimistic state if available, else server value
+  const displayedMaintenance =
+    localMaintenance !== null ? localMaintenance : (maintenanceMode ?? false);
+
   // Users
-  const { data: users, isLoading: usersLoading, isError: usersError, refetch: refetchUsers } = useGetAllUsers();
+  const {
+    data: users,
+    isLoading: usersLoading,
+    isError: usersError,
+    refetch: refetchUsers,
+    isFetching: usersFetching,
+  } = useGetAllUsers();
 
   // Block / Unblock mutations
   const blockMutation = useBlockUser();
   const unblockMutation = useUnblockUser();
 
   const handleMaintenanceToggle = async (enabled: boolean) => {
+    // Optimistically update the local switch state immediately
+    setLocalMaintenance(enabled);
     try {
       await setMaintenanceMutation.mutateAsync(enabled);
       toast.success(enabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled');
-    } catch (err: any) {
-      toast.error('Failed to update maintenance mode: ' + (err?.message ?? 'Unknown error'));
+    } catch {
+      // Revert the local switch state to the last known server value
+      setLocalMaintenance(maintenanceMode ?? false);
+      toast.error('Failed to update maintenance mode. Please try again.');
     }
   };
 
@@ -60,8 +83,8 @@ export default function UsersControlsPanel() {
     try {
       await blockMutation.mutateAsync(uniqueCode);
       toast.success(`User ${uniqueCode} has been blocked`);
-    } catch (err: any) {
-      toast.error('Failed to block user: ' + (err?.message ?? 'Unknown error'));
+    } catch {
+      toast.error('Failed to block user. Please try again.');
     }
   };
 
@@ -69,8 +92,8 @@ export default function UsersControlsPanel() {
     try {
       await unblockMutation.mutateAsync(uniqueCode);
       toast.success(`User ${uniqueCode} has been unblocked`);
-    } catch (err: any) {
-      toast.error('Failed to unblock user: ' + (err?.message ?? 'Unknown error'));
+    } catch {
+      toast.error('Failed to unblock user. Please try again.');
     }
   };
 
@@ -95,13 +118,18 @@ export default function UsersControlsPanel() {
             <Skeleton className="h-6 w-12 rounded-full" />
           ) : (
             <Switch
-              checked={!!maintenanceMode}
+              checked={displayedMaintenance}
               onCheckedChange={handleMaintenanceToggle}
               disabled={setMaintenanceMutation.isPending}
             />
           )}
           <span className="text-sm font-medium text-foreground">
-            {maintenanceMode ? (
+            {setMaintenanceMutation.isPending ? (
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                Updating…
+              </span>
+            ) : displayedMaintenance ? (
               <span className="text-destructive">Maintenance ON</span>
             ) : (
               <span className="text-green-600 dark:text-green-400">App is Live</span>
@@ -145,13 +173,21 @@ export default function UsersControlsPanel() {
 
         {/* Error State */}
         {usersError && !usersLoading && (
-          <div className="text-center py-8 text-destructive text-sm">
-            Failed to load users. Please try again.
-            <div className="mt-2">
-              <Button variant="outline" size="sm" onClick={() => refetchUsers()}>
-                Retry
-              </Button>
-            </div>
+          <div className="text-center py-10">
+            <Users className="w-10 h-10 mx-auto mb-3 opacity-30 text-destructive" />
+            <p className="text-sm text-destructive font-medium mb-3">
+              Failed to load users. Please try again.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetchUsers()}
+              disabled={usersFetching}
+              className="gap-2"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${usersFetching ? 'animate-spin' : ''}`} />
+              {usersFetching ? 'Retrying…' : 'Retry'}
+            </Button>
           </div>
         )}
 
@@ -277,8 +313,8 @@ export default function UsersControlsPanel() {
                                 <AlertDialogTitle>Block User?</AlertDialogTitle>
                                 <AlertDialogDescription>
                                   This will suspend access for{' '}
-                                  <strong>{user.name}</strong> ({user.uniqueCode}). They will see
-                                  the ban screen until unblocked.
+                                  <strong>{user.name}</strong> ({user.uniqueCode}). They will see a
+                                  ban screen when they open the app.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
