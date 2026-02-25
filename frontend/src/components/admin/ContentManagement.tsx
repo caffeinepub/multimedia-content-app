@@ -19,8 +19,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 type ContentItem =
-  | { type: 'poetry'; data: { id: string; title: string; likes: { count: bigint } } }
-  | { type: 'dua'; data: { id: string; title: string; likes: { count: bigint } } }
+  | { type: 'poetry'; data: { id: string; title: string; likeCount: bigint } }
+  | { type: 'dua'; data: { id: string; title: string; likeCount: bigint } }
   | { type: 'song'; data: { id: string; title: string; artist: string } };
 
 export default function ContentManagement() {
@@ -143,7 +143,7 @@ export default function ContentManagement() {
                     </div>
                     {(item.type === 'poetry' || item.type === 'dua') && (
                       <p className="text-sm text-muted-foreground">
-                        {Number(item.data.likes.count).toLocaleString()} likes
+                        {Number(item.data.likeCount).toLocaleString()} likes
                       </p>
                     )}
                     {item.type === 'song' && (

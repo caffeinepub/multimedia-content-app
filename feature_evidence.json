@@ -1,45 +1,4 @@
 {
   "kind": "feature_evidence_report",
-  "features": [
-    {
-      "featureId": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-update-the-usesetmaintenancemode-mutation-s-onerror-handler-to-display-only-a-user-friendly-toast-error-message-such-as-failed-to-update-maintenance-mode-please-try-again-never-display-raw-ic-rejection-error-strings-replica-error-bodies-request-ids-reject-codes-or-http-details-on-screen",
-      "featureTitle": "In frontend/src/components/admin/UsersControlsPanel.tsx, update the useSetMaintenanceMode mutation's onError handler to display only a user-friendly toast error message such as 'Failed to update maintenance mode. Please try again.' Never display raw IC rejection error strings, replica error bodies, Request IDs, reject codes, or HTTP details on screen.",
-      "files": [
-        "frontend/src/components/admin/UsersControlsPanel.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-104"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-in-frontend-src-hooks-usequeries-ts-verify-and-fix-the-usesetmaintenancemode-mutation-hook-to-correctly-call-the-backend-actor-s-setmaintenancemode-enabled-bool-method-ensure-the-hook-uses-the-actor-from-the-useactor-hook-wraps-the-call-in-a-try-catch-and-on-error-throws-a-user-readable-error-string-rather-than-the-raw-ic-rejection-invalidate-the-maintenancemode-query-key-on-success-so-the-toggle-immediately-reflects-the-new-state",
-      "featureTitle": "In frontend/src/hooks/useQueries.ts, verify and fix the useSetMaintenanceMode mutation hook to correctly call the backend actor's setMaintenanceMode(enabled: Bool) method. Ensure the hook uses the actor from the useActor hook, wraps the call in a try/catch, and on error throws a user-readable error string rather than the raw IC rejection. Invalidate the 'maintenanceMode' query key on success so the toggle immediately reflects the new state.",
-      "files": [
-        "frontend/src/hooks/useQueries.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-105"
-      ],
-      "confidence": "high"
-    }
-  ]
+  "features": []
 }

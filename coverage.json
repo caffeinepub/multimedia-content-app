@@ -1,55 +1,40 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T20:37:13.053Z",
+  "generatedAt": "2026-02-25T10:52:40.854Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 2,
+    "total": 2,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-103",
-        "summary": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. Verify the stable variable holding the maintenance mode flag persists across canister upgrades and is never re-initialized to false on restart.",
+        "id": "REQ-128",
+        "summary": "In backend/main.mo, remove all authorization and identity checks from the createSong update function. The function must accept calls from any caller including anonymous without throwing or returning any 'Unauthorized: Only users can create songs' (or equivalent) error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on createSong.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-104",
-        "summary": "In frontend/src/components/admin/UsersControlsPanel.tsx, update the useSetMaintenanceMode mutation's onError handler to display only a user-friendly toast error message such as 'Failed to update maintenance mode. Please try again.' Never display raw IC rejection error strings, replica error bodies, Request IDs, reject codes, or HTTP details on screen.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/admin/UsersControlsPanel.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/admin/UsersControlsPanel.tsx"
-        ]
-      },
-      {
-        "id": "REQ-105",
-        "summary": "In frontend/src/hooks/useQueries.ts, verify and fix the useSetMaintenanceMode mutation hook to correctly call the backend actor's setMaintenanceMode(enabled: Bool) method. Ensure the hook uses the actor from the useActor hook, wraps the call in a try/catch, and on error throws a user-readable error string rather than the raw IC rejection. Invalidate the 'maintenanceMode' query key on success so the toggle immediately reflects the new state.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts"
-        ]
+        "id": "REQ-129",
+        "summary": "In backend/main.mo, also verify and remove all authorization and identity checks from the createPoetry and createDua update functions, ensuring they too accept calls from any caller including anonymous without throwing or returning any 'Unauthorized' error. All three create functions (createPoetry, createDua, createSong) must be fully open to anonymous callers.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/admin/UsersControlsPanel.tsx",
-    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -51,7 +51,7 @@ export default function FullScreenPostModal({ post, postType, onClose }: FullScr
 
   if (!post) return null;
 
-  const likesCount = post.likes?.count != null ? Number(post.likes.count) : 0;
+  const likesCount = post.likeCount != null ? Number(post.likeCount) : 0;
 
   let imageUrl: string | undefined;
   if (isPoetry(post) && post.image) {

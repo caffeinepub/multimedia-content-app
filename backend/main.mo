@@ -2,28 +2,22 @@ import Map "mo:core/Map";
 import Text "mo:core/Text";
 import Array "mo:core/Array";
 import Iter "mo:core/Iter";
-import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
 import Time "mo:core/Time";
 import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // User Profile type as required by frontend
-  public type UserProfile = {
-    name : Text;
-  };
-
+  public type UserProfile = { name : Text };
   let userProfiles = Map.empty<Principal, UserProfile>();
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -47,19 +41,14 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Content models
-  public type Likes = {
-    count : Nat;
-    likedBy : [Text];
-  };
-
   public type Poetry = {
     id : Text;
     title : Text;
     content : Text;
     category : Text;
     image : ?Storage.ExternalBlob;
-    likes : Likes;
+    likeCount : Nat;
+    createdAt : Int;
   };
 
   public type Dua = {
@@ -68,7 +57,8 @@ actor {
     content : Text;
     category : Text;
     audio : ?Storage.ExternalBlob;
-    likes : Likes;
+    likeCount : Nat;
+    createdAt : Int;
   };
 
   public type Song = {
@@ -77,6 +67,8 @@ actor {
     artist : Text;
     category : Text;
     audio : ?Storage.ExternalBlob;
+    likeCount : Nat;
+    createdAt : Int;
   };
 
   public type CreatePoetryInput = {
@@ -97,23 +89,14 @@ actor {
     audio : Storage.ExternalBlob;
   };
 
-  public type LikeInput = {
-    userId : Text;
-    contentId : Text;
-    contentType : Text;
-  };
-
-  // Maps for content storage
   let poetryMap = Map.empty<Text, Poetry>();
   let duaMap = Map.empty<Text, Dua>();
   let songMap = Map.empty<Text, Song>();
 
-  // Counter for generating IDs
   var poetryCounter : Nat = 0;
   var duaCounter : Nat = 0;
   var songCounter : Nat = 0;
 
-  // User management additions
   public type UserRecord = {
     uniqueCode : Text;
     deviceId : Text;
@@ -127,35 +110,18 @@ actor {
 
   stable var maintenanceMode : Bool = false;
 
-  // Validation helpers
-  func isEmpty(val : Text) : Bool {
-    val.trim(#char ' ').size() == 0;
-  };
+  func isEmpty(val : Text) : Bool { val.trim(#char ' ').size() == 0 };
+  func isValidAudio(_ : Storage.ExternalBlob) : Bool { true };
+  func isValidImage(_ : Storage.ExternalBlob) : Bool { true };
+  func generateRandomLikes() : Int { 1000 + (Time.now() % 1001) };
 
-  func isValidAudio(_ : Storage.ExternalBlob) : Bool {
-    true;
-  };
-
-  func isValidImage(_ : Storage.ExternalBlob) : Bool {
-    true;
-  };
-
-  func generateRandomLikes() : Nat {
-    1000 + (Int.abs(Time.now()) % 1001);
-  };
-
-  // Anyone (including anonymous): Create Poetry
-  public shared ({ caller }) func createPoetry(input : CreatePoetryInput) : async Text {
+  public shared func createPoetry(input : CreatePoetryInput) : async Text {
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
 
     switch (input.image) {
-      case (?img) {
-        if (not isValidImage(img)) {
-          Runtime.trap("Invalid image file type");
-        };
-      };
+      case (?img) { if (not isValidImage(img)) { Runtime.trap("Invalid image file type") } };
       case (null) {};
     };
 
@@ -167,25 +133,21 @@ actor {
       content = input.content;
       image = input.image;
       category = "poetry";
-      likes = { count = generateRandomLikes(); likedBy = [] };
+      likeCount = Int.abs(generateRandomLikes());
+      createdAt = Time.now();
     };
 
     poetryMap.add(id, newPoetry);
     id;
   };
 
-  // Anyone (including anonymous): Create Dua
-  public shared ({ caller }) func createDua(input : CreateDuaInput) : async Text {
+  public shared func createDua(input : CreateDuaInput) : async Text {
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
 
     switch (input.audio) {
-      case (?aud) {
-        if (not isValidAudio(aud)) {
-          Runtime.trap("Invalid audio file type");
-        };
-      };
+      case (?aud) { if (not isValidAudio(aud)) { Runtime.trap("Invalid audio file type") } };
       case (null) {};
     };
 
@@ -197,15 +159,15 @@ actor {
       content = input.content;
       audio = input.audio;
       category = "dua";
-      likes = { count = generateRandomLikes(); likedBy = [] };
+      likeCount = Int.abs(generateRandomLikes());
+      createdAt = Time.now();
     };
 
     duaMap.add(id, newDua);
     id;
   };
 
-  // Anyone (including anonymous): Create Song
-  public shared ({ caller }) func createSong(input : CreateSongInput) : async Text {
+  public shared func createSong(input : CreateSongInput) : async Text {
     if (isEmpty(input.title) or isEmpty(input.artist)) {
       Runtime.trap("Title and artist must not be empty");
     };
@@ -222,13 +184,14 @@ actor {
       artist = input.artist;
       audio = ?input.audio;
       category = "song";
+      likeCount = Int.abs(generateRandomLikes());
+      createdAt = Time.now();
     };
 
     songMap.add(id, newSong);
     id;
   };
 
-  // Admin only: Delete Poetry
   public shared ({ caller }) func deletePoetry(id : Text) : async Bool {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can delete poetry");
@@ -243,7 +206,6 @@ actor {
     };
   };
 
-  // Admin only: Delete Dua
   public shared ({ caller }) func deleteDua(id : Text) : async Bool {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can delete dua");
@@ -258,7 +220,6 @@ actor {
     };
   };
 
-  // Admin only: Delete Song
   public shared ({ caller }) func deleteSong(id : Text) : async Bool {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can delete songs");
@@ -273,133 +234,67 @@ actor {
     };
   };
 
-  // Public: Get Poetry by ID
   public query func getPoetryById(id : Text) : async ?Poetry {
     poetryMap.get(id);
   };
 
-  // Public: Get Dua by ID
   public query func getDuaById(id : Text) : async ?Dua {
     duaMap.get(id);
   };
 
-  // Public: Get Song by ID
   public query func getSongById(id : Text) : async ?Song {
     songMap.get(id);
   };
 
-  // Public: Get all Poetry
   public query func getAllPoetry() : async [Poetry] {
     poetryMap.values().toArray();
   };
 
-  // Public: Get all Duas
   public query func getAllDua() : async [Dua] {
     duaMap.values().toArray();
   };
 
-  // Public: Get all Songs
   public query func getAllSongs() : async [Song] {
     songMap.values().toArray();
   };
 
-  // Users only: Like Poetry
-  public shared ({ caller }) func likePoetry(id : Text, userId : Text) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can like poetry");
-    };
-
-    let callerText = caller.toText();
-    if (callerText != userId) {
-      Runtime.trap("Unauthorized: Cannot like on behalf of another user");
-    };
-
-    if (isEmpty(userId)) {
-      Runtime.trap("User ID must not be empty");
-    };
-
+  public shared func incrementPoetryLike(id : Text) : async Nat {
     switch (poetryMap.get(id)) {
       case (?poetry) {
-        let alreadyLiked = poetry.likes.likedBy.find(func(u) { u == userId });
-        switch (alreadyLiked) {
-          case (?_) { false };
-          case (null) {
-            let newLikedBy = poetry.likes.likedBy.concat([userId]);
-            let updatedPoetry : Poetry = {
-              poetry with likes = {
-                count = poetry.likes.count + 1;
-                likedBy = newLikedBy;
-              };
-            };
-            poetryMap.add(id, updatedPoetry);
-            true;
-          };
-        };
+        let newLikeCount = poetry.likeCount + 1;
+        let updatedPoetry = { poetry with likeCount = newLikeCount };
+        poetryMap.add(id, updatedPoetry);
+        newLikeCount;
       };
       case (null) { Runtime.trap("Poetry not found") };
     };
   };
 
-  // Users only: Like Dua
-  public shared ({ caller }) func likeDua(id : Text, userId : Text) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can like dua");
-    };
-
-    let callerText = caller.toText();
-
-    if (callerText != userId) {
-      Runtime.trap("Unauthorized: Cannot like on behalf of another user");
-    };
-
-    if (isEmpty(userId)) {
-      Runtime.trap("User ID must not be empty");
-    };
-
+  public shared func incrementDuaLike(id : Text) : async Nat {
     switch (duaMap.get(id)) {
       case (?dua) {
-        let alreadyLiked = dua.likes.likedBy.find(func(u) { u == userId });
-        switch (alreadyLiked) {
-          case (?_) { false };
-          case (null) {
-            let newLikedBy = dua.likes.likedBy.concat([userId]);
-            let updatedDua : Dua = {
-              dua with likes = {
-                count = dua.likes.count + 1;
-                likedBy = newLikedBy;
-              };
-            };
-            duaMap.add(id, updatedDua);
-            true;
-          };
-        };
+        let newLikeCount = dua.likeCount + 1;
+        let updatedDua = { dua with likeCount = newLikeCount };
+        duaMap.add(id, updatedDua);
+        newLikeCount;
       };
       case (null) { Runtime.trap("Dua not found") };
     };
   };
 
-  // Public: Get Poetry likes
-  public query func getPoetryLikes(id : Text) : async ?Likes {
-    switch (poetryMap.get(id)) {
-      case (?poetry) { ?poetry.likes };
-      case (null) { null };
+  public shared func incrementSongLike(id : Text) : async Nat {
+    switch (songMap.get(id)) {
+      case (?song) {
+        let newLikeCount = song.likeCount + 1;
+        let updatedSong = { song with likeCount = newLikeCount };
+        songMap.add(id, updatedSong);
+        newLikeCount;
+      };
+      case (null) { Runtime.trap("Song not found") };
     };
   };
 
-  // Public: Get Dua likes
-  public query func getDuaLikes(id : Text) : async ?Likes {
-    switch (duaMap.get(id)) {
-      case (?dua) { ?dua.likes };
-      case (null) { null };
-    };
-  };
-
-  ///////////////////////////////////////////////////////
-  ///// New User Management & Maintenance Features //////
-  ///////////////////////////////////////////////////////
-
-  // Register User (or return existing code) - any caller, device-based
-  public shared ({ caller }) func registerUser(name : Text, server : Text, deviceId : Text) : async Text {
+  public shared func registerUser(name : Text, server : Text, deviceId : Text) : async Text {
     switch (usersMap.get(deviceId)) {
       case (?existingUser) { existingUser.uniqueCode };
       case (null) {
@@ -418,17 +313,14 @@ actor {
     };
   };
 
-  // Get User by Device ID - any caller (needed on app start)
   public query func getUserByDeviceId(deviceId : Text) : async ?UserRecord {
     usersMap.get(deviceId);
   };
 
-  // Public: Get Maintenance Mode - any caller (public status check)
   public query func getMaintenanceMode() : async Bool {
     maintenanceMode;
   };
 
-  // Admin only: Set Maintenance Mode
   public shared ({ caller }) func setMaintenanceMode(enabled : Bool) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can set maintenance mode");
@@ -436,43 +328,34 @@ actor {
     maintenanceMode := enabled;
   };
 
-  // Admin only: Block User
   public shared ({ caller }) func blockUser(uniqueCode : Text) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can block users");
     };
-    var found = false;
     for ((deviceId, user) in usersMap.entries()) {
       if (user.uniqueCode == uniqueCode) {
         let updatedUser = { user with isBlocked = true };
         usersMap.add(deviceId, updatedUser);
-        found := true;
+        return ();
       };
     };
-    if (not found) {
-      Runtime.trap("User not found");
-    };
+    Runtime.trap("User not found");
   };
 
-  // Admin only: Unblock User
   public shared ({ caller }) func unblockUser(uniqueCode : Text) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can unblock users");
     };
-    var found = false;
     for ((deviceId, user) in usersMap.entries()) {
       if (user.uniqueCode == uniqueCode) {
         let updatedUser = { user with isBlocked = false };
         usersMap.add(deviceId, updatedUser);
-        found := true;
+        return ();
       };
     };
-    if (not found) {
-      Runtime.trap("User not found");
-    };
+    Runtime.trap("User not found");
   };
 
-  // Get all Users - any caller
   public query func getAllUsers() : async [UserRecord] {
     usersMap.values().toArray();
   };

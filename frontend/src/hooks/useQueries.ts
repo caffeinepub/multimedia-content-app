@@ -10,7 +10,11 @@ export function useGetAllPoetry() {
     queryKey: ['poetry'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllPoetry();
+      try {
+        return await actor.getAllPoetry();
+      } catch {
+        throw new Error('Failed to load poetry. Please try again.');
+      }
     },
     enabled: !!actor && !isFetching,
   });
@@ -44,6 +48,20 @@ export function useDeletePoetry() {
   });
 }
 
+export function useIncrementPoetryLike() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.incrementPoetryLike(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['poetry'] });
+    },
+  });
+}
+
 // ─── Dua ─────────────────────────────────────────────────────────────────────
 
 export function useGetAllDua() {
@@ -52,7 +70,11 @@ export function useGetAllDua() {
     queryKey: ['dua'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllDua();
+      try {
+        return await actor.getAllDua();
+      } catch {
+        throw new Error('Failed to load duas. Please try again.');
+      }
     },
     enabled: !!actor && !isFetching,
   });
@@ -86,6 +108,20 @@ export function useDeleteDua() {
   });
 }
 
+export function useIncrementDuaLike() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.incrementDuaLike(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dua'] });
+    },
+  });
+}
+
 // ─── Songs ────────────────────────────────────────────────────────────────────
 
 export function useGetAllSongs() {
@@ -94,7 +130,11 @@ export function useGetAllSongs() {
     queryKey: ['songs'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllSongs();
+      try {
+        return await actor.getAllSongs();
+      } catch {
+        throw new Error('Failed to load songs. Please try again.');
+      }
     },
     enabled: !!actor && !isFetching,
   });
@@ -128,6 +168,20 @@ export function useDeleteSong() {
   });
 }
 
+export function useIncrementSongLike() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.incrementSongLike(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['songs'] });
+    },
+  });
+}
+
 // ─── User Management ─────────────────────────────────────────────────────────
 
 export function useRegisterUser() {
@@ -151,13 +205,16 @@ export function useRegisterUser() {
 export function useGetUserByDeviceId(deviceId: string) {
   const { actor, isFetching } = useActor();
   return useQuery<UserRecord | null>({
-    queryKey: ['userByDeviceId', deviceId],
+    queryKey: ['user', deviceId],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getUserByDeviceId(deviceId);
+      try {
+        return await actor.getUserByDeviceId(deviceId);
+      } catch {
+        return null;
+      }
     },
     enabled: !!actor && !isFetching && !!deviceId,
-    refetchInterval: 15000,
   });
 }
 
@@ -167,7 +224,11 @@ export function useGetMaintenanceMode() {
     queryKey: ['maintenanceMode'],
     queryFn: async () => {
       if (!actor) return false;
-      return actor.getMaintenanceMode();
+      try {
+        return await actor.getMaintenanceMode();
+      } catch {
+        throw new Error('Failed to load maintenance mode. Please try again.');
+      }
     },
     enabled: !!actor && !isFetching,
     refetchInterval: 15000,
@@ -195,14 +256,18 @@ export function useSetMaintenanceMode() {
 export function useGetAllUsers() {
   const { actor, isFetching } = useActor();
   return useQuery<UserRecord[]>({
-    queryKey: ['allUsers'],
+    queryKey: ['users'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllUsers();
+      try {
+        return await actor.getAllUsers();
+      } catch {
+        throw new Error('Failed to load users. Please try again.');
+      }
     },
     enabled: !!actor && !isFetching,
-    // No retries — fail fast so the error UI with Retry button shows immediately
-    retry: 0,
+    retry: 2,
+    retryDelay: 1000,
   });
 }
 
@@ -211,7 +276,7 @@ export function useBlockUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error('Failed to block user. Please try again.');
       try {
         await actor.blockUser(uniqueCode);
       } catch {
@@ -219,7 +284,7 @@ export function useBlockUser() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }
@@ -229,7 +294,7 @@ export function useUnblockUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error('Failed to unblock user. Please try again.');
       try {
         await actor.unblockUser(uniqueCode);
       } catch {
@@ -237,7 +302,7 @@ export function useUnblockUser() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 }

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -70,6 +70,7 @@
         font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     }
 
+    /* Urdu / Nastaliq script text */
     .urdu-text {
         font-family: 'Noto Nastaliq Urdu', 'Noto Sans Devanagari', 'Inter', sans-serif;
         direction: auto;
@@ -78,6 +79,26 @@
 
     .urdu-input {
         font-family: 'Noto Nastaliq Urdu', 'Noto Sans Devanagari', 'Inter', sans-serif;
+    }
+
+    /* Poetry card title — elegant serif for English, Nastaliq for Urdu */
+    .poetry-title {
+        font-family: 'Noto Nastaliq Urdu', 'Lora', 'Georgia', serif;
+        direction: auto;
+        unicode-bidi: plaintext;
+        font-weight: 600;
+        line-height: 1.5;
+        letter-spacing: 0.01em;
+    }
+
+    /* Poetry card body content — generous line-height for multi-line verse */
+    .poetry-content {
+        font-family: 'Noto Nastaliq Urdu', 'Lora', 'Georgia', serif;
+        direction: auto;
+        unicode-bidi: plaintext;
+        line-height: 1.85;
+        font-size: 0.9rem;
+        letter-spacing: 0.015em;
     }
 
     h1, h2, h3, h4, h5, h6 {

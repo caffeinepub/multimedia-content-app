@@ -1,17 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Users, Wrench, Search, ShieldX, ShieldCheck, RefreshCw, Loader2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,323 +11,236 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Search, Users, ShieldOff, ShieldCheck, Wrench, RefreshCw } from 'lucide-react';
 import {
+  useGetAllUsers,
   useGetMaintenanceMode,
   useSetMaintenanceMode,
-  useGetAllUsers,
   useBlockUser,
   useUnblockUser,
 } from '@/hooks/useQueries';
+import type { UserRecord } from '../../backend';
 
 export default function UsersControlsPanel() {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Maintenance mode — track local optimistic state to allow visual revert on error
-  const { data: maintenanceMode, isLoading: maintenanceLoading } = useGetMaintenanceMode();
-  const setMaintenanceMutation = useSetMaintenanceMode();
-
-  // Local optimistic value for the switch; syncs with server value when it arrives
+  const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    user: UserRecord | null;
+    action: 'block' | 'unblock';
+  }>({ open: false, user: null, action: 'block' });
   const [localMaintenance, setLocalMaintenance] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (maintenanceMode !== undefined) {
-      setLocalMaintenance(maintenanceMode);
-    }
-  }, [maintenanceMode]);
+  const { data: users = [], isLoading: usersLoading, isError: usersError, refetch: refetchUsers } = useGetAllUsers();
+  const { data: maintenanceMode = false } = useGetMaintenanceMode();
+  const setMaintenanceMode = useSetMaintenanceMode();
+  const blockUser = useBlockUser();
+  const unblockUser = useUnblockUser();
 
-  // Effective displayed value: use local optimistic state if available, else server value
-  const displayedMaintenance =
-    localMaintenance !== null ? localMaintenance : (maintenanceMode ?? false);
-
-  // Users
-  const {
-    data: users,
-    isLoading: usersLoading,
-    isError: usersError,
-    refetch: refetchUsers,
-    isFetching: usersFetching,
-  } = useGetAllUsers();
-
-  // Block / Unblock mutations
-  const blockMutation = useBlockUser();
-  const unblockMutation = useUnblockUser();
+  const effectiveMaintenance = localMaintenance !== null ? localMaintenance : maintenanceMode;
 
   const handleMaintenanceToggle = async (enabled: boolean) => {
-    // Optimistically update the local switch state immediately
     setLocalMaintenance(enabled);
     try {
-      await setMaintenanceMutation.mutateAsync(enabled);
-      toast.success(enabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled');
-    } catch {
-      // Revert the local switch state to the last known server value
-      setLocalMaintenance(maintenanceMode ?? false);
-      toast.error('Failed to update maintenance mode. Please try again.');
+      await setMaintenanceMode.mutateAsync(enabled);
+    } catch (err: unknown) {
+      setLocalMaintenance(!enabled);
+      const message = err instanceof Error ? err.message : 'Failed to update maintenance mode. Please try again.';
+      toast.error(message);
     }
   };
 
-  const handleBlock = async (uniqueCode: string) => {
+  const handleBlockUnblock = async () => {
+    if (!confirmDialog.user) return;
+    const { user, action } = confirmDialog;
+    setConfirmDialog({ open: false, user: null, action: 'block' });
+
     try {
-      await blockMutation.mutateAsync(uniqueCode);
-      toast.success(`User ${uniqueCode} has been blocked`);
-    } catch {
-      toast.error('Failed to block user. Please try again.');
+      if (action === 'block') {
+        await blockUser.mutateAsync(user.uniqueCode);
+        toast.success(`User ${user.name} has been blocked.`);
+      } else {
+        await unblockUser.mutateAsync(user.uniqueCode);
+        toast.success(`User ${user.name} has been unblocked.`);
+      }
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : action === 'block'
+          ? 'Failed to block user. Please try again.'
+          : 'Failed to unblock user. Please try again.';
+      toast.error(message);
     }
   };
 
-  const handleUnblock = async (uniqueCode: string) => {
-    try {
-      await unblockMutation.mutateAsync(uniqueCode);
-      toast.success(`User ${uniqueCode} has been unblocked`);
-    } catch {
-      toast.error('Failed to unblock user. Please try again.');
-    }
-  };
-
-  // Client-side filter by unique code
-  const filteredUsers = (users ?? []).filter((u) =>
-    u.uniqueCode.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.uniqueCode.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="space-y-8">
-      {/* Maintenance Mode Toggle */}
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-2">
+    <div className="space-y-6 pb-8">
+      {/* Maintenance Mode Card */}
+      <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="flex items-center gap-3 mb-3">
           <Wrench className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold text-foreground">Maintenance Mode</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
           When enabled, all users will see a maintenance screen instead of the app.
         </p>
-        <div className="flex items-center gap-4">
-          {maintenanceLoading ? (
-            <Skeleton className="h-6 w-12 rounded-full" />
+        <div className="flex items-center gap-3">
+          <Switch
+            checked={effectiveMaintenance}
+            onCheckedChange={handleMaintenanceToggle}
+            disabled={setMaintenanceMode.isPending}
+          />
+          {setMaintenanceMode.isPending ? (
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Updating…
+            </span>
           ) : (
-            <Switch
-              checked={displayedMaintenance}
-              onCheckedChange={handleMaintenanceToggle}
-              disabled={setMaintenanceMutation.isPending}
-            />
+            <span className={`text-sm font-medium ${effectiveMaintenance ? 'text-destructive' : 'text-green-500'}`}>
+              {effectiveMaintenance ? 'Maintenance Active' : 'App is Live'}
+            </span>
           )}
-          <span className="text-sm font-medium text-foreground">
-            {setMaintenanceMutation.isPending ? (
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                Updating…
-              </span>
-            ) : displayedMaintenance ? (
-              <span className="text-destructive">Maintenance ON</span>
-            ) : (
-              <span className="text-green-600 dark:text-green-400">App is Live</span>
-            )}
-          </span>
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+      {/* Registered Users Card */}
+      <div className="bg-card border border-border rounded-2xl p-5">
         <div className="flex items-center gap-3 mb-4">
           <Users className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold text-foreground">Registered Users</h2>
-          {users && (
-            <Badge variant="secondary" className="ml-auto">
+          {!usersLoading && !usersError && (
+            <span className="ml-auto text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
               {users.length} total
-            </Badge>
+            </span>
           )}
         </div>
 
-        {/* Search Bar */}
+        {/* Search */}
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
             type="text"
-            placeholder="Search by Unique ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+            placeholder="Search by Unique ID or name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
 
-        {/* Loading State */}
+        {/* States */}
         {usersLoading && (
-          <div className="space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full rounded-lg" />
-            ))}
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading users…</p>
           </div>
         )}
 
-        {/* Error State */}
         {usersError && !usersLoading && (
-          <div className="text-center py-10">
-            <Users className="w-10 h-10 mx-auto mb-3 opacity-30 text-destructive" />
-            <p className="text-sm text-destructive font-medium mb-3">
-              Failed to load users. Please try again.
-            </p>
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <Users className="w-10 h-10 text-destructive/60" />
+            <p className="text-sm text-destructive font-medium">Failed to load users. Please try again.</p>
             <Button
               variant="outline"
               size="sm"
               onClick={() => refetchUsers()}
-              disabled={usersFetching}
-              className="gap-2"
+              className="flex items-center gap-2"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${usersFetching ? 'animate-spin' : ''}`} />
-              {usersFetching ? 'Retrying…' : 'Retry'}
+              <RefreshCw className="w-3.5 h-3.5" />
+              Retry
             </Button>
           </div>
         )}
 
-        {/* Empty State */}
-        {!usersLoading && !usersError && users && users.length === 0 && (
-          <div className="text-center py-10 text-muted-foreground">
-            <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No users registered yet.</p>
+        {!usersLoading && !usersError && filteredUsers.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <Users className="w-10 h-10 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">
+              {searchQuery ? 'No users match your search.' : 'No registered users yet.'}
+            </p>
           </div>
         )}
 
-        {/* No search results */}
-        {!usersLoading && !usersError && users && users.length > 0 && filteredUsers.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            No users found matching &quot;{searchTerm}&quot;.
-          </div>
-        )}
-
-        {/* Users Table */}
         {!usersLoading && !usersError && filteredUsers.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">Name</TableHead>
-                  <TableHead className="whitespace-nowrap">Server</TableHead>
-                  <TableHead className="whitespace-nowrap">Unique Code</TableHead>
-                  <TableHead className="whitespace-nowrap">Device ID</TableHead>
-                  <TableHead className="whitespace-nowrap">Status</TableHead>
-                  <TableHead className="whitespace-nowrap text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => {
-                  const isBlocking =
-                    blockMutation.isPending && blockMutation.variables === user.uniqueCode;
-                  const isUnblocking =
-                    unblockMutation.isPending && unblockMutation.variables === user.uniqueCode;
-                  const isBusy = isBlocking || isUnblocking;
-
-                  return (
-                    <TableRow key={user.uniqueCode}>
-                      <TableCell className="font-medium max-w-[100px] truncate">
-                        {user.name}
-                      </TableCell>
-                      <TableCell className="max-w-[80px] truncate">{user.server}</TableCell>
-                      <TableCell>
-                        <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">
-                          {user.uniqueCode}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs max-w-[100px]">
-                        <span
-                          title={user.deviceId}
-                          className="block truncate"
-                          style={{ maxWidth: '90px' }}
-                        >
-                          {user.deviceId}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {user.isBlocked ? (
-                          <Badge variant="destructive" className="text-xs">
-                            Blocked
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                          >
-                            Active
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {user.isBlocked ? (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={isBusy}
-                                className="text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700 dark:hover:bg-green-900/20"
-                              >
-                                <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                                {isUnblocking ? 'Unblocking…' : 'Unblock'}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Unblock User?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will restore access for{' '}
-                                  <strong>{user.name}</strong> ({user.uniqueCode}).
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleUnblock(user.uniqueCode)}
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                >
-                                  Unblock
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        ) : (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={isBusy}
-                                className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                              >
-                                <ShieldOff className="w-3.5 h-3.5 mr-1" />
-                                {isBlocking ? 'Blocking…' : 'Block'}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Block User?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will suspend access for{' '}
-                                  <strong>{user.name}</strong> ({user.uniqueCode}). They will see a
-                                  ban screen when they open the app.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleBlock(user.uniqueCode)}
-                                  className="bg-destructive hover:bg-destructive/90 text-white"
-                                >
-                                  Block
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <div className="space-y-2">
+            {filteredUsers.map((user) => (
+              <div
+                key={user.uniqueCode}
+                className="flex items-center justify-between p-3 bg-background border border-border rounded-xl gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-foreground truncate">{user.name}</span>
+                    {user.isBlocked && (
+                      <span className="text-xs bg-destructive/15 text-destructive px-1.5 py-0.5 rounded-full">
+                        Blocked
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className="text-xs text-muted-foreground font-mono">{user.uniqueCode}</span>
+                    <span className="text-xs text-muted-foreground">· {user.server}</span>
+                  </div>
+                </div>
+                <Button
+                  variant={user.isBlocked ? 'outline' : 'destructive'}
+                  size="sm"
+                  className="shrink-0 text-xs h-8 px-3"
+                  disabled={blockUser.isPending || unblockUser.isPending}
+                  onClick={() =>
+                    setConfirmDialog({
+                      open: true,
+                      user,
+                      action: user.isBlocked ? 'unblock' : 'block',
+                    })
+                  }
+                >
+                  {user.isBlocked ? (
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> Unblock
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <ShieldX className="w-3 h-3" /> Block
+                    </span>
+                  )}
+                </Button>
+              </div>
+            ))}
           </div>
         )}
       </div>
+
+      {/* Confirm Dialog */}
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog({ open: false, user: null, action: 'block' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog.action === 'block' ? 'Block User?' : 'Unblock User?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDialog.action === 'block'
+                ? `Are you sure you want to block ${confirmDialog.user?.name}? They will no longer be able to access the app.`
+                : `Are you sure you want to unblock ${confirmDialog.user?.name}? They will regain access to the app.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlockUnblock}
+              className={confirmDialog.action === 'block' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              {confirmDialog.action === 'block' ? 'Block' : 'Unblock'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

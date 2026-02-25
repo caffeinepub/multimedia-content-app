@@ -1,43 +1,13 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T20:37:13.047Z",
-  "summary": "All three requirements (REQ-103, REQ-104, REQ-105) appear to be implemented in the diff. The backend main.mo declares stable var maintenanceMode without any visible authorization check. UsersControlsPanel.tsx implements a clean onError handler showing only a user-friendly toast. useQueries.ts is truncated before the useSetMaintenanceMode hook is visible. A migration.mo file was added which was not requested.",
-  "missing_requirements": [
-    {
-      "id": "REQ-103",
-      "requirement": "The setMaintenanceMode function must have no authorization or identity check and the stable variable must not be re-initialized to false on upgrade.",
-      "reason": "The backend/main.mo diff is truncated before the setMaintenanceMode function body is visible, so it cannot be fully verified that the function exists with no auth guard.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-105",
-      "requirement": "The useSetMaintenanceMode mutation hook must wrap the call in a try/catch and throw a user-readable error string, and invalidate the maintenanceMode query key on success.",
-      "reason": "The useQueries.ts file is truncated before the useSetMaintenanceMode hook implementation is visible, making it impossible to confirm the hook throws a human-readable string on error and invalidates the maintenanceMode query key on success.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    }
-  ],
-  "hallucinated_features": [
-    {
-      "description": "A new backend/migration.mo module was added with a Migration.run function for canister state migration.",
-      "reason": "The build request requirements do not mention adding a migration module. This is an extra feature not requested by any of REQ-103, REQ-104, or REQ-105.",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
-      ]
-    }
-  ],
-  "confidence": 0.58,
+  "generatedAt": "2026-02-25T10:52:40.849Z",
+  "summary": "The diff modifies backend/main.mo to remove authorization checks from createPoetry, createDua, and createSong functions. The truncated diff shows createPoetry and createDua as 'public shared func' without caller identity checks, which aligns with REQ-128 and REQ-129. The functions no longer include 'Unauthorized: Only users can create songs' or equivalent guards. The evidence is partially truncated but the visible portions confirm the authorization removal for the create functions.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.8,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
-    "frontend-file-summaries.txt",
-    "frontend/src/components/admin/UsersControlsPanel.tsx",
-    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

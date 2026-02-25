@@ -1,75 +1,53 @@
 {
   "kind": "build_request",
-  "title": "Fix maintenance mode toggle error in admin panel",
+  "title": "Fix 'Unauthorized: Only users can create songs' error on song upload",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-103",
-      "text": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. Verify the stable variable holding the maintenance mode flag persists across canister upgrades and is never re-initialized to false on restart.",
+      "id": "REQ-128",
+      "text": "In backend/main.mo, remove all authorization and identity checks from the createSong update function. The function must accept calls from any caller including anonymous without throwing or returning any 'Unauthorized: Only users can create songs' (or equivalent) error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on createSong.",
       "target": "backend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "In admin panel if I click on maintenance mode button it shows error"
+          "Unauthorized: Only users can create songs"
         ]
       },
       "acceptanceCriteria": [
-        "The setMaintenanceMode function in backend/main.mo has no caller identity check, no require statement, and no 'Unauthorized' throw or return of any kind.",
-        "Calling setMaintenanceMode(true) or setMaintenanceMode(false) from an anonymous identity succeeds without error.",
-        "The maintenanceMode stable variable is declared with the `stable` keyword and retains its value across canister upgrades.",
-        "The function does not re-initialize the stable variable to false on canister restart or upgrade."
+        "The createSong function in backend/main.mo contains no caller identity check, no admin principal validation, and no 'Unauthorized' guard of any kind.",
+        "Calling createSong from an anonymous identity (as the frontend does) succeeds without error.",
+        "The error toast 'Unauthorized: Only users can create songs' no longer appears after clicking 'Upload Song' in the admin panel.",
+        "A song uploaded via the admin panel is persisted and returned by getAllSongs."
       ]
     },
     {
-      "id": "REQ-104",
-      "text": "In frontend/src/components/admin/UsersControlsPanel.tsx, update the useSetMaintenanceMode mutation's onError handler to display only a user-friendly toast error message such as 'Failed to update maintenance mode. Please try again.' Never display raw IC rejection error strings, replica error bodies, Request IDs, reject codes, or HTTP details on screen.",
-      "target": "frontend",
+      "id": "REQ-129",
+      "text": "In backend/main.mo, also verify and remove all authorization and identity checks from the createPoetry and createDua update functions, ensuring they too accept calls from any caller including anonymous without throwing or returning any 'Unauthorized' error. All three create functions (createPoetry, createDua, createSong) must be fully open to anonymous callers.",
+      "target": "backend",
       "source": {
         "messageIds": [
           "msg-1"
-        ],
-        "quotes": [
-          "In admin panel if I click on maintenance mode button it shows error"
         ]
       },
       "acceptanceCriteria": [
-        "When the setMaintenanceMode mutation fails, only the message 'Failed to update maintenance mode. Please try again.' is shown to the admin — no raw IC error string is displayed.",
-        "The toast notification is dismissible and does not block the admin panel UI.",
-        "On success, the toggle reflects the updated state and a success toast is shown."
-      ]
-    },
-    {
-      "id": "REQ-105",
-      "text": "In frontend/src/hooks/useQueries.ts, verify and fix the useSetMaintenanceMode mutation hook to correctly call the backend actor's setMaintenanceMode(enabled: Bool) method. Ensure the hook uses the actor from the useActor hook, wraps the call in a try/catch, and on error throws a user-readable error string rather than the raw IC rejection. Invalidate the 'maintenanceMode' query key on success so the toggle immediately reflects the new state.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "In admin panel if I click on maintenance mode button it shows error"
-        ]
-      },
-      "acceptanceCriteria": [
-        "useSetMaintenanceMode calls actor.setMaintenanceMode(enabled) with the correct boolean argument.",
-        "On error, the hook's onError callback receives a human-readable string, not a raw IC rejection object.",
-        "On success, the React Query cache for the maintenanceMode query key is invalidated so the toggle UI updates automatically.",
-        "The hook uses the actor returned by the useActor hook."
+        "createPoetry, createDua, and createSong all contain no caller identity or authorization checks.",
+        "Uploading Poetry, Dua, or Song content from the admin panel succeeds without any 'Unauthorized' error for all three content types.",
+        "All three create functions persist data that is subsequently returned by their respective getAllX query functions."
       ]
     }
   ],
   "constraints": [
-    "Do not add any authorization or identity checks to setMaintenanceMode in backend/main.mo.",
-    "Do not modify frontend/src/hooks/useActor.ts or any file under frontend/src/components/ui.",
-    "Do not remove the History or Downloads sections from the HamburgerMenu."
+    "Do not add any new authorization mechanism to the backend — the PIN-protected frontend admin panel is the sole authentication gate.",
+    "Do not modify any immutable frontend paths listed in the system context.",
+    "Preserve all existing stable variable declarations and data — do not re-initialize or wipe stored content."
   ],
   "nonGoals": [
-    "Changing the PIN authentication flow for the admin panel.",
-    "Modifying any other admin panel tab (Poetry, Dua, Songs, Content Management).",
-    "Altering the block/unblock or getAllUsers functionality."
+    "Adding backend role-based access control or admin identity management.",
+    "Changing the frontend admin PIN authentication flow.",
+    "Modifying any other backend functions beyond the create functions."
   ],
   "imageRequirements": {
     "required": [],

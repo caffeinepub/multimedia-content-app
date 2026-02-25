@@ -40,30 +40,30 @@ export const CreateSongInput = IDL.Record({
   'audio' : ExternalBlob,
   'artist' : IDL.Text,
 });
-export const Likes = IDL.Record({
-  'count' : IDL.Nat,
-  'likedBy' : IDL.Vec(IDL.Text),
-});
 export const Dua = IDL.Record({
   'id' : IDL.Text,
   'title' : IDL.Text,
+  'likeCount' : IDL.Nat,
   'content' : IDL.Text,
   'audio' : IDL.Opt(ExternalBlob),
-  'likes' : Likes,
+  'createdAt' : IDL.Int,
   'category' : IDL.Text,
 });
 export const Poetry = IDL.Record({
   'id' : IDL.Text,
   'title' : IDL.Text,
+  'likeCount' : IDL.Nat,
   'content' : IDL.Text,
-  'likes' : Likes,
+  'createdAt' : IDL.Int,
   'category' : IDL.Text,
   'image' : IDL.Opt(ExternalBlob),
 });
 export const Song = IDL.Record({
   'id' : IDL.Text,
   'title' : IDL.Text,
+  'likeCount' : IDL.Nat,
   'audio' : IDL.Opt(ExternalBlob),
+  'createdAt' : IDL.Int,
   'category' : IDL.Text,
   'artist' : IDL.Text,
 });
@@ -119,10 +119,8 @@ export const idlService = IDL.Service({
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDuaById' : IDL.Func([IDL.Text], [IDL.Opt(Dua)], ['query']),
-  'getDuaLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
   'getMaintenanceMode' : IDL.Func([], [IDL.Bool], ['query']),
   'getPoetryById' : IDL.Func([IDL.Text], [IDL.Opt(Poetry)], ['query']),
-  'getPoetryLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
   'getSongById' : IDL.Func([IDL.Text], [IDL.Opt(Song)], ['query']),
   'getUserByDeviceId' : IDL.Func([IDL.Text], [IDL.Opt(UserRecord)], ['query']),
   'getUserProfile' : IDL.Func(
@@ -130,9 +128,10 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'incrementDuaLike' : IDL.Func([IDL.Text], [IDL.Nat], []),
+  'incrementPoetryLike' : IDL.Func([IDL.Text], [IDL.Nat], []),
+  'incrementSongLike' : IDL.Func([IDL.Text], [IDL.Nat], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'likeDua' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
-  'likePoetry' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
   'registerUser' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setMaintenanceMode' : IDL.Func([IDL.Bool], [], []),
@@ -174,30 +173,30 @@ export const idlFactory = ({ IDL }) => {
     'audio' : ExternalBlob,
     'artist' : IDL.Text,
   });
-  const Likes = IDL.Record({
-    'count' : IDL.Nat,
-    'likedBy' : IDL.Vec(IDL.Text),
-  });
   const Dua = IDL.Record({
     'id' : IDL.Text,
     'title' : IDL.Text,
+    'likeCount' : IDL.Nat,
     'content' : IDL.Text,
     'audio' : IDL.Opt(ExternalBlob),
-    'likes' : Likes,
+    'createdAt' : IDL.Int,
     'category' : IDL.Text,
   });
   const Poetry = IDL.Record({
     'id' : IDL.Text,
     'title' : IDL.Text,
+    'likeCount' : IDL.Nat,
     'content' : IDL.Text,
-    'likes' : Likes,
+    'createdAt' : IDL.Int,
     'category' : IDL.Text,
     'image' : IDL.Opt(ExternalBlob),
   });
   const Song = IDL.Record({
     'id' : IDL.Text,
     'title' : IDL.Text,
+    'likeCount' : IDL.Nat,
     'audio' : IDL.Opt(ExternalBlob),
+    'createdAt' : IDL.Int,
     'category' : IDL.Text,
     'artist' : IDL.Text,
   });
@@ -253,10 +252,8 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDuaById' : IDL.Func([IDL.Text], [IDL.Opt(Dua)], ['query']),
-    'getDuaLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
     'getMaintenanceMode' : IDL.Func([], [IDL.Bool], ['query']),
     'getPoetryById' : IDL.Func([IDL.Text], [IDL.Opt(Poetry)], ['query']),
-    'getPoetryLikes' : IDL.Func([IDL.Text], [IDL.Opt(Likes)], ['query']),
     'getSongById' : IDL.Func([IDL.Text], [IDL.Opt(Song)], ['query']),
     'getUserByDeviceId' : IDL.Func(
         [IDL.Text],
@@ -268,9 +265,10 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'incrementDuaLike' : IDL.Func([IDL.Text], [IDL.Nat], []),
+    'incrementPoetryLike' : IDL.Func([IDL.Text], [IDL.Nat], []),
+    'incrementSongLike' : IDL.Func([IDL.Text], [IDL.Nat], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'likeDua' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
-    'likePoetry' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
     'registerUser' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setMaintenanceMode' : IDL.Func([IDL.Bool], [], []),

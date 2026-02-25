@@ -10,10 +10,12 @@ import { AlertCircle, RefreshCw, Copy, Check } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
+type CategoryFilter = 'all' | 'poetry' | 'dua' | 'songs';
+
 type ContentItem = {
   type: 'poetry' | 'dua' | 'song';
   data: any;
-  likes: number;
+  createdAt: bigint;
 };
 
 function UserIdentityCard() {
@@ -28,7 +30,6 @@ function UserIdentityCard() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const el = document.createElement('textarea');
       el.value = uniqueCode;
       document.body.appendChild(el);
@@ -44,7 +45,6 @@ function UserIdentityCard() {
 
   return (
     <div className="flex flex-col items-center gap-3 py-6 px-4">
-      {/* Unique Code */}
       <div className="flex flex-col items-center gap-2">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
           Your Unique Code
@@ -73,21 +73,28 @@ function UserIdentityCard() {
         </div>
       </div>
 
-      {/* User Name */}
       {userName && (
         <p className="text-base text-muted-foreground font-medium">
           Welcome, <span className="text-foreground font-semibold">{userName}</span>
         </p>
       )}
 
-      {/* Divider */}
       <div className="w-24 h-px bg-border/60 mt-1" />
     </div>
   );
 }
 
+const CATEGORY_TABS: { label: string; value: CategoryFilter }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Poetry', value: 'poetry' },
+  { label: 'Dua', value: 'dua' },
+  { label: 'Songs', value: 'songs' },
+];
+
 export default function MixPage() {
   const { isFetching: actorFetching } = useActor();
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
+
   const {
     data: poetry,
     isLoading: poetryLoading,
@@ -111,7 +118,6 @@ export default function MixPage() {
   } = useGetAllSongs();
   const queryClient = useQueryClient();
 
-  // Show loading while actor is initializing or any query is still in flight without data
   const isLoading =
     actorFetching ||
     poetryLoading ||
@@ -121,7 +127,6 @@ export default function MixPage() {
     (duasFetching && duas === undefined) ||
     (songsFetching && songs === undefined);
 
-  // Only show error state when ALL three queries have failed
   const allFailed = poetryError && duasError && songsError;
 
   const handleRetry = () => {
@@ -139,9 +144,9 @@ export default function MixPage() {
         <UserIdentityCard />
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
-            Trending Content
+            Latest Content
           </h1>
-          <p className="text-muted-foreground">Discover the most loved spiritual content</p>
+          <p className="text-muted-foreground">Discover the newest spiritual content</p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
@@ -171,39 +176,43 @@ export default function MixPage() {
     );
   }
 
+  // Combine all content with createdAt for sorting
   const allContent: ContentItem[] = [
     ...(poetry || []).map((p) => ({
       type: 'poetry' as const,
       data: p,
-      likes: p.likes?.count != null ? Number(p.likes.count) : 0,
+      createdAt: p.createdAt ?? 0n,
     })),
     ...(duas || []).map((d) => ({
       type: 'dua' as const,
       data: d,
-      likes: d.likes?.count != null ? Number(d.likes.count) : 0,
+      createdAt: d.createdAt ?? 0n,
     })),
     ...(songs || []).map((s) => ({
       type: 'song' as const,
       data: s,
-      likes: 0,
+      createdAt: s.createdAt ?? 0n,
     })),
   ];
 
-  const sortedContent = allContent.sort((a, b) => b.likes - a.likes);
+  // Sort by createdAt descending (newest first); posts with 0 sort last
+  const sortedContent = [...allContent].sort((a, b) => {
+    const aTs = a.createdAt ?? 0n;
+    const bTs = b.createdAt ?? 0n;
+    if (aTs === 0n && bTs === 0n) return 0;
+    if (aTs === 0n) return 1;
+    if (bTs === 0n) return -1;
+    return bTs > aTs ? 1 : bTs < aTs ? -1 : 0;
+  });
 
-  if (sortedContent.length === 0) {
-    return (
-      <div className="space-y-6">
-        <UserIdentityCard />
-        <div className="text-center py-10 space-y-4">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
-            Trending Content
-          </h1>
-          <p className="text-muted-foreground text-lg">No content available yet. Check back soon!</p>
-        </div>
-      </div>
-    );
-  }
+  // Apply category filter
+  const filteredContent = sortedContent.filter((item) => {
+    if (activeCategory === 'all') return true;
+    if (activeCategory === 'poetry') return item.type === 'poetry';
+    if (activeCategory === 'dua') return item.type === 'dua';
+    if (activeCategory === 'songs') return item.type === 'song';
+    return true;
+  });
 
   return (
     <div className="space-y-8">
@@ -212,22 +221,45 @@ export default function MixPage() {
 
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
-          Trending Content
+          Latest Content
         </h1>
-        <p className="text-muted-foreground">Discover the most loved spiritual content</p>
+        <p className="text-muted-foreground">Discover the newest spiritual content</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {sortedContent.map((item, index) => {
-          if (item.type === 'poetry') {
-            return <PoetryPost key={`poetry-${item.data.id}-${index}`} poetry={item.data} />;
-          } else if (item.type === 'dua') {
-            return <DuaPost key={`dua-${item.data.id}-${index}`} dua={item.data} />;
-          } else {
-            return <SongPost key={`song-${item.data.id}-${index}`} song={item.data} />;
-          }
-        })}
+      {/* Category Filter Tabs */}
+      <div className="flex items-center justify-center gap-2 flex-wrap px-2">
+        {CATEGORY_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setActiveCategory(tab.value)}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
+              activeCategory === tab.value
+                ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                : 'bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground hover:bg-accent'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {filteredContent.length === 0 ? (
+        <div className="text-center py-10 space-y-4">
+          <p className="text-muted-foreground text-lg">No content available yet. Check back soon!</p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredContent.map((item, index) => {
+            if (item.type === 'poetry') {
+              return <PoetryPost key={`poetry-${item.data.id}-${index}`} poetry={item.data} />;
+            } else if (item.type === 'dua') {
+              return <DuaPost key={`dua-${item.data.id}-${index}`} dua={item.data} />;
+            } else {
+              return <SongPost key={`song-${item.data.id}-${index}`} song={item.data} />;
+            }
+          })}
+        </div>
+      )}
     </div>
   );
 }

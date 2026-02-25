@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 59,
-  "summary": "Multimedia content app 'Dard-e-munasif' undergoing complete rebuild from scratch due to persistent 'failed to load content' errors across Poetry, Dua, and Songs sections. Backend Motoko stable variables and query functions (getAllPoetry, getAllDua, getAllSongs) will be rewritten with minimal, clean implementation. All existing features will be preserved: four-category navigation, admin panel (PIN: 09186114), full-screen modals, hybrid music player, Web Audio API filters, hamburger menu with History/Downloads/Volume Manager, IndexedDB storage, and external links.",
+  "projectStateVersion": 69,
+  "summary": "Multimedia content app 'Dard-e-munasif' undergoing active development. Latest features requested: Home Page reverse-chronological feed showing all posts (Poetry, Dua, Songs) sorted newest-first, category filter/tab system on Home Page, dynamic 'Time Ago' timestamps on post cards, elegant Urdu/English typography, and a bottom action bar with Like (heart icon with live counter), Share (native mobile share menu with 'Shared via Be Asar App' attribution), and Copy (clipboard copy with 'Text Copied!' toast) buttons.",
   "architectural_notes": [
     "Separate /admin route with PIN-only authentication (09186114)",
     "Content categorization system: Dua, Poetry, Songs, Mix",
@@ -24,7 +24,7 @@
     "Admin panel shows 'Only admin can set maintenance mode' error when toggling maintenance mode — backend setMaintenanceMode enforcing unauthorized identity check that must be removed",
     "Admin panel Users & Controls tab shows 'Failed to load users, make sure you are admin' — backend getAllUsers enforcing unauthorized identity check that must be removed",
     "Admin panel block/unblock user shows 'Only admin can block users' error — backend blockUser/unblockUser enforcing unauthorized identity check that must be removed",
-    "Maintenance mode toggle not working in admin panel — setMaintenanceMode backend call may still have authorization check or state not persisting"
+    "Admin panel maintenance mode toggle shows error when attempting to enable — setMaintenanceMode call failing"
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -651,6 +651,110 @@
         "REQ-105"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-hooks-usequeries-ts-fix-the-usesetmaintenancemode-mutation-hook-to-correctly-call-the-backend-actor-s-setmaintenancemode-enabled-bool-method-using-the-actor-from-useactor-wrap-the-call-in-a-try-catch-and-on-error-throw-a-plain-user-readable-string-e-g-failed-to-update-maintenance-mode-please-try-again-rather-than-re-throwing-the-raw-ic-rejection-object-invalidate-the-maintenancemode-query-key-on-success-so-the-toggle-immediately-reflects-the-new-state",
+      "title": "In frontend/src/hooks/useQueries.ts, fix the useSetMaintenanceMode mutation hook to correctly call the backend actor's setMaintenanceMode(enabled: Bool) method using the actor from useActor. Wrap the call in a try/catch and on error throw a plain user-readable string (e.g. 'Failed to update maintenance mode. Please try again.') rather than re-throwing the raw IC rejection object. Invalidate the 'maintenanceMode' query key on success so the toggle immediately reflects the new state.",
+      "reqIds": [
+        "REQ-108"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-hooks-usequeries-ts-fix-the-useblockuser-and-useunblockuser-mutation-hooks-to-correctly-call-the-backend-actor-s-blockuser-uniquecode-text-and-unblockuser-uniquecode-text-methods-using-the-actor-from-useactor-wrap-each-call-in-a-try-catch-and-on-error-throw-a-plain-user-readable-string-e-g-failed-to-block-user-please-try-again-rather-than-re-throwing-the-raw-ic-rejection-object-invalidate-the-users-query-key-on-success-so-the-user-list-table-refreshes-automatically",
+      "title": "In frontend/src/hooks/useQueries.ts, fix the useBlockUser and useUnblockUser mutation hooks to correctly call the backend actor's blockUser(uniqueCode: Text) and unblockUser(uniqueCode: Text) methods using the actor from useActor. Wrap each call in a try/catch and on error throw a plain user-readable string (e.g. 'Failed to block user. Please try again.') rather than re-throwing the raw IC rejection object. Invalidate the 'users' query key on success so the user list table refreshes automatically.",
+      "reqIds": [
+        "REQ-109"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-ensure-the-onerror-handlers-for-both-the-usesetmaintenancemode-and-useblockuser-useunblockuser-mutations-display-only-a-short-user-friendly-toast-message-e-g-failed-to-update-maintenance-mode-please-try-again-and-failed-to-block-user-please-try-again-respectively-never-render-the-raw-error-object-ic-rejection-body-request-id-reject-code-or-http-details-anywhere-on-screen",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, ensure the onError handlers for both the useSetMaintenanceMode and useBlockUser/useUnblockUser mutations display only a short user-friendly toast message (e.g. 'Failed to update maintenance mode. Please try again.' and 'Failed to block user. Please try again.' respectively). Never render the raw error object, IC rejection body, Request ID, reject code, or HTTP details anywhere on screen.",
+      "reqIds": [
+        "REQ-110"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-hooks-usequeries-ts-fix-the-usesetmaintenancemode-useblockuser-and-useunblockuser-mutation-hooks-to-ensure-they-call-the-correct-backend-actor-methods-setmaintenancemode-blockuser-unblockuser-using-the-actor-from-useactor-wrap-each-call-in-a-try-catch-and-on-error-throw-a-plain-user-readable-string-e-g-failed-to-update-maintenance-mode-please-try-again-failed-to-block-user-please-try-again-rather-than-re-throwing-the-raw-ic-rejection-object-each-mutation-must-not-pass-any-admin-token-or-authorization-header",
+      "title": "In frontend/src/hooks/useQueries.ts, fix the useSetMaintenanceMode, useBlockUser, and useUnblockUser mutation hooks to ensure they call the correct backend actor methods (setMaintenanceMode, blockUser, unblockUser) using the actor from useActor, wrap each call in a try/catch, and on error throw a plain user-readable string (e.g. 'Failed to update maintenance mode. Please try again.' / 'Failed to block user. Please try again.') rather than re-throwing the raw IC rejection object. Each mutation must not pass any admin token or authorization header.",
+      "reqIds": [
+        "REQ-113"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-remove-all-rendering-of-admin-access-required-please-ensure-you-are-authorized-error-text-from-both-the-maintenance-mode-toggle-section-and-the-user-list-block-section-replace-any-such-error-message-with-only-a-short-user-friendly-toast-or-inline-text-e-g-failed-to-update-maintenance-mode-please-try-again-or-failed-to-block-user-please-try-again-never-render-raw-ic-rejection-bodies-request-ids-reject-codes-or-the-phrase-admin-access-required-anywhere-on-screen",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, remove all rendering of 'Admin access required. Please ensure you are authorized.' error text from both the maintenance mode toggle section and the user list/block section. Replace any such error message with only a short user-friendly toast or inline text (e.g. 'Failed to update maintenance mode. Please try again.' or 'Failed to block user. Please try again.'). Never render raw IC rejection bodies, Request IDs, reject codes, or the phrase 'Admin access required' anywhere on screen.",
+      "reqIds": [
+        "REQ-114"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-mixpage-frontend-src-pages-mixpage-tsx-to-sort-the-combined-feed-of-all-posts-poetry-dua-songs-in-reverse-chronological-order-newest-createdat-first-replace-the-current-likecount-descending-sort-with-a-createdat-descending-sort-so-the-newest-post-always-appears-at-the-top-of-the-home-page-feed",
+      "title": "Update MixPage (frontend/src/pages/MixPage.tsx) to sort the combined feed of all posts (Poetry, Dua, Songs) in reverse-chronological order — newest createdAt first. Replace the current likeCount-descending sort with a createdAt-descending sort so the newest post always appears at the top of the Home Page feed.",
+      "reqIds": [
+        "REQ-116"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-category-filter-tab-bar-at-the-top-of-the-mixpage-home-page-feed-above-the-post-grid-the-tabs-must-be-all-default-shows-all-posts-poetry-dua-and-songs-when-a-tab-is-selected-the-feed-filters-to-show-only-posts-of-that-category-the-active-tab-must-be-visually-highlighted-the-filter-is-client-side-only-no-additional-backend-calls-are-needed",
+      "title": "Add a category filter/tab bar at the top of the MixPage (Home Page) feed, above the post grid. The tabs must be: 'All' (default, shows all posts), 'Poetry', 'Dua', and 'Songs'. When a tab is selected, the feed filters to show only posts of that category. The active tab must be visually highlighted. The filter is client-side only — no additional backend calls are needed.",
+      "reqIds": [
+        "REQ-117"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-dynamic-time-ago-timestamp-label-to-the-top-right-corner-of-every-post-card-poetrypost-duapost-songpost-rendered-in-any-feed-mixpage-poetrypage-duapage-songspage-the-label-must-display-human-readable-relative-time-based-on-the-post-s-createdat-field-just-now-less-than-1-minute-x-minutes-ago-x-hours-ago-x-days-ago-x-weeks-ago-etc-the-timestamp-must-update-live-while-the-page-is-open-if-createdat-is-0-or-unavailable-display-nothing-implement-a-shared-utility-function-e-g-frontend-src-utils-timeago-ts-to-compute-the-label-from-a-timestamp",
+      "title": "Add a dynamic 'Time Ago' timestamp label to the top-right corner of every post card (PoetryPost, DuaPost, SongPost) rendered in any feed (MixPage, PoetryPage, DuaPage, SongsPage). The label must display human-readable relative time based on the post's createdAt field: 'Just Now' (less than 1 minute), 'X minutes ago', 'X hours ago', 'X days ago', 'X weeks ago', etc. The timestamp must update live while the page is open. If createdAt is 0 or unavailable, display nothing. Implement a shared utility function (e.g. frontend/src/utils/timeAgo.ts) to compute the label from a timestamp.",
+      "reqIds": [
+        "REQ-118"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-an-elegant-readable-typography-style-to-all-post-card-text-titles-content-body-text-across-poetrypost-duapost-and-songpost-components-that-is-suitable-for-both-urdu-and-english-poetry-use-the-existing-noto-nastaliq-urdu-font-already-imported-in-frontend-src-index-css-for-urdu-arabic-script-text-and-a-complementary-elegant-serif-or-refined-sans-serif-for-english-text-ensure-proper-line-height-letter-spacing-and-font-size-for-comfortable-reading-of-multi-line-poetic-content",
+      "title": "Apply an elegant, readable typography style to all post card text (titles, content/body text) across PoetryPost, DuaPost, and SongPost components that is suitable for both Urdu and English poetry. Use the existing Noto Nastaliq Urdu font (already imported in frontend/src/index.css) for Urdu/Arabic-script text, and a complementary elegant serif or refined sans-serif for English text. Ensure proper line-height, letter-spacing, and font-size for comfortable reading of multi-line poetic content.",
+      "reqIds": [
+        "REQ-119"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-bottom-action-bar-to-each-post-card-poetrypost-duapost-songpost-containing-three-action-buttons-1-like-a-clickable-heart-icon-that-fills-with-color-e-g-red-pink-when-clicked-and-calls-the-backend-incrementpoetrylike-incrementdualike-incrementsonglike-to-increment-the-public-like-counter-then-updates-the-displayed-count-optimistically-2-share-an-icon-button-that-invokes-the-web-share-api-navigator-share-with-the-post-s-text-content-plus-the-attribution-string-shared-via-be-asar-app-if-the-web-share-api-is-unavailable-fall-back-to-copying-the-share-text-to-the-clipboard-with-a-brief-toast-notification-3-copy-an-icon-button-that-copies-the-post-s-full-text-content-to-the-clipboard-and-shows-a-small-text-copied-toast-notification-all-three-buttons-must-be-visually-distinct-and-positioned-in-a-horizontal-row-at-the-bottom-of-the-card",
+      "title": "Add a bottom action bar to each post card (PoetryPost, DuaPost, SongPost) containing three action buttons: (1) Like — a clickable Heart icon that fills with color (e.g. red/pink) when clicked and calls the backend incrementPoetryLike / incrementDuaLike / incrementSongLike to increment the public Like Counter, then updates the displayed count optimistically; (2) Share — an icon button that invokes the Web Share API (navigator.share) with the post's text content plus the attribution string 'Shared via Be Asar App' — if the Web Share API is unavailable, fall back to copying the share text to the clipboard with a brief toast notification; (3) Copy — an icon button that copies the post's full text content to the clipboard and shows a small 'Text Copied!' toast notification. All three buttons must be visually distinct and positioned in a horizontal row at the bottom of the card.",
+      "reqIds": [
+        "REQ-120"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-useincrementpoetrylike-useincrementdualike-and-useincrementsonglike-mutation-hooks-to-frontend-src-hooks-usequeries-ts-each-hook-must-call-the-corresponding-backend-actor-method-incrementpoetrylike-incrementdualike-incrementsonglike-using-the-actor-from-useactor-wrap-the-call-in-a-try-catch-and-invalidate-the-relevant-query-key-poetry-dua-or-songs-on-success-so-the-updated-like-count-is-reflected-in-the-feed",
+      "title": "Add useIncrementPoetryLike, useIncrementDuaLike, and useIncrementSongLike mutation hooks to frontend/src/hooks/useQueries.ts. Each hook must call the corresponding backend actor method (incrementPoetryLike, incrementDuaLike, incrementSongLike) using the actor from useActor, wrap the call in a try/catch, and invalidate the relevant query key (['poetry'], ['dua'], or ['songs']) on success so the updated like count is reflected in the feed.",
+      "reqIds": [
+        "REQ-122"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-hooks-usequeries-ts-audit-and-fix-the-usegetallusers-usesetmaintenancemode-useblockuser-and-useunblockuser-hooks-to-ensure-1-each-hook-calls-the-exact-actor-method-name-as-defined-in-the-backend-getallusers-setmaintenancemode-blockuser-unblockuser-using-the-actor-from-useactor-2-each-hook-wraps-the-actor-call-in-a-try-catch-and-on-error-throws-only-a-plain-user-readable-string-rather-than-re-throwing-the-raw-ic-rejection-object-3-usesetmaintenancemode-invalidates-the-maintenancemode-query-key-on-success-4-useblockuser-and-useunblockuser-invalidate-the-users-query-key-on-success-5-no-hook-passes-any-admin-token-or-authorization-header",
+      "title": "In frontend/src/hooks/useQueries.ts, audit and fix the useGetAllUsers, useSetMaintenanceMode, useBlockUser, and useUnblockUser hooks to ensure: (1) Each hook calls the exact actor method name as defined in the backend (getAllUsers, setMaintenanceMode, blockUser, unblockUser) using the actor from useActor. (2) Each hook wraps the actor call in a try/catch and on error throws only a plain user-readable string rather than re-throwing the raw IC rejection object. (3) useSetMaintenanceMode invalidates the 'maintenanceMode' query key on success. (4) useBlockUser and useUnblockUser invalidate the 'users' query key on success. (5) No hook passes any admin token or authorization header.",
+      "reqIds": [
+        "REQ-126"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-frontend-src-components-admin-userscontrolspanel-tsx-ensure-all-error-handlers-for-usegetallusers-usesetmaintenancemode-useblockuser-and-useunblockuser-display-only-short-user-friendly-toast-or-inline-messages-failed-to-load-users-please-try-again-failed-to-update-maintenance-mode-please-try-again-and-failed-to-block-unblock-user-please-try-again-respectively-never-render-raw-ic-rejection-bodies-request-ids-reject-codes-canister-error-details-or-the-phrase-admin-access-required-anywhere-on-screen-the-retry-button-on-the-users-error-state-must-call-refetch-to-re-run-the-getallusers-query",
+      "title": "In frontend/src/components/admin/UsersControlsPanel.tsx, ensure all error handlers for useGetAllUsers, useSetMaintenanceMode, useBlockUser, and useUnblockUser display only short, user-friendly toast or inline messages: 'Failed to load users. Please try again.', 'Failed to update maintenance mode. Please try again.', and 'Failed to block/unblock user. Please try again.' respectively. Never render raw IC rejection bodies, Request IDs, reject codes, canister error details, or the phrase 'Admin access required' anywhere on screen. The Retry button on the users error state must call refetch() to re-run the getAllUsers query.",
+      "reqIds": [
+        "REQ-127"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1035,6 +1139,118 @@
       "summary": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. Verify the stable variable holding the maintenance mode flag persists across canister upgrades and is never re-initialized to false on restart.",
       "reqIds": [
         "REQ-103"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-70",
+      "summary": "Fix maintenance mode toggle showing error when turned on, and fix block user showing 'Failed to block, try again' error in admin panel — both backend calls failing.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-71",
+      "summary": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. Additionally verify the stable variable holding the maintenance mode flag is declared with the `stable` keyword and persists across canister upgrades without being re-initialized to false on restart.",
+      "reqIds": [
+        "REQ-106"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-72",
+      "summary": "In backend/main.mo, ensure the blockUser(uniqueCode: Text) and unblockUser(uniqueCode: Text) functions have absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. Both functions must accept calls from any caller including anonymous, update the isBlocked field on the matching user record, and return without error. The PIN-protected frontend admin panel is the sole authentication gate.",
+      "reqIds": [
+        "REQ-107"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-73",
+      "summary": "In backend/main.mo, ensure the setMaintenanceMode(enabled: Bool) function has absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' or 'Admin access required' guard. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. The PIN-protected frontend admin panel is the sole authentication gate.",
+      "reqIds": [
+        "REQ-111"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-74",
+      "summary": "In backend/main.mo, ensure the blockUser(uniqueCode: Text) and unblockUser(uniqueCode: Text) functions have absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' or 'Admin access required' guard. Both functions must accept calls from any caller including anonymous, update the isBlocked field on the matching user record, and return without error. The PIN-protected frontend admin panel is the sole authentication gate.",
+      "reqIds": [
+        "REQ-112"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-75",
+      "summary": "Configure Home Page to display all posts (Poetry, Dua, Songs) in reverse-chronological order — newest post at top. Add a category filter/tab system at the top of the Home Page to sort content by Poetry, Dua, and Songs.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-76",
+      "summary": "Add a dynamic 'Time Ago' timestamp label on the top-right of each post card (e.g. 'Just Now', '2 hours ago', '5 days ago') based on the post's upload date/time. Use an elegant, readable font suitable for both Urdu and English poetry across all post cards.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-77",
+      "summary": "Add a bottom action bar to each post card with three buttons: (1) Like — clickable Heart icon that fills with color on click and increments a public Like Counter; (2) Share — opens the mobile's native share menu with the post text followed by 'Shared via Be Asar App'; (3) Copy — copies the post's text to clipboard and shows a small 'Text Copied!' notification.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-78",
+      "summary": "Update the backend Motoko actor in backend/main.mo to store a createdAt timestamp (Int, Unix epoch in nanoseconds via Time.now()) on every Poetry, Dua, and Song record at creation time. Update the createPoetry, createDua, and createSong functions to capture and persist this field. Update the getAllPoetry, getAllDua, and getAllSongs return types to include the createdAt field so the frontend can use it for sorting and display.",
+      "reqIds": [
+        "REQ-115"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-84",
+      "summary": "Add incrementPoetryLike(id: Nat), incrementDuaLike(id: Nat), and incrementSongLike(id: Nat) public update functions to backend/main.mo if they do not already exist. Each function must find the entry by id and increment its likeCount by 1. These functions must accept calls from any caller including anonymous, with no authorization checks.",
+      "reqIds": [
+        "REQ-121"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-85",
+      "summary": "In backend/main.mo, audit and rewrite the getAllUsers() query function to have absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard, no 'Make sure you are logged in as admin' check. The function must return all stored user records (uniqueCode, deviceId, name, server, isBlocked) to any caller including anonymous. Verify the stable users storage variable is correctly declared with the `stable` keyword, is never re-initialized on upgrade, is correctly iterated, and all stored entries are returned as a flat array without any trap, rejection, or IC0508 canister-stopped error.",
+      "reqIds": [
+        "REQ-123"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-86",
+      "summary": "In backend/main.mo, audit and rewrite the setMaintenanceMode(enabled: Bool) update function to have absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard, no 'Only admins can set maintenance mode' check. The function must accept calls from any caller including anonymous, update the stable maintenanceMode variable, and return without error. Verify the stable maintenanceMode variable is declared with the `stable` keyword, defaults to false, and is never re-initialized to false on canister upgrade or restart.",
+      "reqIds": [
+        "REQ-124"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-87",
+      "summary": "In backend/main.mo, audit and rewrite the blockUser(uniqueCode: Text) and unblockUser(uniqueCode: Text) update functions to have absolutely no authorization or identity check of any kind — no caller validation, no admin principal check, no 'Unauthorized' guard. Both functions must accept calls from any caller including anonymous, update the isBlocked field on the matching user record in the stable users storage, and return without error. The PIN-protected frontend admin panel is the sole authentication gate.",
+      "reqIds": [
+        "REQ-125"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-88",
+      "summary": "In backend/main.mo, remove all authorization and identity checks from the createSong update function. The function must accept calls from any caller including anonymous without throwing or returning any 'Unauthorized: Only users can create songs' (or equivalent) error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on createSong.",
+      "reqIds": [
+        "REQ-128"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-89",
+      "summary": "In backend/main.mo, also verify and remove all authorization and identity checks from the createPoetry and createDua update functions, ensuring they too accept calls from any caller including anonymous without throwing or returning any 'Unauthorized' error. All three create functions (createPoetry, createDua, createSong) must be fully open to anonymous callers.",
+      "reqIds": [
+        "REQ-129"
       ],
       "status": "pending"
     }

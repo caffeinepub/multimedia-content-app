@@ -28,25 +28,28 @@ export interface CreateSongInput {
 export interface Dua {
   'id' : string,
   'title' : string,
+  'likeCount' : bigint,
   'content' : string,
   'audio' : [] | [ExternalBlob],
-  'likes' : Likes,
+  'createdAt' : bigint,
   'category' : string,
 }
 export type ExternalBlob = Uint8Array;
-export interface Likes { 'count' : bigint, 'likedBy' : Array<string> }
 export interface Poetry {
   'id' : string,
   'title' : string,
+  'likeCount' : bigint,
   'content' : string,
-  'likes' : Likes,
+  'createdAt' : bigint,
   'category' : string,
   'image' : [] | [ExternalBlob],
 }
 export interface Song {
   'id' : string,
   'title' : string,
+  'likeCount' : bigint,
   'audio' : [] | [ExternalBlob],
+  'createdAt' : bigint,
   'category' : string,
   'artist' : string,
 }
@@ -104,16 +107,15 @@ export interface _SERVICE {
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDuaById' : ActorMethod<[string], [] | [Dua]>,
-  'getDuaLikes' : ActorMethod<[string], [] | [Likes]>,
   'getMaintenanceMode' : ActorMethod<[], boolean>,
   'getPoetryById' : ActorMethod<[string], [] | [Poetry]>,
-  'getPoetryLikes' : ActorMethod<[string], [] | [Likes]>,
   'getSongById' : ActorMethod<[string], [] | [Song]>,
   'getUserByDeviceId' : ActorMethod<[string], [] | [UserRecord]>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'incrementDuaLike' : ActorMethod<[string], bigint>,
+  'incrementPoetryLike' : ActorMethod<[string], bigint>,
+  'incrementSongLike' : ActorMethod<[string], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'likeDua' : ActorMethod<[string, string], boolean>,
-  'likePoetry' : ActorMethod<[string, string], boolean>,
   'registerUser' : ActorMethod<[string, string, string], string>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setMaintenanceMode' : ActorMethod<[boolean], undefined>,
