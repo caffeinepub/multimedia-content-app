@@ -1,14 +1,37 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T08:45:43.665Z",
-  "summary": "The diff correctly implements REQ-1 by modifying Layout.tsx to treat /admin as an unguarded route (alongside /login), skipping the credential check and backend calls for admin page visitors, while preserving all other route protections. All acceptance criteria appear to be met.",
-  "missing_requirements": [],
+  "generatedAt": "2026-02-26T09:00:16.411Z",
+  "summary": "The diff introduces a new `useAdminActor` hook that creates an actor with admin-level authorization (via a secret token), and updates `useQueries.ts` to use this admin actor for admin mutations. The backend `main.mo` shows a `maintenanceMode` stable variable and user-related structures. However, the diff is truncated and key details about the actual fix implementations (backend listUsers/setMaintenanceMode functions, frontend query/mutation hooks for users and maintenance mode, and the UsersControlsPanel component) are not fully visible. Based on what is visible, the core architectural fix (admin actor with proper authorization) is present, but explicit confirmation of the specific function calls and handler logic for REQ-1 and REQ-2 cannot be fully verified from the truncated content.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Fix the 'Failed to load users. Please try again.' error — backend query for fetching registered users must return successfully, and the frontend must correctly call and handle the response.",
+      "reason": "The diff shows useQueries.ts truncated before any useGetUsers or similar hook is visible. The UsersControlsPanel component is referenced in frontend-file-summaries.txt but its implementation is not shown in the diff. The backend main.mo shows usersMap and UserRecord type but the actual listUsers or equivalent query function is not visible in the truncated content. Cannot confirm the fix is fully implemented.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts",
+        "backend/main.mo",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Fix the 'Failed to update maintenance mode. Please try again.' error — backend mutation must succeed and frontend must call it with proper authorization.",
+      "reason": "The diff shows maintenanceMode stable variable in backend/main.mo but the actual setMaintenanceMode function and its authorization check are not visible in the truncated content. The frontend mutation hook for toggling maintenance mode is not visible in the truncated useQueries.ts. The UsersControlsPanel component implementation is not shown.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts",
+        "backend/main.mo",
+        "frontend-file-summaries.txt"
+      ]
+    }
+  ],
   "hallucinated_features": [],
-  "confidence": 0.95,
+  "confidence": 0.35,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/Layout.tsx",
+    "frontend/src/hooks/useAdminActor.ts",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

@@ -1,8 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import { useAdminActor } from './useAdminActor';
 import type { Poetry, Dua, Song, UserRecord } from '../backend';
-
-// ─── Poetry ──────────────────────────────────────────────────────────────────
 
 export function useGetAllPoetry() {
   const { actor, isFetching } = useActor();
@@ -12,57 +11,13 @@ export function useGetAllPoetry() {
       if (!actor) return [];
       try {
         return await actor.getAllPoetry();
-      } catch {
-        throw new Error('Failed to load poetry. Please try again.');
+      } catch (e: any) {
+        throw new Error('Failed to load poetry');
       }
     },
     enabled: !!actor && !isFetching,
   });
 }
-
-export function useCreatePoetry() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { title: string; content: string; image?: any }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.createPoetry(input);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['poetry'] });
-    },
-  });
-}
-
-export function useDeletePoetry() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.deletePoetry(id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['poetry'] });
-    },
-  });
-}
-
-export function useIncrementPoetryLike() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.incrementPoetryLike(id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['poetry'] });
-    },
-  });
-}
-
-// ─── Dua ─────────────────────────────────────────────────────────────────────
 
 export function useGetAllDua() {
   const { actor, isFetching } = useActor();
@@ -72,38 +27,44 @@ export function useGetAllDua() {
       if (!actor) return [];
       try {
         return await actor.getAllDua();
-      } catch {
-        throw new Error('Failed to load duas. Please try again.');
+      } catch (e: any) {
+        throw new Error('Failed to load dua');
       }
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useCreateDua() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { title: string; content: string; audio?: any }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.createDua(input);
+export function useGetAllSongs() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Song[]>({
+    queryKey: ['songs'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getAllSongs();
+      } catch (e: any) {
+        throw new Error('Failed to load songs');
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dua'] });
-    },
+    enabled: !!actor && !isFetching,
   });
 }
 
-export function useDeleteDua() {
+export function useIncrementPoetryLike() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.deleteDua(id);
+      try {
+        return await actor.incrementPoetryLike(id);
+      } catch (e: any) {
+        throw new Error('Failed to like poetry');
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dua'] });
+      queryClient.invalidateQueries({ queryKey: ['poetry'] });
     },
   });
 }
@@ -114,56 +75,14 @@ export function useIncrementDuaLike() {
   return useMutation({
     mutationFn: async (id: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.incrementDuaLike(id);
+      try {
+        return await actor.incrementDuaLike(id);
+      } catch (e: any) {
+        throw new Error('Failed to like dua');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dua'] });
-    },
-  });
-}
-
-// ─── Songs ────────────────────────────────────────────────────────────────────
-
-export function useGetAllSongs() {
-  const { actor, isFetching } = useActor();
-  return useQuery<Song[]>({
-    queryKey: ['songs'],
-    queryFn: async () => {
-      if (!actor) return [];
-      try {
-        return await actor.getAllSongs();
-      } catch {
-        throw new Error('Failed to load songs. Please try again.');
-      }
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useCreateSong() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { title: string; artist: string; audio: any }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.createSong(input);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['songs'] });
-    },
-  });
-}
-
-export function useDeleteSong() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.deleteSong(id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['songs'] });
     },
   });
 }
@@ -174,7 +93,11 @@ export function useIncrementSongLike() {
   return useMutation({
     mutationFn: async (id: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.incrementSongLike(id);
+      try {
+        return await actor.incrementSongLike(id);
+      } catch (e: any) {
+        throw new Error('Failed to like song');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['songs'] });
@@ -182,39 +105,111 @@ export function useIncrementSongLike() {
   });
 }
 
-// ─── User Management ─────────────────────────────────────────────────────────
-
-export function useRegisterUser() {
-  const { actor } = useActor();
+export function useCreatePoetry() {
+  const { actor } = useAdminActor();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      name,
-      server,
-      deviceId,
-    }: {
-      name: string;
-      server: string;
-      deviceId: string;
-    }) => {
+    mutationFn: async (input: Parameters<NonNullable<typeof actor>['createPoetry']>[0]) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.registerUser(name, server, deviceId);
+      try {
+        return await actor.createPoetry(input);
+      } catch (e: any) {
+        throw new Error(e?.message || 'Failed to create poetry');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['poetry'] });
     },
   });
 }
 
-export function useGetUserByDeviceId(deviceId: string) {
-  const { actor, isFetching } = useActor();
-  return useQuery<UserRecord | null>({
-    queryKey: ['user', deviceId],
-    queryFn: async () => {
-      if (!actor) return null;
+export function useCreateDua() {
+  const { actor } = useAdminActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Parameters<NonNullable<typeof actor>['createDua']>[0]) => {
+      if (!actor) throw new Error('Actor not available');
       try {
-        return await actor.getUserByDeviceId(deviceId);
-      } catch {
-        return null;
+        return await actor.createDua(input);
+      } catch (e: any) {
+        throw new Error(e?.message || 'Failed to create dua');
       }
     },
-    enabled: !!actor && !isFetching && !!deviceId,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dua'] });
+    },
+  });
+}
+
+export function useCreateSong() {
+  const { actor } = useAdminActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Parameters<NonNullable<typeof actor>['createSong']>[0]) => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.createSong(input);
+      } catch (e: any) {
+        throw new Error(e?.message || 'Failed to create song');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['songs'] });
+    },
+  });
+}
+
+export function useDeletePoetry() {
+  const { actor } = useAdminActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.deletePoetry(id);
+      } catch (e: any) {
+        throw new Error('Failed to delete poetry');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['poetry'] });
+    },
+  });
+}
+
+export function useDeleteDua() {
+  const { actor } = useAdminActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.deleteDua(id);
+      } catch (e: any) {
+        throw new Error('Failed to delete dua');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dua'] });
+    },
+  });
+}
+
+export function useDeleteSong() {
+  const { actor } = useAdminActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.deleteSong(id);
+      } catch (e: any) {
+        throw new Error('Failed to delete song');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['songs'] });
+    },
   });
 }
 
@@ -226,24 +221,23 @@ export function useGetMaintenanceMode() {
       if (!actor) return false;
       try {
         return await actor.getMaintenanceMode();
-      } catch {
-        throw new Error('Failed to load maintenance mode. Please try again.');
+      } catch (e: any) {
+        throw new Error('Failed to load maintenance mode');
       }
     },
     enabled: !!actor && !isFetching,
-    refetchInterval: 15000,
   });
 }
 
 export function useSetMaintenanceMode() {
-  const { actor } = useActor();
+  const { actor } = useAdminActor();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (enabled: boolean) => {
-      if (!actor) throw new Error('Failed to update maintenance mode. Please try again.');
+      if (!actor) throw new Error('Actor not available');
       try {
         await actor.setMaintenanceMode(enabled);
-      } catch {
+      } catch (e: any) {
         throw new Error('Failed to update maintenance mode. Please try again.');
       }
     },
@@ -254,14 +248,14 @@ export function useSetMaintenanceMode() {
 }
 
 export function useGetAllUsers() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching } = useAdminActor();
   return useQuery<UserRecord[]>({
-    queryKey: ['users'],
+    queryKey: ['allUsers'],
     queryFn: async () => {
       if (!actor) return [];
       try {
         return await actor.getAllUsers();
-      } catch {
+      } catch (e: any) {
         throw new Error('Failed to load users. Please try again.');
       }
     },
@@ -272,37 +266,67 @@ export function useGetAllUsers() {
 }
 
 export function useBlockUser() {
-  const { actor } = useActor();
+  const { actor } = useAdminActor();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
-      if (!actor) throw new Error('Failed to block user. Please try again.');
+      if (!actor) throw new Error('Actor not available');
       try {
         await actor.blockUser(uniqueCode);
-      } catch {
-        throw new Error('Failed to block user. Please try again.');
+      } catch (e: any) {
+        throw new Error('Failed to block user');
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
   });
 }
 
 export function useUnblockUser() {
-  const { actor } = useActor();
+  const { actor } = useAdminActor();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
-      if (!actor) throw new Error('Failed to unblock user. Please try again.');
+      if (!actor) throw new Error('Actor not available');
       try {
         await actor.unblockUser(uniqueCode);
-      } catch {
-        throw new Error('Failed to unblock user. Please try again.');
+      } catch (e: any) {
+        throw new Error('Failed to unblock user');
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     },
+  });
+}
+
+export function useRegisterUser() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async ({ name, server, deviceId }: { name: string; server: string; deviceId: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      try {
+        return await actor.registerUser(name, server, deviceId);
+      } catch (e: any) {
+        throw new Error(e?.message || 'Failed to register user');
+      }
+    },
+  });
+}
+
+export function useGetUserByDeviceId(deviceId: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<UserRecord | null>({
+    queryKey: ['userByDeviceId', deviceId],
+    queryFn: async () => {
+      if (!actor || !deviceId) return null;
+      try {
+        return await actor.getUserByDeviceId(deviceId);
+      } catch (e: any) {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching && !!deviceId,
   });
 }

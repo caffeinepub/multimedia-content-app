@@ -115,7 +115,11 @@ actor {
   func isValidImage(_ : Storage.ExternalBlob) : Bool { true };
   func generateRandomLikes() : Int { 1000 + (Time.now() % 1001) };
 
-  public shared func createPoetry(input : CreatePoetryInput) : async Text {
+  public shared ({ caller }) func createPoetry(input : CreatePoetryInput) : async Text {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create poetry");
+    };
+
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
@@ -141,7 +145,11 @@ actor {
     id;
   };
 
-  public shared func createDua(input : CreateDuaInput) : async Text {
+  public shared ({ caller }) func createDua(input : CreateDuaInput) : async Text {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create dua");
+    };
+
     if (isEmpty(input.title) or isEmpty(input.content)) {
       Runtime.trap("Title and content must not be empty");
     };
@@ -167,7 +175,11 @@ actor {
     id;
   };
 
-  public shared func createSong(input : CreateSongInput) : async Text {
+  public shared ({ caller }) func createSong(input : CreateSongInput) : async Text {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can create songs");
+    };
+
     if (isEmpty(input.title) or isEmpty(input.artist)) {
       Runtime.trap("Title and artist must not be empty");
     };
@@ -356,7 +368,10 @@ actor {
     Runtime.trap("User not found");
   };
 
-  public query func getAllUsers() : async [UserRecord] {
+  public query ({ caller }) func getAllUsers() : async [UserRecord] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can list all users");
+    };
     usersMap.values().toArray();
   };
 };

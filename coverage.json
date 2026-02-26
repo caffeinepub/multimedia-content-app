@@ -1,37 +1,49 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T08:45:43.667Z",
+  "generatedAt": "2026-02-26T09:00:16.413Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "When a user navigates to the admin page URL directly (e.g., via a shared link), they must be shown the admin panel (PIN auth guard) instead of being redirected to the main app or login page. The router must not intercept or redirect away from the /admin route for users who are not yet authenticated via Internet Identity — instead, the admin route should render the PINAuthGuard component which handles its own authentication flow independently of the main app auth.",
+        "summary": "Fix the 'Failed to load users. Please try again.' error in the Users & Controls tab of the admin panel. The backend query for fetching registered users must return successfully, and the frontend must correctly call and handle the response from the backend's user listing function.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/Layout.tsx",
-          "frontend/src/pages/AdminPage.tsx"
+          "frontend/src/components/admin/UsersControlsPanel.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/Layout.tsx"
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Fix the 'Failed to update maintenance mode. Please try again.' error shown when toggling the Maintenance Mode switch in the admin panel. The backend mutation for setting maintenance mode must succeed, and the frontend must correctly call the backend function with proper authorization and handle the response.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/UsersControlsPanel.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
-    "build-template/README.md",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/Layout.tsx",
+    "frontend/src/hooks/useAdminActor.ts",
+    "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

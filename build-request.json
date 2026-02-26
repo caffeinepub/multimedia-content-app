@@ -1,40 +1,54 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin URL Access — Allow Shared Admin Links to Open Admin Panel",
+  "title": "Fix admin panel: failed to load users and failed to update maintenance mode errors",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "When a user navigates to the admin page URL directly (e.g., via a shared link), they must be shown the admin panel (PIN auth guard) instead of being redirected to the main app or login page. The router must not intercept or redirect away from the /admin route for users who are not yet authenticated via Internet Identity — instead, the admin route should render the PINAuthGuard component which handles its own authentication flow independently of the main app auth.",
-      "target": "frontend",
+      "text": "Fix the 'Failed to load users. Please try again.' error in the Users & Controls tab of the admin panel. The backend query for fetching registered users must return successfully, and the frontend must correctly call and handle the response from the backend's user listing function.",
+      "target": "both",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "If am forwarding my admin url link to second person but they are unable to open admin panel there showing direct main app"
+          "Failed to load users. Please try again."
         ]
       },
       "acceptanceCriteria": [
-        "Navigating directly to the /admin URL (e.g., via a shared link) renders the admin panel PIN guard screen, not the main app feed or login page.",
-        "A user who has not logged in via Internet Identity can still reach the admin PIN prompt when accessing the admin URL directly.",
-        "The Layout component's authentication redirect logic does not redirect /admin route visitors away from the admin page.",
-        "After entering the correct PIN on the admin panel, the full admin interface is shown regardless of Internet Identity login state.",
-        "All other protected routes (Mix, Poetry, Dua, Songs) continue to redirect unauthenticated users to the login page as before."
+        "The Registered Users section in the admin panel loads and displays all registered users without showing an error.",
+        "The search by Unique ID or name field functions correctly after users load.",
+        "If no users are registered, an appropriate empty state is shown instead of an error."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Fix the 'Failed to update maintenance mode. Please try again.' error shown when toggling the Maintenance Mode switch in the admin panel. The backend mutation for setting maintenance mode must succeed, and the frontend must correctly call the backend function with proper authorization and handle the response.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Failed to update maintenance mode. Please try again."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Toggling the Maintenance Mode switch in the admin panel succeeds without showing an error toast.",
+        "After toggling, the switch state reflects the actual maintenance mode state from the backend.",
+        "The 'App is Live' / maintenance active label updates correctly after a successful toggle."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
-    "The existing PINAuthGuard component must remain the access control mechanism for the admin panel.",
-    "Do not remove or weaken existing authentication/ban checks for non-admin routes."
+    "Do not change the PIN-based authentication logic in PINAuthGuard.tsx.",
+    "Do not alter immutable frontend paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui."
   ],
   "nonGoals": [
-    "Adding Internet Identity login requirement to access the admin panel.",
-    "Changing the PIN authentication logic inside PINAuthGuard.",
-    "Modifying backend access control or admin-related backend functions.",
-    "Adding role-based access control or new user permission models."
+    "Redesigning the admin panel UI.",
+    "Adding new admin features beyond fixing the existing errors.",
+    "Changing user registration or login flow."
   ],
   "imageRequirements": {
     "required": [],

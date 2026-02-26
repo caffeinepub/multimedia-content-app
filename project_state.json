@@ -2,31 +2,28 @@
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
   "summary": "New project",
-  "architectural_notes": [
-    "Admin panel access via shared URL redirects unauthorized users to main app instead of showing admin panel or login"
-  ],
-  "known_issues": [
-    "Sharing admin URL with another person shows them the main app instead of the admin panel"
-  ],
+  "architectural_notes": [],
+  "known_issues": [],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-when-a-user-navigates-to-the-admin-page-url-directly-e-g-via-a-shared-link-they-must-be-shown-the-admin-panel-pin-auth-guard-instead-of-being-redirected-to-the-main-app-or-login-page-the-router-must-not-intercept-or-redirect-away-from-the-admin-route-for-users-who-are-not-yet-authenticated-via-internet-identity-instead-the-admin-route-should-render-the-pinauthguard-component-which-handles-its-own-authentication-flow-independently-of-the-main-app-auth",
-      "title": "When a user navigates to the admin page URL directly (e.g., via a shared link), they must be shown the admin panel (PIN auth guard) instead of being redirected to the main app or login page. The router must not intercept or redirect away from the /admin route for users who are not yet authenticated via Internet Identity — instead, the admin route should render the PINAuthGuard component which handles its own authentication flow independently of the main app auth.",
+      "id": "feature-fix-the-failed-to-load-users-please-try-again-error-in-the-users-controls-tab-of-the-admin-panel-the-backend-query-for-fetching-registered-users-must-return-successfully-and-the-frontend-must-correctly-call-and-handle-the-response-from-the-backend-s-user-listing-function",
+      "title": "Fix the 'Failed to load users. Please try again.' error in the Users & Controls tab of the admin panel. The backend query for fetching registered users must return successfully, and the frontend must correctly call and handle the response from the backend's user listing function.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
-    }
-  ],
-  "new_feature_requests": [
+    },
     {
-      "id": "AR-1",
-      "summary": "Admin URL access control: when sharing admin panel URL with another person, they should be able to open the admin panel (not be redirected to the main app)",
-      "reqIds": [],
-      "status": "pending"
+      "id": "feature-fix-the-failed-to-update-maintenance-mode-please-try-again-error-shown-when-toggling-the-maintenance-mode-switch-in-the-admin-panel-the-backend-mutation-for-setting-maintenance-mode-must-succeed-and-the-frontend-must-correctly-call-the-backend-function-with-proper-authorization-and-handle-the-response",
+      "title": "Fix the 'Failed to update maintenance mode. Please try again.' error shown when toggling the Maintenance Mode switch in the admin panel. The backend mutation for setting maintenance mode must succeed, and the frontend must correctly call the backend function with proper authorization and handle the response.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
     }
   ],
+  "new_feature_requests": [],
   "projectName": "Dard-e-munasif",
   "clarification_mode": "instant",
   "clarification_rounds": 0

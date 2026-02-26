@@ -1,28 +1,47 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin URL Access — Allow Shared Admin Links to Open Admin Panel",
+  "title": "Fix admin panel: failed to load users and failed to update maintenance mode errors",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Allow direct navigation to /admin URL to show PIN auth guard instead of redirecting to login or main app, ensuring shared admin links work for unauthenticated users",
+      "summary": "Fix the 'Failed to load users. Please try again.' error in the Users & Controls tab by correcting the frontend call to getAllUsers and handling the response properly.",
       "acceptanceCriteria": [
-        "Navigating directly to the /admin URL (e.g., via a shared link) renders the admin panel PIN guard screen, not the main app feed or login page.",
-        "A user who has not logged in via Internet Identity can still reach the admin PIN prompt when accessing the admin URL directly.",
-        "The Layout component's authentication redirect logic does not redirect /admin route visitors away from the admin page.",
-        "After entering the correct PIN on the admin panel, the full admin interface is shown regardless of Internet Identity login state.",
-        "All other protected routes (Mix, Poetry, Dua, Songs) continue to redirect unauthenticated users to the login page as before."
+        "The Registered Users section in the admin panel loads and displays all registered users without showing an error.",
+        "The search by Unique ID or name field functions correctly after users load.",
+        "If no users are registered, an appropriate empty state is shown instead of an error."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/Layout.tsx",
+          "path": "frontend/src/components/admin/UsersControlsPanel.tsx",
           "operation": "modify",
-          "description": "Modify the Layout component to exclude the /admin route from authentication redirect logic. Add a check that allows users to reach the /admin route even when not authenticated via Internet Identity. The PINAuthGuard component on the admin page will handle its own authentication independently. Ensure all other protected routes (Mix, Poetry, Dua, Songs) continue to require Internet Identity authentication as before."
+          "description": "Fix the useGetAllUsers hook call in UsersControlsPanel to correctly fetch and handle the list of registered users. Ensure the query properly awaits actor.getAllUsers() and handles both success (displaying users) and error states (showing appropriate error UI). Verify error handling does not suppress actual backend errors. Update the user list rendering logic to correctly map over the returned UserRecord[] array and display user details (name, uniqueCode, server, deviceId, isBlocked). Ensure the search filter works correctly after users load. Add an empty state UI when no users are registered instead of showing an error."
         },
         {
-          "path": "frontend/src/pages/AdminPage.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Verify that the AdminPage component properly wraps all admin content with PINAuthGuard and that the PIN authentication flow works independently of Internet Identity state. Ensure the page does not perform any additional authentication checks beyond the PINAuthGuard component."
+          "description": "Review and fix the useGetAllUsers React Query hook implementation. Ensure the queryFn correctly calls actor.getAllUsers() and returns the result without transformation errors. Verify the queryKey is unique and appropriate. Ensure the enabled condition checks for actor availability. Add proper error handling and retry configuration. Confirm the return type matches Array<UserRecord> as defined in backend.d.ts."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Fix the 'Failed to update maintenance mode. Please try again.' error by correcting the frontend mutation call to setMaintenanceMode with proper authorization handling.",
+      "acceptanceCriteria": [
+        "Toggling the Maintenance Mode switch in the admin panel succeeds without showing an error toast.",
+        "After toggling, the switch state reflects the actual maintenance mode state from the backend.",
+        "The 'App is Live' / maintenance active label updates correctly after a successful toggle."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/UsersControlsPanel.tsx",
+          "operation": "modify",
+          "description": "Fix the maintenance mode toggle handler in UsersControlsPanel to correctly call the setMaintenanceMode mutation with the new boolean state. Ensure the mutation properly awaits actor.setMaintenanceMode(enabled) and handles success/error responses. After a successful toggle, invalidate the getMaintenanceMode query to refresh the UI state. Update the switch component to reflect the current maintenance mode state from the query. Ensure the 'App is Live' / maintenance active label updates correctly based on the maintenance mode state. Add proper error handling that shows meaningful error messages to the user if the mutation fails."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Review and fix the useSetMaintenanceMode mutation hook implementation. Ensure the mutationFn correctly calls actor.setMaintenanceMode(enabled) with the boolean parameter. Verify proper error handling and success callbacks. Ensure the mutation invalidates the ['maintenanceMode'] query key on success to trigger a UI refresh. Confirm the mutation is properly typed to accept a boolean parameter and return void as per the backend interface."
         }
       ]
     }

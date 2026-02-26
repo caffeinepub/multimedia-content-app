@@ -1,11 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the `/admin` route so that navigating directly to the admin URL (e.g., via a shared link) always renders the admin PIN auth guard, regardless of Internet Identity login state.
+**Goal:** Fix two broken admin panel features in the "Users & Controls" tab — the failed user listing and the failed maintenance mode toggle.
 
 **Planned changes:**
-- Update the router/Layout component so that the `/admin` route is excluded from the main app authentication redirect logic.
-- Ensure the `/admin` route renders the `PINAuthGuard` component directly without requiring Internet Identity login first.
-- All other protected routes retain their existing unauthenticated redirect behavior.
+- Fix the backend query for fetching registered users so it returns successfully, and update the frontend to correctly call and handle the response, eliminating the "Failed to load users. Please try again." error.
+- Fix the backend mutation for toggling maintenance mode so it succeeds with proper authorization, and update the frontend to correctly call and handle the response, eliminating the "Failed to update maintenance mode. Please try again." error toast.
+- Ensure the Maintenance Mode switch state and "App is Live" / maintenance active label reflect the actual backend state after a successful toggle.
+- Show an appropriate empty state in the Registered Users section if no users are registered, instead of an error.
 
-**User-visible outcome:** Anyone who receives a shared admin URL can open it and be presented with the admin PIN prompt, instead of being redirected to the main app or login page.
+**User-visible outcome:** The admin panel's Users & Controls tab correctly loads and displays registered users with a working search field, and the Maintenance Mode toggle works without errors.
