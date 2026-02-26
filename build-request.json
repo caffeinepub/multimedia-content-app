@@ -1,53 +1,40 @@
 {
   "kind": "build_request",
-  "title": "Fix 'Unauthorized: Only users can create songs' error on song upload",
+  "title": "Fix Admin URL Access — Allow Shared Admin Links to Open Admin Panel",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-128",
-      "text": "In backend/main.mo, remove all authorization and identity checks from the createSong update function. The function must accept calls from any caller including anonymous without throwing or returning any 'Unauthorized: Only users can create songs' (or equivalent) error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on createSong.",
-      "target": "backend",
+      "id": "REQ-1",
+      "text": "When a user navigates to the admin page URL directly (e.g., via a shared link), they must be shown the admin panel (PIN auth guard) instead of being redirected to the main app or login page. The router must not intercept or redirect away from the /admin route for users who are not yet authenticated via Internet Identity — instead, the admin route should render the PINAuthGuard component which handles its own authentication flow independently of the main app auth.",
+      "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Unauthorized: Only users can create songs"
+          "If am forwarding my admin url link to second person but they are unable to open admin panel there showing direct main app"
         ]
       },
       "acceptanceCriteria": [
-        "The createSong function in backend/main.mo contains no caller identity check, no admin principal validation, and no 'Unauthorized' guard of any kind.",
-        "Calling createSong from an anonymous identity (as the frontend does) succeeds without error.",
-        "The error toast 'Unauthorized: Only users can create songs' no longer appears after clicking 'Upload Song' in the admin panel.",
-        "A song uploaded via the admin panel is persisted and returned by getAllSongs."
-      ]
-    },
-    {
-      "id": "REQ-129",
-      "text": "In backend/main.mo, also verify and remove all authorization and identity checks from the createPoetry and createDua update functions, ensuring they too accept calls from any caller including anonymous without throwing or returning any 'Unauthorized' error. All three create functions (createPoetry, createDua, createSong) must be fully open to anonymous callers.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ]
-      },
-      "acceptanceCriteria": [
-        "createPoetry, createDua, and createSong all contain no caller identity or authorization checks.",
-        "Uploading Poetry, Dua, or Song content from the admin panel succeeds without any 'Unauthorized' error for all three content types.",
-        "All three create functions persist data that is subsequently returned by their respective getAllX query functions."
+        "Navigating directly to the /admin URL (e.g., via a shared link) renders the admin panel PIN guard screen, not the main app feed or login page.",
+        "A user who has not logged in via Internet Identity can still reach the admin PIN prompt when accessing the admin URL directly.",
+        "The Layout component's authentication redirect logic does not redirect /admin route visitors away from the admin page.",
+        "After entering the correct PIN on the admin panel, the full admin interface is shown regardless of Internet Identity login state.",
+        "All other protected routes (Mix, Poetry, Dua, Songs) continue to redirect unauthenticated users to the login page as before."
       ]
     }
   ],
   "constraints": [
-    "Do not add any new authorization mechanism to the backend — the PIN-protected frontend admin panel is the sole authentication gate.",
-    "Do not modify any immutable frontend paths listed in the system context.",
-    "Preserve all existing stable variable declarations and data — do not re-initialize or wipe stored content."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "The existing PINAuthGuard component must remain the access control mechanism for the admin panel.",
+    "Do not remove or weaken existing authentication/ban checks for non-admin routes."
   ],
   "nonGoals": [
-    "Adding backend role-based access control or admin identity management.",
-    "Changing the frontend admin PIN authentication flow.",
-    "Modifying any other backend functions beyond the create functions."
+    "Adding Internet Identity login requirement to access the admin panel.",
+    "Changing the PIN authentication logic inside PINAuthGuard.",
+    "Modifying backend access control or admin-related backend functions.",
+    "Adding role-based access control or new user permission models."
   ],
   "imageRequirements": {
     "required": [],

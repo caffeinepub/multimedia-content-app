@@ -1,4 +1,25 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-when-a-user-navigates-to-the-admin-page-url-directly-e-g-via-a-shared-link-they-must-be-shown-the-admin-panel-pin-auth-guard-instead-of-being-redirected-to-the-main-app-or-login-page-the-router-must-not-intercept-or-redirect-away-from-the-admin-route-for-users-who-are-not-yet-authenticated-via-internet-identity-instead-the-admin-route-should-render-the-pinauthguard-component-which-handles-its-own-authentication-flow-independently-of-the-main-app-auth",
+      "featureTitle": "When a user navigates to the admin page URL directly (e.g., via a shared link), they must be shown the admin panel (PIN auth guard) instead of being redirected to the main app or login page. The router must not intercept or redirect away from the /admin route for users who are not yet authenticated via Internet Identity — instead, the admin route should render the PINAuthGuard component which handles its own authentication flow independently of the main app auth.",
+      "files": [
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

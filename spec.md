@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the "Unauthorized: Only users can create songs" error by removing all caller identity and authorization checks from the backend create functions.
+**Goal:** Fix the `/admin` route so that navigating directly to the admin URL (e.g., via a shared link) always renders the admin PIN auth guard, regardless of Internet Identity login state.
 
 **Planned changes:**
-- Remove all caller identity checks and authorization guards from the `createSong` function in `backend/main.mo`
-- Remove all caller identity checks and authorization guards from the `createPoetry` function in `backend/main.mo`
-- Remove all caller identity checks and authorization guards from the `createDua` function in `backend/main.mo`
-- Ensure all three create functions accept calls from any caller, including anonymous identities
+- Update the router/Layout component so that the `/admin` route is excluded from the main app authentication redirect logic.
+- Ensure the `/admin` route renders the `PINAuthGuard` component directly without requiring Internet Identity login first.
+- All other protected routes retain their existing unauthenticated redirect behavior.
 
-**User-visible outcome:** Uploading songs, poetry, and duas from the admin panel no longer shows any "Unauthorized" error — content is successfully persisted and retrievable.
+**User-visible outcome:** Anyone who receives a shared admin URL can open it and be presented with the admin PIN prompt, instead of being redirected to the main app or login page.

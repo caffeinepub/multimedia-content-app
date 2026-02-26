@@ -1,6 +1,30 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix 'Unauthorized: Only users can create songs' error on song upload",
-  "requirements": []
+  "title": "Fix Admin URL Access — Allow Shared Admin Links to Open Admin Panel",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Allow direct navigation to /admin URL to show PIN auth guard instead of redirecting to login or main app, ensuring shared admin links work for unauthenticated users",
+      "acceptanceCriteria": [
+        "Navigating directly to the /admin URL (e.g., via a shared link) renders the admin panel PIN guard screen, not the main app feed or login page.",
+        "A user who has not logged in via Internet Identity can still reach the admin PIN prompt when accessing the admin URL directly.",
+        "The Layout component's authentication redirect logic does not redirect /admin route visitors away from the admin page.",
+        "After entering the correct PIN on the admin panel, the full admin interface is shown regardless of Internet Identity login state.",
+        "All other protected routes (Mix, Poetry, Dua, Songs) continue to redirect unauthenticated users to the login page as before."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Modify the Layout component to exclude the /admin route from authentication redirect logic. Add a check that allows users to reach the /admin route even when not authenticated via Internet Identity. The PINAuthGuard component on the admin page will handle its own authentication independently. Ensure all other protected routes (Mix, Poetry, Dua, Songs) continue to require Internet Identity authentication as before."
+        },
+        {
+          "path": "frontend/src/pages/AdminPage.tsx",
+          "operation": "modify",
+          "description": "Verify that the AdminPage component properly wraps all admin content with PINAuthGuard and that the PIN authentication flow works independently of Internet Identity state. Ensure the page does not perform any additional authentication checks beyond the PINAuthGuard component."
+        }
+      ]
+    }
+  ]
 }

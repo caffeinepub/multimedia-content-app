@@ -42,13 +42,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const isActive = (path: string) => currentPath === path;
   const isLoginPage = currentPath === '/login';
+  // Admin page has its own PIN-based auth guard — skip credential redirect for it
+  const isAdminPage = currentPath === '/admin';
+  // Pages that bypass the normal credential/auth check
+  const isUnguardedPage = isLoginPage || isAdminPage;
 
   const [checkState, setCheckState] = useState<CheckState>({ status: 'idle' });
   const hasChecked = useRef(false);
 
   useEffect(() => {
-    // On login page, no guard needed
-    if (isLoginPage) return;
+    // On login or admin page, no guard needed
+    if (isUnguardedPage) return;
 
     // Early exit: no credentials → redirect immediately, no backend calls
     const creds = getStoredCredentials();
@@ -88,18 +92,74 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
 
     runChecks();
-  }, [isLoginPage, actor, actorFetching, navigate, currentPath]);
+  }, [isUnguardedPage, actor, actorFetching, navigate, currentPath]);
 
   // Reset check on route change so re-checks happen on navigation
   useEffect(() => {
-    if (!isLoginPage) {
+    if (!isUnguardedPage) {
       hasChecked.current = false;
     }
-  }, [currentPath, isLoginPage]);
+  }, [currentPath, isUnguardedPage]);
 
   // On login page, render children without layout chrome
   if (isLoginPage) {
     return <>{children}</>;
+  }
+
+  // On admin page, render children directly — PINAuthGuard handles its own auth
+  if (isAdminPage) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2 transition-transform hover:scale-105">
+              <img
+                src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
+                alt="Dard-e-munasif logo"
+                className="h-10 w-10 rounded-full object-cover border border-border/40"
+              />
+              <span className="text-xl font-semibold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
+                Dard-e-munasif
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="rounded-full"
+              >
+                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="container py-8 animate-in fade-in duration-500">
+          {children}
+        </main>
+
+        <footer className="border-t border-border/40 bg-muted/30 py-8 mt-16">
+          <div className="container text-center text-sm text-muted-foreground">
+            <p className="flex items-center justify-center gap-2">
+              Built with <span className="text-red-500">♥</span> using{' '}
+              <a
+                href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground hover:underline"
+              >
+                caffeine.ai
+              </a>
+            </p>
+            <p className="mt-2">© {new Date().getFullYear()} Dard-e-munasif. All rights reserved.</p>
+          </div>
+        </footer>
+      </div>
+    );
   }
 
   // No credentials → render nothing while redirect fires

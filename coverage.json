@@ -1,40 +1,37 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-25T10:52:40.854Z",
+  "generatedAt": "2026-02-26T08:45:43.667Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 0,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-128",
-        "summary": "In backend/main.mo, remove all authorization and identity checks from the createSong update function. The function must accept calls from any caller including anonymous without throwing or returning any 'Unauthorized: Only users can create songs' (or equivalent) error. The PIN-protected frontend admin panel is the sole authentication gate — the backend must not enforce any caller identity restriction on createSong.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-129",
-        "summary": "In backend/main.mo, also verify and remove all authorization and identity checks from the createPoetry and createDua update functions, ensuring they too accept calls from any caller including anonymous without throwing or returning any 'Unauthorized' error. All three create functions (createPoetry, createDua, createSong) must be fully open to anonymous callers.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "id": "REQ-1",
+        "summary": "When a user navigates to the admin page URL directly (e.g., via a shared link), they must be shown the admin panel (PIN auth guard) instead of being redirected to the main app or login page. The router must not intercept or redirect away from the /admin route for users who are not yet authenticated via Internet Identity — instead, the admin route should render the PINAuthGuard component which handles its own authentication flow independently of the main app auth.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/pages/AdminPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/Layout.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
+    "build-template/README.md",
+    "caffeine.lock.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/components/Layout.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
