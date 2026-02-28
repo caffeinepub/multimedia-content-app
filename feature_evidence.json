@@ -2,11 +2,9 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-maintenance-mode-toggle-in-userscontrolspanel-so-that-calling-togglemaintenancemode-via-the-admin-actor-succeeds-without-throwing-an-error-ensure-the-admin-actor-is-correctly-initialized-with-admin-credentials-before-the-toggle-call-is-made-and-that-the-backend-togglemaintenancemode-function-authorizes-the-admin-caller-properly",
-      "featureTitle": "Fix the maintenance mode toggle in UsersControlsPanel so that calling toggleMaintenanceMode via the admin actor succeeds without throwing an error. Ensure the admin actor is correctly initialized with admin credentials before the toggle call is made, and that the backend toggleMaintenanceMode function authorizes the admin caller properly.",
+      "featureId": "feature-fix-the-admin-authorization-failure-in-userscontrolspanel-that-causes-failed-to-load-users-please-try-again-error-when-the-users-controls-tab-is-opened-ensure-the-admin-actor-is-correctly-initialized-with-the-secret-token-before-calling-the-getallusers-or-equivalent-backend-query-so-the-registered-users-list-loads-successfully",
+      "featureTitle": "Fix the admin authorization failure in UsersControlsPanel that causes 'Failed to load users. Please try again.' error when the Users & Controls tab is opened. Ensure the admin actor is correctly initialized with the secret token before calling the getAllUsers (or equivalent) backend query, so the registered users list loads successfully.",
       "files": [
-        "frontend/src/components/admin/UsersControlsPanel.tsx",
-        "frontend/src/hooks/useAdminActor.ts",
         "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
@@ -20,27 +18,6 @@
       ],
       "testIds": [
         "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-fix-the-registered-users-list-in-userscontrolspanel-so-that-getallusers-or-equivalent-is-called-via-a-correctly-initialized-admin-actor-with-proper-permissions-and-the-list-of-registered-users-is-successfully-fetched-and-displayed-ensure-the-query-does-not-fail-with-an-authorization-or-initialization-error",
-      "featureTitle": "Fix the registered users list in UsersControlsPanel so that getAllUsers (or equivalent) is called via a correctly initialized admin actor with proper permissions, and the list of registered users is successfully fetched and displayed. Ensure the query does not fail with an authorization or initialization error.",
-      "files": [
-        "frontend/src/components/admin/UsersControlsPanel.tsx",
-        "frontend/src/hooks/useQueries.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
       ],
       "confidence": "high"
     }

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 const CORRECT_PIN = '09186114';
 const SESSION_KEY = 'admin_authenticated';
@@ -15,6 +16,7 @@ export default function PINAuthGuard({ children }: { children: React.ReactNode }
   const [pin, setPin] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     try {
@@ -34,11 +36,10 @@ export default function PINAuthGuard({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (pin === CORRECT_PIN) {
-      setIsAuthenticated(true);
       try {
         sessionStorage.setItem(SESSION_KEY, 'true');
         // Store the PIN as the admin token for useAdminActor to use
@@ -46,6 +47,13 @@ export default function PINAuthGuard({ children }: { children: React.ReactNode }
       } catch (error) {
         console.error('Error writing to sessionStorage:', error);
       }
+
+      // Invalidate the cached actor so it gets re-created with the admin token
+      await queryClient.invalidateQueries({ queryKey: ['actor'] });
+      // Also clear any stale allUsers query so it re-runs with the new actor
+      await queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+
+      setIsAuthenticated(true);
       toast.success('Access granted!');
     } else {
       toast.error('Invalid PIN. Access denied.');

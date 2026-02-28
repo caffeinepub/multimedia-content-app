@@ -1,40 +1,24 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T10:55:21.738Z",
+  "generatedAt": "2026-02-28T11:54:25.996Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the maintenance mode toggle in UsersControlsPanel so that calling toggleMaintenanceMode via the admin actor succeeds without throwing an error. Ensure the admin actor is correctly initialized with admin credentials before the toggle call is made, and that the backend toggleMaintenanceMode function authorizes the admin caller properly.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/admin/UsersControlsPanel.tsx",
-          "frontend/src/hooks/useAdminActor.ts",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/admin/UsersControlsPanel.tsx",
-          "frontend/src/hooks/useAdminActor.ts",
-          "frontend/src/hooks/useQueries.ts"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Fix the registered users list in UsersControlsPanel so that getAllUsers (or equivalent) is called via a correctly initialized admin actor with proper permissions, and the list of registered users is successfully fetched and displayed. Ensure the query does not fail with an authorization or initialization error.",
+        "summary": "Fix the admin authorization failure in UsersControlsPanel that causes 'Failed to load users. Please try again.' error when the Users & Controls tab is opened. Ensure the admin actor is correctly initialized with the secret token before calling the getAllUsers (or equivalent) backend query, so the registered users list loads successfully.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/components/admin/UsersControlsPanel.tsx",
           "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/UsersControlsPanel.tsx",
           "frontend/src/hooks/useQueries.ts"
         ]
       }
@@ -49,10 +33,8 @@
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
     "frontend/src/components/PINAuthGuard.tsx",
-    "frontend/src/components/admin/UsersControlsPanel.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useAdminActor.ts",
     "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",

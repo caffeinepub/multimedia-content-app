@@ -1,58 +1,38 @@
 {
   "kind": "build_request",
-  "title": "Fix maintenance mode toggle and registered users loading in admin panel",
+  "title": "Fix 'Failed to load users' error in UsersControlsPanel",
   "projectName": "Dard-e-munasif",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the maintenance mode toggle in UsersControlsPanel so that calling toggleMaintenanceMode via the admin actor succeeds without throwing an error. Ensure the admin actor is correctly initialized with admin credentials before the toggle call is made, and that the backend toggleMaintenanceMode function authorizes the admin caller properly.",
+      "text": "Fix the admin authorization failure in UsersControlsPanel that causes 'Failed to load users. Please try again.' error when the Users & Controls tab is opened. Ensure the admin actor is correctly initialized with the secret token before calling the getAllUsers (or equivalent) backend query, so the registered users list loads successfully.",
       "target": "both",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "unable to open maintenance mode",
-          "Failed to update maintenance mode. Please try again."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Clicking the maintenance mode toggle in the admin panel does not show 'Failed to update maintenance mode' error",
-        "The toggle correctly switches between 'App is Live' and 'Maintenance Mode' states",
-        "The backend toggleMaintenanceMode function accepts the admin actor call without rejection",
-        "The updated maintenance mode state persists and is reflected on next load"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Fix the registered users list in UsersControlsPanel so that getAllUsers (or equivalent) is called via a correctly initialized admin actor with proper permissions, and the list of registered users is successfully fetched and displayed. Ensure the query does not fail with an authorization or initialization error.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "registered users not showing",
+          "Showing failed to load users",
           "Failed to load users. Please try again."
         ]
       },
       "acceptanceCriteria": [
-        "The Registered Users section displays the list of registered users without showing 'Failed to load users' error",
-        "Users can be searched by Unique ID or name",
-        "The backend user listing function authorizes the admin actor call and returns all users",
-        "Block/unblock actions remain functional after the fix"
+        "Opening the Users & Controls tab in the admin panel displays the list of registered users without any error.",
+        "The 'Failed to load users. Please try again.' error message does not appear when the admin is authenticated.",
+        "The admin actor call to fetch all users succeeds without an authorization rejection.",
+        "Maintenance mode toggle continues to work correctly after the fix."
       ]
     }
   ],
   "constraints": [
-    "Do not change immutable frontend paths (useInternetIdentity, useActor, main.tsx, ui components)",
-    "All Motoko logic must remain in the single backend/main.mo actor"
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "Keep all Motoko logic in backend/main.mo."
   ],
   "nonGoals": [
-    "Redesigning the admin panel UI",
-    "Adding new admin features beyond fixing the two broken ones",
-    "Changing authentication flow for regular users"
+    "Redesigning the Users & Controls UI layout.",
+    "Adding new user management features beyond fixing the load failure.",
+    "Changing the PIN authentication flow."
   ],
   "imageRequirements": {
     "required": [],

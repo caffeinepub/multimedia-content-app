@@ -109,11 +109,22 @@ actor {
   let usersMap = Map.empty<Text, UserRecord>();
 
   var maintenanceMode : Bool = false;
+  var isInitialized = false;
 
-  func isEmpty(val : Text) : Bool { val.trim(#char ' ').size() == 0 };
+  func isEmpty(val : Text) : Bool {
+    val.trim(#char ' ').size() == 0;
+  };
   func isValidAudio(_ : Storage.ExternalBlob) : Bool { true };
   func isValidImage(_ : Storage.ExternalBlob) : Bool { true };
   func generateRandomLikes() : Int { 1000 + (Time.now() % 1001) };
+
+  public shared ({ caller }) func initialize(adminToken : Text, userProvidedToken : Text) : async () {
+    if (isInitialized) {
+      Runtime.trap("Initialization already done. Only once allowed.");
+    };
+    ignore AccessControl.initialize(accessControlState, caller, adminToken, userProvidedToken);
+    isInitialized := true;
+  };
 
   public shared ({ caller }) func createPoetry(input : CreatePoetryInput) : async Text {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
@@ -125,7 +136,11 @@ actor {
     };
 
     switch (input.image) {
-      case (?img) { if (not isValidImage(img)) { Runtime.trap("Invalid image file type") } };
+      case (?img) {
+        if (not isValidImage(img)) {
+          Runtime.trap("Invalid image file type");
+        };
+      };
       case (null) {};
     };
 
@@ -155,7 +170,11 @@ actor {
     };
 
     switch (input.audio) {
-      case (?aud) { if (not isValidAudio(aud)) { Runtime.trap("Invalid audio file type") } };
+      case (?aud) {
+        if (not isValidAudio(aud)) {
+          Runtime.trap("Invalid audio file type");
+        };
+      };
       case (null) {};
     };
 

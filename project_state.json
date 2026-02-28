@@ -1,27 +1,18 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Project with maintenance mode and registered users features. Currently experiencing issues: unable to open maintenance mode and registered users not showing.",
+  "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "Unable to open maintenance mode (error reported in v38)",
-    "Registered users not showing (reported in v38)"
+    "Failed to load users error occurring in the registered users list"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-maintenance-mode-toggle-in-userscontrolspanel-so-that-calling-togglemaintenancemode-via-the-admin-actor-succeeds-without-throwing-an-error-ensure-the-admin-actor-is-correctly-initialized-with-admin-credentials-before-the-toggle-call-is-made-and-that-the-backend-togglemaintenancemode-function-authorizes-the-admin-caller-properly",
-      "title": "Fix the maintenance mode toggle in UsersControlsPanel so that calling toggleMaintenanceMode via the admin actor succeeds without throwing an error. Ensure the admin actor is correctly initialized with admin credentials before the toggle call is made, and that the backend toggleMaintenanceMode function authorizes the admin caller properly.",
+      "id": "feature-fix-the-admin-authorization-failure-in-userscontrolspanel-that-causes-failed-to-load-users-please-try-again-error-when-the-users-controls-tab-is-opened-ensure-the-admin-actor-is-correctly-initialized-with-the-secret-token-before-calling-the-getallusers-or-equivalent-backend-query-so-the-registered-users-list-loads-successfully",
+      "title": "Fix the admin authorization failure in UsersControlsPanel that causes 'Failed to load users. Please try again.' error when the Users & Controls tab is opened. Ensure the admin actor is correctly initialized with the secret token before calling the getAllUsers (or equivalent) backend query, so the registered users list loads successfully.",
       "reqIds": [
         "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-fix-the-registered-users-list-in-userscontrolspanel-so-that-getallusers-or-equivalent-is-called-via-a-correctly-initialized-admin-actor-with-proper-permissions-and-the-list-of-registered-users-is-successfully-fetched-and-displayed-ensure-the-query-does-not-fail-with-an-authorization-or-initialization-error",
-      "title": "Fix the registered users list in UsersControlsPanel so that getAllUsers (or equivalent) is called via a correctly initialized admin actor with proper permissions, and the list of registered users is successfully fetched and displayed. Ensure the query does not fail with an authorization or initialization error.",
-      "reqIds": [
-        "REQ-2"
       ],
       "version": 1
     }

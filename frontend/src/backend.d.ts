@@ -95,6 +95,7 @@ export interface backendInterface {
     incrementDuaLike(id: string): Promise<bigint>;
     incrementPoetryLike(id: string): Promise<bigint>;
     incrementSongLike(id: string): Promise<bigint>;
+    initialize(adminToken: string, userProvidedToken: string): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     registerUser(name: string, server: string, deviceId: string): Promise<string>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;

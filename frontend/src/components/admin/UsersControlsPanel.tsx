@@ -32,7 +32,7 @@ export default function UsersControlsPanel() {
   }>({ open: false, user: null, action: 'block' });
   const [localMaintenance, setLocalMaintenance] = useState<boolean | null>(null);
 
-  // Check admin actor readiness
+  // Check admin actor readiness (now delegates to useActor)
   const { actor: adminActor, isFetching: adminActorLoading } = useAdminActor();
 
   const {
@@ -53,7 +53,7 @@ export default function UsersControlsPanel() {
 
   const effectiveMaintenance = localMaintenance !== null ? localMaintenance : maintenanceMode;
 
-  // Show loading state while admin actor is initializing
+  // Show loading state while actor is initializing
   if (adminActorLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -63,7 +63,7 @@ export default function UsersControlsPanel() {
     );
   }
 
-  // Show error if admin actor failed to initialize
+  // Show error if actor failed to initialize
   if (!adminActor) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -137,36 +137,29 @@ export default function UsersControlsPanel() {
         <p className="text-sm text-muted-foreground mb-4">
           When enabled, all users will see a maintenance screen instead of the app.
         </p>
-        <div className="flex items-center gap-3">
-          {maintenanceLoading ? (
-            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Loading…
-            </span>
-          ) : (
-            <>
-              <Switch
-                checked={effectiveMaintenance}
-                onCheckedChange={handleMaintenanceToggle}
-                disabled={setMaintenanceMode.isPending}
-              />
-              {setMaintenanceMode.isPending ? (
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Updating…
-                </span>
-              ) : (
-                <span
-                  className={`text-sm font-medium ${
-                    effectiveMaintenance ? 'text-destructive' : 'text-green-500'
-                  }`}
-                >
-                  {effectiveMaintenance ? 'Maintenance Active' : 'App is Live'}
-                </span>
-              )}
-            </>
-          )}
-        </div>
+        {maintenanceLoading ? (
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Loading…</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={effectiveMaintenance}
+              onCheckedChange={handleMaintenanceToggle}
+              disabled={setMaintenanceMode.isPending}
+            />
+            {setMaintenanceMode.isPending ? (
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating…
+              </span>
+            ) : effectiveMaintenance ? (
+              <span className="text-sm font-medium text-destructive">Maintenance Active</span>
+            ) : (
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">App is Live</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Registered Users Card */}
@@ -189,22 +182,19 @@ export default function UsersControlsPanel() {
             placeholder="Search by Unique ID or name"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full pl-9 pr-4 py-2 text-sm bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
-        {/* Loading state */}
-        {usersLoading && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
+        {/* Users list */}
+        {usersLoading ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
             <p className="text-sm text-muted-foreground">Loading users…</p>
           </div>
-        )}
-
-        {/* Error state */}
-        {usersError && !usersLoading && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <Users className="w-10 h-10 text-destructive/60" />
+        ) : usersError ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
+            <Users className="w-10 h-10 text-destructive/40" />
             <p className="text-sm text-destructive font-medium text-center">
               Failed to load users. Please try again.
             </p>
@@ -218,45 +208,39 @@ export default function UsersControlsPanel() {
               Retry
             </Button>
           </div>
-        )}
-
-        {/* Empty state */}
-        {!usersLoading && !usersError && filteredUsers.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 gap-2">
+        ) : filteredUsers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-2">
             <Users className="w-10 h-10 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">
               {searchQuery ? 'No users match your search.' : 'No registered users yet.'}
             </p>
           </div>
-        )}
-
-        {/* Users list */}
-        {!usersLoading && !usersError && filteredUsers.length > 0 && (
+        ) : (
           <div className="space-y-2">
             {filteredUsers.map((user) => (
               <div
                 key={user.uniqueCode}
-                className="flex items-center justify-between p-3 bg-background border border-border rounded-xl gap-3"
+                className="flex items-center justify-between gap-3 p-3 rounded-xl bg-background border border-border"
               >
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium text-foreground truncate">{user.name}</span>
                     {user.isBlocked && (
-                      <span className="text-xs bg-destructive/15 text-destructive px-1.5 py-0.5 rounded-full">
+                      <span className="text-xs bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full font-medium">
                         Blocked
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="text-xs text-muted-foreground font-mono">{user.uniqueCode}</span>
-                    <span className="text-xs text-muted-foreground">· {user.server}</span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground">{user.server}</span>
                   </div>
                 </div>
                 <Button
                   variant={user.isBlocked ? 'outline' : 'destructive'}
                   size="sm"
                   className="shrink-0 text-xs h-8 px-3"
-                  disabled={blockUser.isPending || unblockUser.isPending}
                   onClick={() =>
                     setConfirmDialog({
                       open: true,
@@ -264,14 +248,15 @@ export default function UsersControlsPanel() {
                       action: user.isBlocked ? 'unblock' : 'block',
                     })
                   }
+                  disabled={blockUser.isPending || unblockUser.isPending}
                 >
                   {user.isBlocked ? (
                     <span className="flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3" /> Unblock
+                      <ShieldCheck className="w-3.5 h-3.5" /> Unblock
                     </span>
                   ) : (
                     <span className="flex items-center gap-1">
-                      <ShieldX className="w-3 h-3" /> Block
+                      <ShieldX className="w-3.5 h-3.5" /> Block
                     </span>
                   )}
                 </Button>
@@ -281,7 +266,7 @@ export default function UsersControlsPanel() {
         )}
       </div>
 
-      {/* Confirm Dialog */}
+      {/* Confirm Block/Unblock Dialog */}
       <AlertDialog
         open={confirmDialog.open}
         onOpenChange={(open) => !open && setConfirmDialog({ open: false, user: null, action: 'block' })}
@@ -301,7 +286,11 @@ export default function UsersControlsPanel() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBlockUnblock}
-              className={confirmDialog.action === 'block' ? 'bg-destructive hover:bg-destructive/90' : ''}
+              className={
+                confirmDialog.action === 'block'
+                  ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                  : ''
+              }
             >
               {confirmDialog.action === 'block' ? 'Block' : 'Unblock'}
             </AlertDialogAction>

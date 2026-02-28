@@ -254,8 +254,18 @@ export function useSetMaintenanceMode() {
 
 export function useGetAllUsers() {
   const { actor, isFetching } = useAdminActor();
+  // Include the admin token in the query key so the query re-runs when the
+  // token changes (i.e. after the PIN is entered and the actor is refreshed).
+  const adminToken = (() => {
+    try {
+      return sessionStorage.getItem('caffeineAdminToken') || '';
+    } catch {
+      return '';
+    }
+  })();
+
   return useQuery<UserRecord[]>({
-    queryKey: ['allUsers'],
+    queryKey: ['allUsers', adminToken],
     queryFn: async () => {
       if (!actor) throw new Error('Admin actor not available. Please reload the page.');
       try {
@@ -268,8 +278,14 @@ export function useGetAllUsers() {
         throw new Error('Failed to load users. Please try again.');
       }
     },
-    enabled: !!actor && !isFetching,
-    retry: 1,
+    // Only run when actor is ready AND the admin token is present
+    enabled: !!actor && !isFetching && !!adminToken,
+    retry: (failureCount, error: any) => {
+      // Don't retry on authorization errors
+      const msg: string = error?.message || '';
+      if (msg.includes('authorization') || msg.includes('Unauthorized')) return false;
+      return failureCount < 2;
+    },
     retryDelay: 1500,
   });
 }
