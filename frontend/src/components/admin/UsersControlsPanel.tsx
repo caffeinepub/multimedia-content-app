@@ -20,6 +20,7 @@ import {
   useBlockUser,
   useUnblockUser,
 } from '@/hooks/useQueries';
+import { useAdminActor } from '@/hooks/useAdminActor';
 import type { UserRecord } from '../../backend';
 
 export default function UsersControlsPanel() {
@@ -31,13 +32,57 @@ export default function UsersControlsPanel() {
   }>({ open: false, user: null, action: 'block' });
   const [localMaintenance, setLocalMaintenance] = useState<boolean | null>(null);
 
-  const { data: users = [], isLoading: usersLoading, isError: usersError, refetch: refetchUsers } = useGetAllUsers();
-  const { data: maintenanceMode = false } = useGetMaintenanceMode();
+  // Check admin actor readiness
+  const { actor: adminActor, isFetching: adminActorLoading } = useAdminActor();
+
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    isError: usersError,
+    refetch: refetchUsers,
+  } = useGetAllUsers();
+
+  const {
+    data: maintenanceMode = false,
+    isLoading: maintenanceLoading,
+  } = useGetMaintenanceMode();
+
   const setMaintenanceMode = useSetMaintenanceMode();
   const blockUser = useBlockUser();
   const unblockUser = useUnblockUser();
 
   const effectiveMaintenance = localMaintenance !== null ? localMaintenance : maintenanceMode;
+
+  // Show loading state while admin actor is initializing
+  if (adminActorLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-sm text-muted-foreground">Initializing admin access…</p>
+      </div>
+    );
+  }
+
+  // Show error if admin actor failed to initialize
+  if (!adminActor) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Users className="w-10 h-10 text-destructive/60" />
+        <p className="text-sm text-destructive font-medium text-center px-4">
+          Admin access unavailable. Please reload the page and enter your PIN again.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          Reload
+        </Button>
+      </div>
+    );
+  }
 
   const handleMaintenanceToggle = async (enabled: boolean) => {
     setLocalMaintenance(enabled);
@@ -45,7 +90,8 @@ export default function UsersControlsPanel() {
       await setMaintenanceMode.mutateAsync(enabled);
     } catch (err: unknown) {
       setLocalMaintenance(!enabled);
-      const message = err instanceof Error ? err.message : 'Failed to update maintenance mode. Please try again.';
+      const message =
+        err instanceof Error ? err.message : 'Failed to update maintenance mode. Please try again.';
       toast.error(message);
     }
   };
@@ -92,20 +138,33 @@ export default function UsersControlsPanel() {
           When enabled, all users will see a maintenance screen instead of the app.
         </p>
         <div className="flex items-center gap-3">
-          <Switch
-            checked={effectiveMaintenance}
-            onCheckedChange={handleMaintenanceToggle}
-            disabled={setMaintenanceMode.isPending}
-          />
-          {setMaintenanceMode.isPending ? (
+          {maintenanceLoading ? (
             <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Updating…
+              Loading…
             </span>
           ) : (
-            <span className={`text-sm font-medium ${effectiveMaintenance ? 'text-destructive' : 'text-green-500'}`}>
-              {effectiveMaintenance ? 'Maintenance Active' : 'App is Live'}
-            </span>
+            <>
+              <Switch
+                checked={effectiveMaintenance}
+                onCheckedChange={handleMaintenanceToggle}
+                disabled={setMaintenanceMode.isPending}
+              />
+              {setMaintenanceMode.isPending ? (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Updating…
+                </span>
+              ) : (
+                <span
+                  className={`text-sm font-medium ${
+                    effectiveMaintenance ? 'text-destructive' : 'text-green-500'
+                  }`}
+                >
+                  {effectiveMaintenance ? 'Maintenance Active' : 'App is Live'}
+                </span>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -134,7 +193,7 @@ export default function UsersControlsPanel() {
           />
         </div>
 
-        {/* States */}
+        {/* Loading state */}
         {usersLoading && (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -142,10 +201,13 @@ export default function UsersControlsPanel() {
           </div>
         )}
 
+        {/* Error state */}
         {usersError && !usersLoading && (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <Users className="w-10 h-10 text-destructive/60" />
-            <p className="text-sm text-destructive font-medium">Failed to load users. Please try again.</p>
+            <p className="text-sm text-destructive font-medium text-center">
+              Failed to load users. Please try again.
+            </p>
             <Button
               variant="outline"
               size="sm"
@@ -158,6 +220,7 @@ export default function UsersControlsPanel() {
           </div>
         )}
 
+        {/* Empty state */}
         {!usersLoading && !usersError && filteredUsers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
             <Users className="w-10 h-10 text-muted-foreground/40" />
@@ -167,6 +230,7 @@ export default function UsersControlsPanel() {
           </div>
         )}
 
+        {/* Users list */}
         {!usersLoading && !usersError && filteredUsers.length > 0 && (
           <div className="space-y-2">
             {filteredUsers.map((user) => (
@@ -218,11 +282,14 @@ export default function UsersControlsPanel() {
       </div>
 
       {/* Confirm Dialog */}
-      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog({ open: false, user: null, action: 'block' })}>
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => !open && setConfirmDialog({ open: false, user: null, action: 'block' })}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmDialog.action === 'block' ? 'Block User?' : 'Unblock User?'}
+              {confirmDialog.action === 'block' ? 'Block User' : 'Unblock User'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmDialog.action === 'block'

@@ -108,7 +108,7 @@ actor {
   var userCounter : Nat = 0;
   let usersMap = Map.empty<Text, UserRecord>();
 
-  stable var maintenanceMode : Bool = false;
+  var maintenanceMode : Bool = false;
 
   func isEmpty(val : Text) : Bool { val.trim(#char ' ').size() == 0 };
   func isValidAudio(_ : Storage.ExternalBlob) : Bool { true };
@@ -306,23 +306,18 @@ actor {
     };
   };
 
-  public shared func registerUser(name : Text, server : Text, deviceId : Text) : async Text {
-    switch (usersMap.get(deviceId)) {
-      case (?existingUser) { existingUser.uniqueCode };
-      case (null) {
-        userCounter += 1;
-        let uniqueCode = "DM-" # userCounter.toText();
-        let newUser : UserRecord = {
-          uniqueCode;
-          deviceId;
-          name;
-          server;
-          isBlocked = false;
-        };
-        usersMap.add(deviceId, newUser);
-        uniqueCode;
-      };
+  public shared ({ caller }) func registerUser(name : Text, server : Text, deviceId : Text) : async Text {
+    userCounter += 1;
+    let uniqueCode = "DM-" # userCounter.toText();
+    let newUser : UserRecord = {
+      uniqueCode;
+      deviceId;
+      name;
+      server;
+      isBlocked = false;
     };
+    usersMap.add(deviceId, newUser);
+    uniqueCode;
   };
 
   public query func getUserByDeviceId(deviceId : Text) : async ?UserRecord {
@@ -338,6 +333,14 @@ actor {
       Runtime.trap("Unauthorized: Only admins can set maintenance mode");
     };
     maintenanceMode := enabled;
+  };
+
+  public shared ({ caller }) func toggleMaintenanceMode() : async Bool {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can toggle maintenance mode");
+    };
+    maintenanceMode := not maintenanceMode;
+    maintenanceMode;
   };
 
   public shared ({ caller }) func blockUser(uniqueCode : Text) : async () {

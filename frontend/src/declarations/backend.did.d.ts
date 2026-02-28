@@ -119,6 +119,7 @@ export interface _SERVICE {
   'registerUser' : ActorMethod<[string, string, string], string>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setMaintenanceMode' : ActorMethod<[boolean], undefined>,
+  'toggleMaintenanceMode' : ActorMethod<[], boolean>,
   'unblockUser' : ActorMethod<[string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

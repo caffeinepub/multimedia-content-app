@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Server, User, ChevronRight, Wifi, AlertCircle } from 'lucide-react';
+import { Server, User, ChevronRight, Wifi, AlertCircle, Loader2 } from 'lucide-react';
 import { useRegisterUser } from '../hooks/useQueries';
+import { useActor } from '../hooks/useActor';
 
 const SERVERS = [
   { id: 'kashmir', label: 'V.99.kashmir.2HZ.World' },
@@ -50,7 +51,16 @@ export default function LoginPage() {
   const [connectingServer, setConnectingServer] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState('');
 
+  const { actor, isFetching: actorLoading } = useActor();
   const registerUser = useRegisterUser();
+
+  // If user is already registered, redirect to home
+  useEffect(() => {
+    const existingCode = localStorage.getItem('dmUser_uniqueCode');
+    if (existingCode) {
+      navigate({ to: '/' });
+    }
+  }, [navigate]);
 
   const handleConnect = () => {
     const trimmed = name.trim();
@@ -63,6 +73,12 @@ export default function LoginPage() {
   };
 
   const handleServerSelect = async (serverLabel: string) => {
+    // Don't allow selection while actor is loading
+    if (actorLoading || !actor) {
+      setRegisterError('Still connecting to server, please wait a moment and try again.');
+      return;
+    }
+
     setConnectingServer(serverLabel);
     setRegisterError('');
 
@@ -82,8 +98,15 @@ export default function LoginPage() {
 
       navigate({ to: '/' });
     } catch (err: unknown) {
-      const msg = (err as any)?.message || 'Registration failed. Please try again.';
-      setRegisterError(msg);
+      const raw = (err as any)?.message || '';
+      // Show a clean, user-friendly message
+      if (raw.includes('Connecting to server') || raw.includes('please try again in a moment')) {
+        setRegisterError('Still connecting to server. Please wait a moment and try again.');
+      } else if (raw.includes('refresh') || raw.includes('IC0508') || raw.includes('trap') || raw.includes('Reject')) {
+        setRegisterError('Connection error. Please refresh the page and try again.');
+      } else {
+        setRegisterError(raw || 'Registration failed. Please try again.');
+      }
       setConnectingServer(null);
     }
   };
@@ -141,13 +164,31 @@ export default function LoginPage() {
                 )}
               </div>
 
+              {/* Actor loading indicator */}
+              {actorLoading && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Connecting to network…</span>
+                </div>
+              )}
+
               <Button
                 onClick={handleConnect}
-                className="w-full h-11 rounded-xl font-semibold gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                disabled={actorLoading}
+                className="w-full h-11 rounded-xl font-semibold gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
               >
-                <Wifi className="h-4 w-4" />
-                Connect with Server
-                <ChevronRight className="h-4 w-4" />
+                {actorLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Connecting…
+                  </>
+                ) : (
+                  <>
+                    <Wifi className="h-4 w-4" />
+                    Connect with Server
+                    <ChevronRight className="h-4 w-4" />
+                  </>
+                )}
               </Button>
             </div>
           )}
@@ -171,6 +212,14 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {/* Actor loading indicator on server step */}
+              {actorLoading && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center py-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Connecting to network, please wait…</span>
+                </div>
+              )}
+
               <div className="space-y-3">
                 {SERVERS.map((server) => {
                   const isConnecting = connectingServer === server.label;
@@ -178,10 +227,10 @@ export default function LoginPage() {
                     <button
                       key={server.id}
                       onClick={() => handleServerSelect(server.label)}
-                      disabled={connectingServer !== null}
+                      disabled={connectingServer !== null || actorLoading}
                       className="w-full flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-background/60 hover:bg-primary/5 hover:border-primary/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed group text-left"
                     >
-                      <div className={`flex-shrink-0 w-2.5 h-2.5 rounded-full transition-colors ${isConnecting ? 'bg-primary animate-pulse' : 'bg-muted-foreground/40 group-hover:bg-primary/60'}`} />
+                      <div className={`flex-shrink-0 w-2.5 h-2.5 rounded-full transition-colors ${isConnecting ? 'bg-primary animate-pulse' : actorLoading ? 'bg-muted-foreground/20' : 'bg-muted-foreground/40 group-hover:bg-primary/60'}`} />
                       <span className="flex-1 text-sm font-medium text-foreground font-mono">
                         {server.label}
                       </span>

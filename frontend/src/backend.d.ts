@@ -99,5 +99,6 @@ export interface backendInterface {
     registerUser(name: string, server: string, deviceId: string): Promise<string>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setMaintenanceMode(enabled: boolean): Promise<void>;
+    toggleMaintenanceMode(): Promise<boolean>;
     unblockUser(uniqueCode: string): Promise<void>;
 }

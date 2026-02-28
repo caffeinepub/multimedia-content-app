@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix two broken admin panel features in the "Users & Controls" tab — the failed user listing and the failed maintenance mode toggle.
+**Goal:** Fix two broken features in the admin panel's Users & Controls section: the maintenance mode toggle and the registered users list both fail due to admin actor initialization or authorization errors.
 
 **Planned changes:**
-- Fix the backend query for fetching registered users so it returns successfully, and update the frontend to correctly call and handle the response, eliminating the "Failed to load users. Please try again." error.
-- Fix the backend mutation for toggling maintenance mode so it succeeds with proper authorization, and update the frontend to correctly call and handle the response, eliminating the "Failed to update maintenance mode. Please try again." error toast.
-- Ensure the Maintenance Mode switch state and "App is Live" / maintenance active label reflect the actual backend state after a successful toggle.
-- Show an appropriate empty state in the Registered Users section if no users are registered, instead of an error.
+- Fix the maintenance mode toggle in `UsersControlsPanel` by ensuring the admin actor is correctly initialized with admin credentials before calling `toggleMaintenanceMode`, and that the backend authorizes the admin caller properly
+- Fix the registered users list by ensuring `getAllUsers` (or equivalent) is called via a correctly initialized admin actor with proper permissions so the user list loads successfully
+- Ensure `toggleMaintenanceMode` and the user listing function in `backend/main.mo` properly authorize admin callers without rejection
 
-**User-visible outcome:** The admin panel's Users & Controls tab correctly loads and displays registered users with a working search field, and the Maintenance Mode toggle works without errors.
+**User-visible outcome:** Admin can toggle maintenance mode between "App is Live" and "Maintenance Mode" without errors, and the Registered Users section displays all users with working search and block/unblock actions.

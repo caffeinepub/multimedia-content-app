@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 
 const CORRECT_PIN = '09186114';
 const SESSION_KEY = 'admin_authenticated';
+// Store the PIN as the admin token so useAdminActor can pick it up
+const ADMIN_TOKEN_KEY = 'caffeineAdminToken';
 
 export default function PINAuthGuard({ children }: { children: React.ReactNode }) {
   const [pin, setPin] = useState('');
@@ -18,6 +20,11 @@ export default function PINAuthGuard({ children }: { children: React.ReactNode }
     try {
       const stored = sessionStorage.getItem(SESSION_KEY);
       if (stored === 'true') {
+        // Ensure the admin token is also set (in case it was cleared)
+        const existingToken = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+        if (!existingToken) {
+          sessionStorage.setItem(ADMIN_TOKEN_KEY, CORRECT_PIN);
+        }
         setIsAuthenticated(true);
       }
     } catch (error) {
@@ -29,11 +36,13 @@ export default function PINAuthGuard({ children }: { children: React.ReactNode }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (pin === CORRECT_PIN) {
       setIsAuthenticated(true);
       try {
         sessionStorage.setItem(SESSION_KEY, 'true');
+        // Store the PIN as the admin token for useAdminActor to use
+        sessionStorage.setItem(ADMIN_TOKEN_KEY, CORRECT_PIN);
       } catch (error) {
         console.error('Error writing to sessionStorage:', error);
       }

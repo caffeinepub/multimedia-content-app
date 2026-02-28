@@ -192,6 +192,7 @@ export interface backendInterface {
     registerUser(name: string, server: string, deviceId: string): Promise<string>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setMaintenanceMode(enabled: boolean): Promise<void>;
+    toggleMaintenanceMode(): Promise<boolean>;
     unblockUser(uniqueCode: string): Promise<void>;
 }
 import type { CreateDuaInput as _CreateDuaInput, CreatePoetryInput as _CreatePoetryInput, CreateSongInput as _CreateSongInput, Dua as _Dua, ExternalBlob as _ExternalBlob, Poetry as _Poetry, Song as _Song, UserProfile as _UserProfile, UserRecord as _UserRecord, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
@@ -670,6 +671,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.setMaintenanceMode(arg0);
+            return result;
+        }
+    }
+    async toggleMaintenanceMode(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.toggleMaintenanceMode();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.toggleMaintenanceMode();
             return result;
         }
     }

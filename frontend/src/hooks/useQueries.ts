@@ -213,6 +213,7 @@ export function useDeleteSong() {
   });
 }
 
+// getMaintenanceMode is a public query — use the regular actor (no admin required)
 export function useGetMaintenanceMode() {
   const { actor, isFetching } = useActor();
   return useQuery<boolean>({
@@ -234,10 +235,14 @@ export function useSetMaintenanceMode() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (enabled: boolean) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error('Admin actor not available. Please reload the page.');
       try {
         await actor.setMaintenanceMode(enabled);
       } catch (e: any) {
+        const msg: string = e?.message || '';
+        if (msg.includes('Unauthorized') || msg.includes('trap')) {
+          throw new Error('Admin authorization failed. Please reload the page and try again.');
+        }
         throw new Error('Failed to update maintenance mode. Please try again.');
       }
     },
@@ -252,16 +257,20 @@ export function useGetAllUsers() {
   return useQuery<UserRecord[]>({
     queryKey: ['allUsers'],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error('Admin actor not available. Please reload the page.');
       try {
         return await actor.getAllUsers();
       } catch (e: any) {
+        const msg: string = e?.message || '';
+        if (msg.includes('Unauthorized') || msg.includes('trap')) {
+          throw new Error('Admin authorization failed. Please reload the page and try again.');
+        }
         throw new Error('Failed to load users. Please try again.');
       }
     },
     enabled: !!actor && !isFetching,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 1,
+    retryDelay: 1500,
   });
 }
 
@@ -270,7 +279,7 @@ export function useBlockUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error('Admin actor not available');
       try {
         await actor.blockUser(uniqueCode);
       } catch (e: any) {
@@ -288,7 +297,7 @@ export function useUnblockUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (uniqueCode: string) => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error('Admin actor not available');
       try {
         await actor.unblockUser(uniqueCode);
       } catch (e: any) {
@@ -302,14 +311,21 @@ export function useUnblockUser() {
 }
 
 export function useRegisterUser() {
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
   return useMutation({
     mutationFn: async ({ name, server, deviceId }: { name: string; server: string; deviceId: string }) => {
-      if (!actor) throw new Error('Actor not available');
+      // Wait for actor to be ready if it's still initializing
+      if (isFetching) throw new Error('Connecting to server, please try again in a moment...');
+      if (!actor) throw new Error('Unable to connect to server. Please refresh and try again.');
       try {
         return await actor.registerUser(name, server, deviceId);
       } catch (e: any) {
-        throw new Error(e?.message || 'Failed to register user');
+        // Extract a clean error message
+        const raw: string = e?.message || '';
+        if (raw.includes('trap') || raw.includes('IC0508') || raw.includes('Reject')) {
+          throw new Error('Registration failed. Please refresh the page and try again.');
+        }
+        throw new Error(raw || 'Registration failed. Please try again.');
       }
     },
   });
