@@ -172,11 +172,11 @@ export default function LoginPage() {
       <div className="mb-8 flex flex-col items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-700">
         <img
           src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
-          alt="Dard-e-munasif"
+          alt="Aks-e-bilkees"
           className="h-20 w-20 rounded-full object-cover border-2 border-primary/30 shadow-lg shadow-primary/20"
         />
         <h1 className="text-3xl font-bold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent tracking-tight">
-          Dard-e-munasif
+          Aks-e-bilkees
         </h1>
         <p className="text-sm text-muted-foreground">
           Connect to experience poetry, dua &amp; music

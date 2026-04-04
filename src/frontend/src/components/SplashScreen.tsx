@@ -91,7 +91,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               />
               <img
                 src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
-                alt="Dard-e-munasif"
+                alt="Aks-e-bilkees"
                 className="relative h-28 w-28 rounded-full object-cover border-2"
                 style={{ borderColor: "oklch(0.35 0.04 280)" }}
               />
@@ -115,7 +115,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
                   backgroundClip: "text",
                 }}
               >
-                Dard-e-munasif
+                Aks-e-bilkees
               </h1>
               <p
                 className="text-sm tracking-[0.25em] uppercase font-medium"

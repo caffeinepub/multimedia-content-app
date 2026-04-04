@@ -70,7 +70,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isUnguardedPage) return;
     if (!userLoading && isBlocked) {
-      // Clear login data so they can’t refresh back in
+      // Clear login data so they can't refresh back in
       localStorage.removeItem("dmUser_deviceId");
       localStorage.removeItem("dmUser_name");
       localStorage.removeItem("dmUser_server");
@@ -99,7 +99,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
             <img
               src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
-              alt="Dard-e-munasif logo"
+              alt="Aks-e-bilkees logo"
               className="relative h-9 w-9 rounded-full object-cover"
               style={{ border: "1.5px solid oklch(0.55 0.18 280 / 0.6)" }}
             />
@@ -115,7 +115,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               backgroundClip: "text",
             }}
           >
-            Dard-e-munasif
+            Aks-e-bilkees
           </span>
         </Link>
 
@@ -250,7 +250,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </a>
         </p>
         <p className="mt-1.5 text-xs">
-          &copy; {new Date().getFullYear()} Dard-e-munasif. All rights reserved.
+          &copy; {new Date().getFullYear()} Aks-e-bilkees. All rights reserved.
         </p>
       </div>
     </footer>
@@ -269,7 +269,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // If no credentials, show nothing while redirect happens
   if (!creds) return null;
 
-  // Show loading spinner while actor is initialising and we don’t have
+  // Show loading spinner while actor is initialising and we don't have
   // a cached answer yet
   const initialising =
     actorFetching ||
@@ -288,7 +288,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="relative">
             <img
               src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
-              alt="Dard-e-munasif"
+              alt="Aks-e-bilkees"
               className="h-20 w-20 rounded-full object-cover animate-pulse"
               style={{ border: "2px solid oklch(0.55 0.18 280)" }}
             />
