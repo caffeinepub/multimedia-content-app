@@ -1,1 +1,43 @@
-{"$schema":"./node_modules/@biomejs/biome/configuration_schema.json","files":{"ignore":["**/backend.ts","**/backend.d.ts","dist/**","node_modules/**","build/**","*.config.js","src/declarations/**","src/config.ts"]},"formatter":{"enabled":true,"indentStyle":"space","indentWidth":2},"javascript":{"formatter":{"quoteStyle":"double","semicolons":"always"}},"linter":{"enabled":true,"rules":{"correctness":{"noUnusedVariables":"error","useHookAtTopLevel":"error","useExhaustiveDependencies":"off"},"recommended":true,"a11y":{"useMediaCaption":"off","useButtonType":"off","useSemanticElements":"off"},"complexity":{"noForEach":"off"},"style":{"noNonNullAssertion":"off","useConst":"off"},"suspicious":{"noExplicitAny":"off","noArrayIndexKey":"off"}}}}
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "ignore": [
+      "**/backend.ts",
+      "**/backend.d.ts",
+      "dist/**",
+      "node_modules/**",
+      "build/**",
+      "*.config.js",
+      "src/declarations/**",
+      "src/config.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "useHookAtTopLevel": "error",
+        "noUnusedVariables": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      },
+      "style": {
+        "useConst": "off",
+        "noNonNullAssertion": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always"
+    }
+  }
+}

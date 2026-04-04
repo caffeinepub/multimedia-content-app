@@ -115,7 +115,6 @@ export interface _SERVICE {
   'incrementDuaLike' : ActorMethod<[string], bigint>,
   'incrementPoetryLike' : ActorMethod<[string], bigint>,
   'incrementSongLike' : ActorMethod<[string], bigint>,
-  'initialize' : ActorMethod<[string, string], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'registerUser' : ActorMethod<[string, string, string], string>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,

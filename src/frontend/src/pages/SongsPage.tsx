@@ -40,8 +40,8 @@ export default function SongsPage() {
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-xl" />
+          {Array.from({ length: 6 }, (_, i) => `s${i}`).map((k) => (
+            <Skeleton key={k} className="h-64 rounded-xl" />
           ))}
         </div>
       </div>

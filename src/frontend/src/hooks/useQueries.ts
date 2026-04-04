@@ -16,6 +16,8 @@ export function useGetAllPoetry() {
       }
     },
     enabled: !!actor && !isFetching,
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 }
 
@@ -32,6 +34,8 @@ export function useGetAllDua() {
       }
     },
     enabled: !!actor && !isFetching,
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 }
 
@@ -48,6 +52,8 @@ export function useGetAllSongs() {
       }
     },
     enabled: !!actor && !isFetching,
+    staleTime: 30000,
+    refetchInterval: 60000,
   });
 }
 

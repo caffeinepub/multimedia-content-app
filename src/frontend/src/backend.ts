@@ -188,7 +188,6 @@ export interface backendInterface {
     incrementDuaLike(id: string): Promise<bigint>;
     incrementPoetryLike(id: string): Promise<bigint>;
     incrementSongLike(id: string): Promise<bigint>;
-    initialize(adminToken: string, userProvidedToken: string): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     registerUser(name: string, server: string, deviceId: string): Promise<string>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
@@ -616,20 +615,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.incrementSongLike(arg0);
-            return result;
-        }
-    }
-    async initialize(arg0: string, arg1: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.initialize(arg0, arg1);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.initialize(arg0, arg1);
             return result;
         }
     }

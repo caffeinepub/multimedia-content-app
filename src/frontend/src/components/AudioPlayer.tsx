@@ -227,7 +227,9 @@ export default function AudioPlayer({ audio, title }: AudioPlayerProps) {
         src={audioUrl}
         preload="metadata"
         x-webkit-airplay="allow"
-      />
+      >
+        <track kind="captions" />
+      </audio>
 
       {/* Permission denied guard */}
       {isPermissionDenied && (

@@ -69,10 +69,9 @@ export default function FullScreenPostModal({
   const duaPost = !isPoetry(post) ? (post as Dua) : null;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex flex-col bg-background/98 backdrop-blur-md animate-in fade-in duration-200"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      open
+      className="fixed inset-0 z-[100] flex flex-col bg-background/98 backdrop-blur-md animate-in fade-in duration-200 m-0 p-0 max-w-full max-h-full w-full h-full border-0"
       aria-label={post.title}
     >
       {/* Header */}
@@ -141,6 +140,6 @@ export default function FullScreenPostModal({
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

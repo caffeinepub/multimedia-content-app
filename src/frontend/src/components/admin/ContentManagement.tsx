@@ -119,8 +119,8 @@ export default function ContentManagement() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full" />
+        {Array.from({ length: 3 }, (_, i) => `s${i}`).map((k) => (
+          <Skeleton key={k} className="h-24 w-full" />
         ))}
       </div>
     );

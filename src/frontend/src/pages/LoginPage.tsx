@@ -260,6 +260,7 @@ export default function LoginPage() {
                   const isConnecting = connectingServer === server.label;
                   return (
                     <button
+                      type="button"
                       key={server.id}
                       onClick={() => handleServerSelect(server.label)}
                       disabled={connectingServer !== null || actorLoading}
@@ -282,6 +283,7 @@ export default function LoginPage() {
               </div>
 
               <button
+                type="button"
                 onClick={() => {
                   setStep("name");
                   setConnectingServer(null);

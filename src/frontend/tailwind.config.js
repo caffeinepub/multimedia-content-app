@@ -63,8 +63,10 @@ export default {
                 sm: 'calc(var(--radius) - 4px)'
             },
             fontFamily: {
-                sans: ['Inter', 'system-ui', 'sans-serif'],
-                urdu: ['Noto Nastaliq Urdu', 'Noto Sans Devanagari', 'Inter', 'sans-serif']
+                sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+                display: ['Playfair Display', 'Lora', 'Georgia', 'serif'],
+                urdu: ['Noto Nastaliq Urdu', 'Noto Sans Devanagari', 'Plus Jakarta Sans', 'sans-serif'],
+                mono: ['JetBrains Mono', 'Fira Code', 'monospace']
             },
             keyframes: {
                 'accordion-down': {

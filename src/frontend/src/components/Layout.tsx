@@ -1,9 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BookHeart, LayoutGrid, Music, Sparkles } from "lucide-react";
-import { Moon, Sun } from "lucide-react";
+import {
+  BookHeart,
+  LayoutGrid,
+  Moon,
+  Music,
+  Sparkles,
+  Sun,
+} from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { UserRecord } from "../backend";
 import { useActor } from "../hooks/useActor";
 import BanScreen from "./BanScreen";
@@ -29,9 +35,7 @@ function withTimeout<T>(
 ): Promise<T | null> {
   const timeout = new Promise<null>((resolve) => {
     setTimeout(() => {
-      console.warn(
-        `[Layout] ${label} timed out after ${ms}ms — allowing user through`,
-      );
+      console.warn(`[Layout] ${label} timed out after ${ms}ms`);
       resolve(null);
     }, ms);
   });
@@ -52,35 +56,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const isActive = (path: string) => currentPath === path;
   const isLoginPage = currentPath === "/login";
-  // Admin page has its own PIN-based auth guard — skip credential redirect for it
   const isAdminPage = currentPath === "/admin";
-  // Pages that bypass the normal credential/auth check
   const isUnguardedPage = isLoginPage || isAdminPage;
 
   const [checkState, setCheckState] = useState<CheckState>({ status: "idle" });
-  const hasChecked = useRef(false);
 
   useEffect(() => {
-    // On login or admin page, no guard needed
     if (isUnguardedPage) return;
-
-    // Early exit: no credentials → redirect immediately, no backend calls
     const creds = getStoredCredentials();
     if (!creds) {
       navigate({ to: "/login" });
       return;
     }
-
-    // Wait for actor to be ready before running checks
     if (actorFetching || !actor) {
       setCheckState({ status: "checking" });
       return;
     }
-
-    // Only run checks once per mount (or when actor becomes available)
-    if (hasChecked.current) return;
-    hasChecked.current = true;
-
     setCheckState({ status: "checking" });
 
     const runChecks = async () => {
@@ -107,261 +98,299 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
 
     runChecks();
-  }, [isUnguardedPage, actor, actorFetching, navigate, currentPath]);
+  }, [isUnguardedPage, actor, actorFetching, navigate]);
 
-  // Reset check on route change so re-checks happen on navigation
   useEffect(() => {
-    if (!isUnguardedPage) {
-      hasChecked.current = false;
-    }
-  }, [currentPath, isUnguardedPage]);
+    if (isUnguardedPage) return;
+    if (actorFetching || !actor) return;
+    const creds = getStoredCredentials();
+    if (!creds) return;
 
-  // On login page, render children without layout chrome
+    const intervalId = setInterval(async () => {
+      try {
+        const [userResult, maintenanceResult] = await Promise.all([
+          withTimeout(
+            actor.getUserByDeviceId(creds.deviceId),
+            4000,
+            "poll:getUserByDeviceId",
+          ),
+          withTimeout(
+            actor.getMaintenanceMode(),
+            4000,
+            "poll:getMaintenanceMode",
+          ),
+        ]);
+
+        const isBlocked = !!(userResult as UserRecord | null)?.isBlocked;
+        const isMaintenance = maintenanceResult === true;
+
+        setCheckState((prev) => {
+          if (
+            prev.status === "done" &&
+            prev.isBlocked === isBlocked &&
+            prev.isMaintenance === isMaintenance
+          ) {
+            return prev;
+          }
+          return { status: "done", isBlocked, isMaintenance };
+        });
+      } catch (_e) {
+        // Silently ignore poll errors
+      }
+    }, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [isUnguardedPage, actor, actorFetching]);
+
   if (isLoginPage) {
     return <>{children}</>;
   }
 
-  // On admin page, render children directly — PINAuthGuard handles its own auth
+  // Shared header/footer chrome
+  const headerContent = (
+    <header
+      className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
+      style={{ borderColor: "oklch(var(--border) / 0.4)" }}
+    >
+      <div className="container flex h-16 items-center justify-between">
+        <Link
+          to="/"
+          className="flex items-center space-x-2.5 transition-transform hover:scale-105"
+          data-ocid="nav.link"
+        >
+          <div className="relative">
+            <div
+              className="absolute inset-0 rounded-full blur-md opacity-50"
+              style={{ background: "oklch(0.6 0.2 280)" }}
+            />
+            <img
+              src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
+              alt="Dard-e-munasif logo"
+              className="relative h-9 w-9 rounded-full object-cover"
+              style={{ border: "1.5px solid oklch(0.55 0.18 280 / 0.6)" }}
+            />
+          </div>
+          <span
+            className="text-lg font-bold tracking-tight"
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              background:
+                "linear-gradient(135deg, oklch(var(--chart-1)), oklch(var(--chart-2)))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Dard-e-munasif
+          </span>
+        </Link>
+
+        {!isAdminPage && (
+          <nav className="hidden md:flex items-center space-x-1">
+            {[
+              {
+                to: "/",
+                label: "Mix",
+                icon: <LayoutGrid className="h-4 w-4" />,
+              },
+              {
+                to: "/poetry",
+                label: "Poetry",
+                icon: <BookHeart className="h-4 w-4" />,
+              },
+              {
+                to: "/dua",
+                label: "Dua",
+                icon: <Sparkles className="h-4 w-4" />,
+              },
+              {
+                to: "/songs",
+                label: "Songs",
+                icon: <Music className="h-4 w-4" />,
+              },
+            ].map(({ to, label, icon }) => (
+              <Link
+                key={to}
+                to={to}
+                data-ocid={`nav.${label.toLowerCase()}.link`}
+              >
+                <Button
+                  variant={isActive(to) ? "default" : "ghost"}
+                  className={`gap-2 transition-all rounded-xl ${
+                    isActive(to)
+                      ? "shadow-sm"
+                      : "hover:bg-primary/8 hover:text-primary"
+                  }`}
+                >
+                  {icon}
+                  {label}
+                </Button>
+              </Link>
+            ))}
+          </nav>
+        )}
+
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="rounded-full"
+          >
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+          {!isAdminPage && <HamburgerMenu />}
+        </div>
+      </div>
+
+      {/* Mobile nav */}
+      {!isAdminPage && (
+        <nav
+          className="md:hidden border-t bg-background/80 backdrop-blur-xl"
+          style={{ borderColor: "oklch(var(--border) / 0.4)" }}
+        >
+          <div className="container flex items-center justify-around py-1.5">
+            {[
+              {
+                to: "/",
+                label: "Mix",
+                icon: <LayoutGrid className="h-4 w-4" />,
+              },
+              {
+                to: "/poetry",
+                label: "Poetry",
+                icon: <BookHeart className="h-4 w-4" />,
+              },
+              {
+                to: "/dua",
+                label: "Dua",
+                icon: <Sparkles className="h-4 w-4" />,
+              },
+              {
+                to: "/songs",
+                label: "Songs",
+                icon: <Music className="h-4 w-4" />,
+              },
+            ].map(({ to, label, icon }) => (
+              <Link
+                key={to}
+                to={to}
+                data-ocid={`nav.${label.toLowerCase()}.mobile.link`}
+              >
+                <Button
+                  variant={isActive(to) ? "default" : "ghost"}
+                  size="sm"
+                  className="flex-col h-auto py-2 gap-0.5 rounded-xl min-w-[56px]"
+                >
+                  {icon}
+                  <span className="text-[10px] font-medium">{label}</span>
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
+    </header>
+  );
+
+  const footerContent = (
+    <footer
+      className="border-t py-8 mt-16"
+      style={{
+        borderColor: "oklch(var(--border) / 0.4)",
+        background: "oklch(var(--muted) / 0.3)",
+      }}
+    >
+      <div className="container text-center text-sm text-muted-foreground">
+        <p className="flex items-center justify-center gap-2">
+          Built with <span className="text-red-500">♥</span> using{" "}
+          <a
+            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-foreground hover:underline"
+          >
+            caffeine.ai
+          </a>
+        </p>
+        <p className="mt-1.5 text-xs">
+          &copy; {new Date().getFullYear()} Dard-e-munasif. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  );
+
   if (isAdminPage) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 items-center justify-between">
-            <Link
-              to="/"
-              className="flex items-center space-x-2 transition-transform hover:scale-105"
-            >
-              <img
-                src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
-                alt="Dard-e-munasif logo"
-                className="h-10 w-10 rounded-full object-cover border border-border/40"
-              />
-              <span className="text-xl font-semibold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
-                Dard-e-munasif
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="rounded-full"
-              >
-                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <main className="container py-8 animate-in fade-in duration-500">
-          {children}
-        </main>
-
-        <footer className="border-t border-border/40 bg-muted/30 py-8 mt-16">
-          <div className="container text-center text-sm text-muted-foreground">
-            <p className="flex items-center justify-center gap-2">
-              Built with <span className="text-red-500">♥</span> using{" "}
-              <a
-                href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-foreground hover:underline"
-              >
-                caffeine.ai
-              </a>
-            </p>
-            <p className="mt-2">
-              © {new Date().getFullYear()} Dard-e-munasif. All rights reserved.
-            </p>
-          </div>
-        </footer>
+      <div className="min-h-screen bg-background">
+        {headerContent}
+        <main className="container py-8 animate-in">{children}</main>
+        {footerContent}
       </div>
     );
   }
 
-  // No credentials → render nothing while redirect fires
   const creds = getStoredCredentials();
-  if (!creds) {
-    return null;
-  }
+  if (!creds) return null;
 
-  // Show branded loading screen while checks are in progress
+  // Loading state
   if (checkState.status === "idle" || checkState.status === "checking") {
     return (
-      <div className="min-h-screen bg-[oklch(0.13_0.02_280)] flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 30%, oklch(0.2 0.06 280) 0%, oklch(0.1 0.02 270) 100%)",
+        }}
+      >
         <div className="flex flex-col items-center gap-5">
           <div className="relative">
             <img
               src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
               alt="Dard-e-munasif"
-              className="h-20 w-20 rounded-full object-cover border-2 border-[oklch(0.55_0.18_280)] animate-pulse"
+              className="h-20 w-20 rounded-full object-cover animate-pulse"
+              style={{ border: "2px solid oklch(0.55 0.18 280)" }}
             />
-            <div className="absolute inset-0 rounded-full border-2 border-[oklch(0.55_0.18_280)] opacity-40 animate-ping" />
+            <div
+              className="absolute inset-0 rounded-full border-2 opacity-40 animate-ping"
+              style={{ borderColor: "oklch(0.55 0.18 280)" }}
+            />
           </div>
           <p
-            className="text-[oklch(0.75_0.08_280)] text-base tracking-wide"
-            style={{ fontFamily: "'Noto Nastaliq Urdu', 'Inter', sans-serif" }}
+            className="text-base tracking-wide"
+            style={{
+              color: "oklch(0.65 0.1 280)",
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
           >
-            Loading...
+            Loading…
           </p>
         </div>
       </div>
     );
   }
 
-  // If user is blocked, show ban screen (takes priority over maintenance)
   if (checkState.status === "done" && checkState.isBlocked) {
     return <BanScreen />;
   }
 
-  // If maintenance mode is on, show maintenance screen
   if (checkState.status === "done" && checkState.isMaintenance) {
     return <MaintenanceScreen />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <Link
-            to="/"
-            className="flex items-center space-x-2 transition-transform hover:scale-105"
-          >
-            <img
-              src="/assets/generated/dard-e-munasif-logo.dim_200x200.png"
-              alt="Dard-e-munasif logo"
-              className="h-10 w-10 rounded-full object-cover border border-border/40"
-            />
-            <span className="text-xl font-semibold bg-gradient-to-r from-chart-1 to-chart-2 bg-clip-text text-transparent">
-              Dard-e-munasif
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center space-x-1">
-            <Link to="/">
-              <Button
-                variant={isActive("/") ? "default" : "ghost"}
-                className="gap-2 transition-all"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Mix
-              </Button>
-            </Link>
-            <Link to="/poetry">
-              <Button
-                variant={isActive("/poetry") ? "default" : "ghost"}
-                className="gap-2 transition-all"
-              >
-                <BookHeart className="h-4 w-4" />
-                Poetry
-              </Button>
-            </Link>
-            <Link to="/dua">
-              <Button
-                variant={isActive("/dua") ? "default" : "ghost"}
-                className="gap-2 transition-all"
-              >
-                <Sparkles className="h-4 w-4" />
-                Dua
-              </Button>
-            </Link>
-            <Link to="/songs">
-              <Button
-                variant={isActive("/songs") ? "default" : "ghost"}
-                className="gap-2 transition-all"
-              >
-                <Music className="h-4 w-4" />
-                Songs
-              </Button>
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full"
-            >
-              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-            <HamburgerMenu />
-          </div>
-        </div>
-
-        <nav className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur">
-          <div className="container flex items-center justify-around py-2">
-            <Link to="/">
-              <Button
-                variant={isActive("/") ? "default" : "ghost"}
-                size="sm"
-                className="flex-col h-auto py-2 gap-1"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                <span className="text-xs">Mix</span>
-              </Button>
-            </Link>
-            <Link to="/poetry">
-              <Button
-                variant={isActive("/poetry") ? "default" : "ghost"}
-                size="sm"
-                className="flex-col h-auto py-2 gap-1"
-              >
-                <BookHeart className="h-4 w-4" />
-                <span className="text-xs">Poetry</span>
-              </Button>
-            </Link>
-            <Link to="/dua">
-              <Button
-                variant={isActive("/dua") ? "default" : "ghost"}
-                size="sm"
-                className="flex-col h-auto py-2 gap-1"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span className="text-xs">Dua</span>
-              </Button>
-            </Link>
-            <Link to="/songs">
-              <Button
-                variant={isActive("/songs") ? "default" : "ghost"}
-                size="sm"
-                className="flex-col h-auto py-2 gap-1"
-              >
-                <Music className="h-4 w-4" />
-                <span className="text-xs">Songs</span>
-              </Button>
-            </Link>
-          </div>
-        </nav>
-      </header>
-
-      <main className="container py-8 animate-in fade-in duration-500">
-        {children}
-      </main>
-
-      <footer className="border-t border-border/40 bg-muted/30 py-8 mt-16">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p className="flex items-center justify-center gap-2">
-            Built with <span className="text-red-500">♥</span> using{" "}
-            <a
-              href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-foreground hover:underline"
-            >
-              caffeine.ai
-            </a>
-          </p>
-          <p className="mt-2">
-            © {new Date().getFullYear()} Dard-e-munasif. All rights reserved.
-          </p>
-        </div>
-      </footer>
+    <div
+      className="min-h-screen"
+      style={{
+        background:
+          "radial-gradient(ellipse at 70% 0%, oklch(0.2 0.04 280 / 0.15) 0%, transparent 60%), oklch(var(--background))",
+      }}
+    >
+      {headerContent}
+      <main className="container py-8 animate-in">{children}</main>
+      {footerContent}
     </div>
   );
 }

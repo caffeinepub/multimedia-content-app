@@ -9,14 +9,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
-import { Lock } from "lucide-react";
+import { Lock, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const CORRECT_PIN = "09186114";
 const SESSION_KEY = "admin_authenticated";
-// Store the PIN as the admin token so useAdminActor can pick it up
 const ADMIN_TOKEN_KEY = "caffeineAdminToken";
+
+function dispatchAdminTokenChanged() {
+  window.dispatchEvent(new CustomEvent("adminTokenChanged"));
+}
 
 export default function PINAuthGuard({
   children,
@@ -30,12 +33,13 @@ export default function PINAuthGuard({
     try {
       const stored = sessionStorage.getItem(SESSION_KEY);
       if (stored === "true") {
-        // Ensure the admin token is also set (in case it was cleared)
-        const existingToken = sessionStorage.getItem(ADMIN_TOKEN_KEY);
-        if (!existingToken) {
+        // Ensure admin token is set
+        if (!sessionStorage.getItem(ADMIN_TOKEN_KEY)) {
           sessionStorage.setItem(ADMIN_TOKEN_KEY, CORRECT_PIN);
         }
         setIsAuthenticated(true);
+        // Notify useActor that the token is already present
+        dispatchAdminTokenChanged();
       }
     } catch (error) {
       console.error("Error reading sessionStorage:", error);
@@ -50,15 +54,17 @@ export default function PINAuthGuard({
     if (pin === CORRECT_PIN) {
       try {
         sessionStorage.setItem(SESSION_KEY, "true");
-        // Store the PIN as the admin token for useAdminActor to use
         sessionStorage.setItem(ADMIN_TOKEN_KEY, CORRECT_PIN);
       } catch (error) {
         console.error("Error writing to sessionStorage:", error);
       }
 
-      // Invalidate the cached actor so it gets re-created with the admin token
+      // Notify useActor to re-create with admin token
+      dispatchAdminTokenChanged();
+
+      // Also explicitly invalidate + refetch actor and admin queries
       await queryClient.invalidateQueries({ queryKey: ["actor"] });
-      // Also clear any stale allUsers query so it re-runs with the new actor
+      await queryClient.refetchQueries({ queryKey: ["actor"] });
       await queryClient.invalidateQueries({ queryKey: ["allUsers"] });
 
       setIsAuthenticated(true);
@@ -72,40 +78,54 @@ export default function PINAuthGuard({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Verifying access…</p>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center space-y-2">
-            <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-chart-1 to-chart-2 flex items-center justify-center">
-              <Lock className="h-6 w-6 text-white" />
+      <div className="flex items-center justify-center min-h-[70vh] px-4">
+        <Card className="w-full max-w-md border-border/60 bg-card/80 backdrop-blur shadow-2xl">
+          <CardHeader className="text-center space-y-3 pb-6">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-chart-2/20 border border-primary/30 flex items-center justify-center">
+              <Lock className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">Admin Access</CardTitle>
-            <CardDescription>
-              Enter PIN to access the admin panel
-            </CardDescription>
+            <div className="space-y-1">
+              <CardTitle className="text-2xl font-bold">Admin Access</CardTitle>
+              <CardDescription className="text-base">
+                Enter your PIN to access the admin panel
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="pin">PIN Code</Label>
+                <Label htmlFor="pin" className="text-sm font-medium">
+                  PIN Code
+                </Label>
                 <Input
                   id="pin"
                   type="password"
-                  placeholder="Enter PIN"
+                  placeholder="Enter 8-digit PIN"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  className="text-center text-lg tracking-widest"
+                  className="text-center text-xl tracking-[0.4em] h-12 rounded-xl border-border/60 focus:border-primary/60"
                   maxLength={8}
                   autoFocus
+                  data-ocid="admin.input"
                 />
               </div>
-              <Button type="submit" className="w-full" size="lg">
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-xl font-semibold gap-2 text-base"
+                size="lg"
+                data-ocid="admin.submit_button"
+              >
+                <Shield className="h-5 w-5" />
                 Unlock Admin Panel
               </Button>
             </form>

@@ -45,7 +45,9 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 
 function notifyListeners() {
-  listeners.forEach((l) => l());
+  for (const l of listeners) {
+    l();
+  }
 }
 
 // Shared mutable state

@@ -7,10 +7,10 @@ import Int "mo:core/Int";
 import Time "mo:core/Time";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import MixinStorage "blob-storage/Mixin";
+import MixinAuthorization "authorization/MixinAuthorization";
 import Storage "blob-storage/Storage";
+import MixinStorage "blob-storage/Mixin";
 
 actor {
   let accessControlState = AccessControl.initState();
@@ -102,20 +102,13 @@ actor {
   var maintenanceMode : Bool = false;
   var isInitialized = false;
 
+  // Helper Functions
   func isEmpty(val : Text) : Bool {
     val.trim(#char ' ').size() == 0;
   };
   func isValidAudio(_ : Storage.ExternalBlob) : Bool { true };
   func isValidImage(_ : Storage.ExternalBlob) : Bool { true };
   func generateRandomLikes() : Int { 1000 + (Time.now() % 1001) };
-
-  public shared ({ caller }) func initialize(adminToken : Text, userProvidedToken : Text) : async () {
-    if (isInitialized) {
-      Runtime.trap("Initialization already done. Only once allowed.");
-    };
-    ignore AccessControl.initialize(accessControlState, caller, adminToken, userProvidedToken);
-    isInitialized := true;
-  };
 
   // ─── Poetry ───────────────────────────────────────────────────────────────
 

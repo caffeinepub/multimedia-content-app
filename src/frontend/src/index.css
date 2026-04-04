@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -7,57 +7,59 @@
 @layer base {
   :root {
     --radius: 0.75rem;
-    --background: 0.98 0.01 280;
-    --foreground: 0.2 0.02 280;
+    /* Light mode — cool silver-white with violet accent */
+    --background: 0.97 0.008 270;
+    --foreground: 0.18 0.025 270;
     --card: 1 0 0;
-    --card-foreground: 0.2 0.02 280;
+    --card-foreground: 0.18 0.025 270;
     --popover: 1 0 0;
-    --popover-foreground: 0.2 0.02 280;
-    --primary: 0.55 0.18 280;
+    --popover-foreground: 0.18 0.025 270;
+    --primary: 0.52 0.22 280;
     --primary-foreground: 0.99 0 0;
-    --secondary: 0.92 0.03 280;
-    --secondary-foreground: 0.3 0.02 280;
-    --muted: 0.95 0.02 280;
-    --muted-foreground: 0.5 0.02 280;
-    --accent: 0.94 0.03 280;
-    --accent-foreground: 0.3 0.02 280;
+    --secondary: 0.93 0.025 270;
+    --secondary-foreground: 0.28 0.025 270;
+    --muted: 0.94 0.018 270;
+    --muted-foreground: 0.48 0.022 270;
+    --accent: 0.93 0.025 270;
+    --accent-foreground: 0.28 0.025 270;
     --destructive: 0.55 0.22 15;
     --destructive-foreground: 0.99 0 0;
-    --border: 0.88 0.02 280;
-    --input: 0.88 0.02 280;
-    --ring: 0.55 0.18 280;
-    --chart-1: 0.65 0.2 320;
-    --chart-2: 0.6 0.18 260;
-    --chart-3: 0.55 0.16 200;
-    --chart-4: 0.7 0.15 180;
-    --chart-5: 0.68 0.19 340;
+    --border: 0.87 0.018 270;
+    --input: 0.87 0.018 270;
+    --ring: 0.52 0.22 280;
+    --chart-1: 0.62 0.22 320;
+    --chart-2: 0.58 0.2 260;
+    --chart-3: 0.54 0.18 200;
+    --chart-4: 0.68 0.16 180;
+    --chart-5: 0.66 0.2 340;
   }
 
   .dark {
-    --background: 0.15 0.02 280;
-    --foreground: 0.95 0.01 280;
-    --card: 0.18 0.02 280;
-    --card-foreground: 0.95 0.01 280;
-    --popover: 0.16 0.02 280;
-    --popover-foreground: 0.95 0.01 280;
-    --primary: 0.7 0.2 280;
-    --primary-foreground: 0.15 0.02 280;
-    --secondary: 0.25 0.03 280;
-    --secondary-foreground: 0.95 0.01 280;
-    --muted: 0.22 0.02 280;
-    --muted-foreground: 0.6 0.02 280;
-    --accent: 0.28 0.03 280;
-    --accent-foreground: 0.95 0.01 280;
-    --destructive: 0.6 0.24 15;
-    --destructive-foreground: 0.95 0.01 280;
-    --border: 0.3 0.02 280;
-    --input: 0.3 0.02 280;
-    --ring: 0.7 0.2 280;
-    --chart-1: 0.7 0.22 320;
-    --chart-2: 0.65 0.2 260;
+    /* Premium dark mode — deep navy/indigo */
+    --background: 0.13 0.025 270;
+    --foreground: 0.94 0.012 270;
+    --card: 0.17 0.025 270;
+    --card-foreground: 0.94 0.012 270;
+    --popover: 0.15 0.022 270;
+    --popover-foreground: 0.94 0.012 270;
+    --primary: 0.68 0.22 280;
+    --primary-foreground: 0.12 0.025 270;
+    --secondary: 0.22 0.03 270;
+    --secondary-foreground: 0.94 0.012 270;
+    --muted: 0.2 0.022 270;
+    --muted-foreground: 0.58 0.022 270;
+    --accent: 0.25 0.03 270;
+    --accent-foreground: 0.94 0.012 270;
+    --destructive: 0.58 0.24 15;
+    --destructive-foreground: 0.94 0.012 270;
+    --border: 0.28 0.022 270;
+    --input: 0.28 0.022 270;
+    --ring: 0.68 0.22 280;
+    --chart-1: 0.68 0.22 320;
+    --chart-2: 0.64 0.2 260;
     --chart-3: 0.6 0.18 200;
-    --chart-4: 0.75 0.17 180;
-    --chart-5: 0.73 0.21 340;
+    --chart-4: 0.72 0.17 180;
+    --chart-5: 0.7 0.21 340;
   }
 
   * {
@@ -66,27 +68,28 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-      sans-serif;
+    font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   /* Urdu / Nastaliq script text */
   .urdu-text {
-    font-family: "Noto Nastaliq Urdu", "Noto Sans Devanagari", "Inter",
-      sans-serif;
+    font-family: "Noto Nastaliq Urdu", "Noto Sans Devanagari",
+      "Plus Jakarta Sans", sans-serif;
     direction: auto;
     unicode-bidi: plaintext;
   }
 
   .urdu-input {
-    font-family: "Noto Nastaliq Urdu", "Noto Sans Devanagari", "Inter",
-      sans-serif;
+    font-family: "Noto Nastaliq Urdu", "Noto Sans Devanagari",
+      "Plus Jakarta Sans", sans-serif;
   }
 
-  /* Poetry card title — elegant serif for English, Nastaliq for Urdu */
+  /* Poetry card title */
   .poetry-title {
-    font-family: "Noto Nastaliq Urdu", "Lora", "Georgia", serif;
+    font-family: "Noto Nastaliq Urdu", "Playfair Display", "Lora", "Georgia",
+      serif;
     direction: auto;
     unicode-bidi: plaintext;
     font-weight: 600;
@@ -94,12 +97,13 @@
     letter-spacing: 0.01em;
   }
 
-  /* Poetry card body content — generous line-height for multi-line verse */
+  /* Poetry card body content */
   .poetry-content {
-    font-family: "Noto Nastaliq Urdu", "Lora", "Georgia", serif;
+    font-family: "Noto Nastaliq Urdu", "Playfair Display", "Lora", "Georgia",
+      serif;
     direction: auto;
     unicode-bidi: plaintext;
-    line-height: 1.85;
+    line-height: 1.9;
     font-size: 0.9rem;
     letter-spacing: 0.015em;
   }
@@ -110,24 +114,85 @@
   h4,
   h5,
   h6 {
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.02em;
+    font-family: "Playfair Display", "Plus Jakarta Sans", serif;
   }
 }
 
 @layer utilities {
+  /* Page entry animation */
   .animate-in {
-    animation: fadeIn 0.5s ease-in-out;
+    animation: fadeInUp 0.45s ease-out both;
   }
 
-  @keyframes fadeIn {
+  @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(14px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Premium glass card */
+  .glass-card {
+    background: oklch(var(--card) / 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid oklch(var(--border) / 0.5);
+  }
+
+  /* Gradient text utility */
+  .gradient-text {
+    background: linear-gradient(
+      135deg,
+      oklch(var(--chart-1)),
+      oklch(var(--chart-2))
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Primary glow */
+  .glow-primary {
+    box-shadow: 0 0 20px oklch(var(--primary) / 0.25), 0 0 60px
+      oklch(var(--primary) / 0.1);
+  }
+
+  /* Shimmer animation */
+  @keyframes shimmer {
+    from {
+      background-position: -200% center;
+    }
+    to {
+      background-position: 200% center;
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      oklch(var(--muted)),
+      oklch(var(--accent)),
+      oklch(var(--muted))
+    );
+    background-size: 200% auto;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Category pill active gradient */
+  .pill-active {
+    background: linear-gradient(
+      135deg,
+      oklch(var(--primary)),
+      oklch(var(--chart-1))
+    );
+    color: oklch(var(--primary-foreground));
+    border-color: transparent;
+    box-shadow: 0 4px 14px oklch(var(--primary) / 0.35);
   }
 }

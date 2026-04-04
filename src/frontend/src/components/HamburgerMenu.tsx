@@ -136,6 +136,7 @@ export default function HamburgerMenu() {
             <div className="p-2 space-y-1">
               {/* History Section */}
               <button
+                type="button"
                 onClick={() => toggleSection("history")}
                 className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-colors text-left"
               >
@@ -163,7 +164,7 @@ export default function HamburgerMenu() {
                     <div className="divide-y divide-border/20">
                       {history.map((entry, i) => (
                         <div
-                          key={i}
+                          key={entry.id || entry.title || i}
                           className="flex items-start gap-2 px-3 py-2.5"
                         >
                           <div className="flex-1 min-w-0">
@@ -191,6 +192,7 @@ export default function HamburgerMenu() {
 
               {/* Downloads Section */}
               <button
+                type="button"
                 onClick={() => toggleSection("downloads")}
                 className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-colors text-left"
               >

@@ -70,8 +70,7 @@ export default function NowPlayingModal({
         bufferCheckRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [song]);
+  }, [song, addHistoryEntry, isPermissionDenied, currentTrack?.id, play]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -110,10 +109,9 @@ export default function NowPlayingModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex flex-col bg-gradient-to-b from-primary/20 via-background to-background animate-in fade-in duration-300"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      open
+      className="fixed inset-0 z-[100] flex flex-col bg-gradient-to-b from-primary/20 via-background to-background animate-in fade-in duration-300 m-0 p-0 max-w-full max-h-full w-full h-full border-0"
       aria-label={`Now Playing: ${song.title}`}
     >
       {/* Top bar */}
@@ -208,6 +206,6 @@ export default function NowPlayingModal({
 
       {/* Bottom padding */}
       <div className="h-8" />
-    </div>
+    </dialog>
   );
 }
