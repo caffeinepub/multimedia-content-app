@@ -9,9 +9,12 @@ import {
   Sun,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
-import type { UserRecord } from "../backend";
+import { useEffect } from "react";
 import { useActor } from "../hooks/useActor";
+import {
+  useGetMaintenanceMode,
+  useGetUserByDeviceId,
+} from "../hooks/useQueries";
 import BanScreen from "./BanScreen";
 import HamburgerMenu from "./HamburgerMenu";
 import MaintenanceScreen from "./MaintenanceScreen";
@@ -28,125 +31,56 @@ function getStoredCredentials(): {
   return { deviceId, name, server };
 }
 
-function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  label: string,
-): Promise<T | null> {
-  const timeout = new Promise<null>((resolve) => {
-    setTimeout(() => {
-      console.warn(`[Layout] ${label} timed out after ${ms}ms`);
-      resolve(null);
-    }, ms);
-  });
-  return Promise.race([promise.catch(() => null), timeout]);
+function LoggedOutLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
-
-type CheckState =
-  | { status: "idle" }
-  | { status: "checking" }
-  | { status: "done"; isBlocked: boolean; isMaintenance: boolean };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { actor, isFetching: actorFetching } = useActor();
+  const { isFetching: actorFetching } = useActor();
 
   const isActive = (path: string) => currentPath === path;
   const isLoginPage = currentPath === "/login";
   const isAdminPage = currentPath === "/admin";
   const isUnguardedPage = isLoginPage || isAdminPage;
 
-  const [checkState, setCheckState] = useState<CheckState>({ status: "idle" });
+  const creds = getStoredCredentials();
 
+  // Redirect to login if no credentials and not on unguarded page
   useEffect(() => {
-    if (isUnguardedPage) return;
-    const creds = getStoredCredentials();
-    if (!creds) {
+    if (!isUnguardedPage && !creds) {
       navigate({ to: "/login" });
-      return;
     }
-    if (actorFetching || !actor) {
-      setCheckState({ status: "checking" });
-      return;
-    }
-    setCheckState({ status: "checking" });
+  }, [isUnguardedPage, creds, navigate]);
 
-    const runChecks = async () => {
-      const [userResult, maintenanceResult] = await Promise.allSettled([
-        withTimeout(
-          actor.getUserByDeviceId(creds.deviceId),
-          4000,
-          "getUserByDeviceId",
-        ),
-        withTimeout(actor.getMaintenanceMode(), 4000, "getMaintenanceMode"),
-      ]);
+  // Use React Query to poll maintenance mode and user status (every 10s)
+  const { data: isMaintenance = false, isLoading: maintenanceLoading } =
+    useGetMaintenanceMode();
 
-      const userRecord: UserRecord | null =
-        userResult.status === "fulfilled" ? userResult.value : null;
-      const maintenanceMode: boolean =
-        maintenanceResult.status === "fulfilled" &&
-        maintenanceResult.value === true;
+  const { data: userRecord, isLoading: userLoading } = useGetUserByDeviceId(
+    isUnguardedPage ? "" : (creds?.deviceId ?? ""),
+  );
 
-      setCheckState({
-        status: "done",
-        isBlocked: !!userRecord?.isBlocked,
-        isMaintenance: maintenanceMode,
-      });
-    };
+  const isBlocked = !!userRecord?.isBlocked;
 
-    runChecks();
-  }, [isUnguardedPage, actor, actorFetching, navigate]);
-
+  // Auto-logout blocked users
   useEffect(() => {
     if (isUnguardedPage) return;
-    if (actorFetching || !actor) return;
-    const creds = getStoredCredentials();
-    if (!creds) return;
-
-    const intervalId = setInterval(async () => {
-      try {
-        const [userResult, maintenanceResult] = await Promise.all([
-          withTimeout(
-            actor.getUserByDeviceId(creds.deviceId),
-            4000,
-            "poll:getUserByDeviceId",
-          ),
-          withTimeout(
-            actor.getMaintenanceMode(),
-            4000,
-            "poll:getMaintenanceMode",
-          ),
-        ]);
-
-        const isBlocked = !!(userResult as UserRecord | null)?.isBlocked;
-        const isMaintenance = maintenanceResult === true;
-
-        setCheckState((prev) => {
-          if (
-            prev.status === "done" &&
-            prev.isBlocked === isBlocked &&
-            prev.isMaintenance === isMaintenance
-          ) {
-            return prev;
-          }
-          return { status: "done", isBlocked, isMaintenance };
-        });
-      } catch (_e) {
-        // Silently ignore poll errors
-      }
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, [isUnguardedPage, actor, actorFetching]);
+    if (!userLoading && isBlocked) {
+      // Clear login data so they can’t refresh back in
+      localStorage.removeItem("dmUser_deviceId");
+      localStorage.removeItem("dmUser_name");
+      localStorage.removeItem("dmUser_server");
+    }
+  }, [isBlocked, userLoading, isUnguardedPage]);
 
   if (isLoginPage) {
-    return <>{children}</>;
+    return <LoggedOutLayout>{children}</LoggedOutLayout>;
   }
 
-  // Shared header/footer chrome
   const headerContent = (
     <header
       className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
@@ -332,11 +266,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const creds = getStoredCredentials();
+  // If no credentials, show nothing while redirect happens
   if (!creds) return null;
 
-  // Loading state
-  if (checkState.status === "idle" || checkState.status === "checking") {
+  // Show loading spinner while actor is initialising and we don’t have
+  // a cached answer yet
+  const initialising =
+    actorFetching ||
+    (maintenanceLoading && !isMaintenance) ||
+    (userLoading && !userRecord);
+  if (initialising && !isMaintenance && !isBlocked) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -372,11 +311,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (checkState.status === "done" && checkState.isBlocked) {
+  // Blocked check (takes priority over maintenance)
+  if (isBlocked) {
     return <BanScreen />;
   }
 
-  if (checkState.status === "done" && checkState.isMaintenance) {
+  // Maintenance check
+  if (isMaintenance) {
     return <MaintenanceScreen />;
   }
 

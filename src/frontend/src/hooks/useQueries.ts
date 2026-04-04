@@ -3,6 +3,10 @@ import type { Dua, Poetry, Song, UserRecord } from "../backend";
 import { useActor } from "./useActor";
 import { useAdminActor } from "./useAdminActor";
 
+// ─── Content Queries ─────────────────────────────────────────────────────────
+// Aggressive refresh: staleTime=0 so data is always considered stale,
+// refetchInterval=10s so the feed stays in sync with admin uploads.
+
 export function useGetAllPoetry() {
   const { actor, isFetching } = useActor();
   return useQuery<Poetry[]>({
@@ -16,8 +20,9 @@ export function useGetAllPoetry() {
       }
     },
     enabled: !!actor && !isFetching,
-    staleTime: 30000,
-    refetchInterval: 60000,
+    staleTime: 0,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -34,8 +39,9 @@ export function useGetAllDua() {
       }
     },
     enabled: !!actor && !isFetching,
-    staleTime: 30000,
-    refetchInterval: 60000,
+    staleTime: 0,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -52,8 +58,9 @@ export function useGetAllSongs() {
       }
     },
     enabled: !!actor && !isFetching,
-    staleTime: 30000,
-    refetchInterval: 60000,
+    staleTime: 0,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -225,7 +232,9 @@ export function useDeleteSong() {
   });
 }
 
-// getMaintenanceMode is a public query — use the regular actor (no admin required)
+// ─── Maintenance Mode ─────────────────────────────────────────────────────────
+// Poll every 10 seconds so the maintenance banner appears quickly.
+
 export function useGetMaintenanceMode() {
   const { actor, isFetching } = useActor();
   return useQuery<boolean>({
@@ -239,6 +248,9 @@ export function useGetMaintenanceMode() {
       }
     },
     enabled: !!actor && !isFetching,
+    staleTime: 0,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -263,6 +275,9 @@ export function useSetMaintenanceMode() {
   });
 }
 
+// ─── Users ────────────────────────────────────────────────────────────────────
+// Poll the users list every 10 seconds in the admin panel.
+
 export function useGetAllUsers() {
   const { actor, isFetching } = useAdminActor();
 
@@ -280,6 +295,8 @@ export function useGetAllUsers() {
       }
     },
     enabled: !!actor && !isFetching,
+    staleTime: 0,
+    refetchInterval: 10000,
     retry: 2,
     retryDelay: 1000,
   });
@@ -369,5 +386,9 @@ export function useGetUserByDeviceId(deviceId: string) {
       }
     },
     enabled: !!actor && !isFetching && !!deviceId,
+    // Poll user record every 10 seconds so blocked status is picked up quickly
+    staleTime: 0,
+    refetchInterval: 10000,
+    refetchIntervalInBackground: false,
   });
 }

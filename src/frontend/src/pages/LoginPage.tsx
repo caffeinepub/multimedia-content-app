@@ -2,22 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  AlertCircle,
-  ChevronRight,
-  Loader2,
-  Server,
-  User,
-  Wifi,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { AlertCircle, Loader2, Phone, User, Wifi } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useActor } from "../hooks/useActor";
 import { useRegisterUser } from "../hooks/useQueries";
-
-const SERVERS = [
-  { id: "kashmir", label: "V.99.kashmir.2HZ.World" },
-  { id: "ikhlas", label: "Developer.99Hz/ikhlas.Java" },
-];
 
 /**
  * Generate a stable device fingerprint from browser properties.
@@ -38,7 +26,6 @@ function getOrCreateDeviceId(): string {
     navigator.platform ?? "",
   ].join("|");
 
-  // Simple hash
   let hash = 0;
   for (let i = 0; i < raw.length; i++) {
     const char = raw.charCodeAt(i);
@@ -50,16 +37,44 @@ function getOrCreateDeviceId(): string {
   return deviceId;
 }
 
+/**
+ * Validate Indian phone numbers only.
+ * Accepts:
+ *  - +91XXXXXXXXXX  (13 chars)
+ *  - 91XXXXXXXXXX   (12 chars)
+ *  - 0XXXXXXXXXX    (11 chars)
+ *  - XXXXXXXXXX     (10 chars)
+ * Where XXXXXXXXXX is a 10-digit number starting with 6, 7, 8, or 9.
+ */
+function validateIndianPhone(value: string): boolean {
+  const cleaned = value.replace(/[\s\-()]/g, "");
+  // Strip country prefix variants
+  let digits = cleaned;
+  if (digits.startsWith("+91")) digits = digits.slice(3);
+  else if (digits.startsWith("91") && digits.length === 12)
+    digits = digits.slice(2);
+  else if (digits.startsWith("0") && digits.length === 11)
+    digits = digits.slice(1);
+
+  // Must be exactly 10 digits starting with 6, 7, 8, or 9
+  return /^[6-9]\d{9}$/.test(digits);
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [step, setStep] = useState<"name" | "server">("name");
+  const [phone, setPhone] = useState("");
   const [nameError, setNameError] = useState("");
-  const [connectingServer, setConnectingServer] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState("");
   const [registerError, setRegisterError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [waitingForActor, setWaitingForActor] = useState(false);
 
   const { actor, isFetching: actorLoading } = useActor();
   const registerUser = useRegisterUser();
+
+  // Ref to track pending login attempt while waiting for actor
+  const pendingLoginRef = useRef(false);
 
   // If user is already registered, redirect to home
   useEffect(() => {
@@ -69,68 +84,87 @@ export default function LoginPage() {
     }
   }, [navigate]);
 
-  const handleConnect = () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setNameError("Please enter your name to continue.");
-      return;
+  // When actor becomes available after a pending login attempt, auto-submit
+  useEffect(() => {
+    if (!actorLoading && actor && pendingLoginRef.current) {
+      pendingLoginRef.current = false;
+      setWaitingForActor(false);
+      performLogin();
     }
-    setNameError("");
-    setStep("server");
-  };
+  }, [actorLoading, actor]);
 
-  const handleServerSelect = async (serverLabel: string) => {
-    // Don't allow selection while actor is loading
-    if (actorLoading || !actor) {
-      setRegisterError(
-        "Still connecting to server, please wait a moment and try again.",
-      );
-      return;
-    }
+  const performLogin = async () => {
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
 
-    setConnectingServer(serverLabel);
+    if (!trimmedName || !trimmedPhone) return;
+    if (!actor) return;
+
+    setIsSubmitting(true);
     setRegisterError("");
 
     const deviceId = getOrCreateDeviceId();
-    const trimmedName = name.trim();
 
     try {
       const uniqueCode = await registerUser.mutateAsync({
         name: trimmedName,
-        server: serverLabel,
+        server: trimmedPhone,
         deviceId,
       });
 
       localStorage.setItem("dmUser_name", trimmedName);
-      localStorage.setItem("dmUser_server", serverLabel);
+      localStorage.setItem("dmUser_server", trimmedPhone);
       localStorage.setItem("dmUser_uniqueCode", uniqueCode);
 
       navigate({ to: "/" });
     } catch (err: unknown) {
       const raw = (err as any)?.message || "";
-      // Show a clean, user-friendly message
-      if (
-        raw.includes("Connecting to server") ||
-        raw.includes("please try again in a moment")
-      ) {
-        setRegisterError(
-          "Still connecting to server. Please wait a moment and try again.",
-        );
-      } else if (
-        raw.includes("refresh") ||
-        raw.includes("IC0508") ||
-        raw.includes("trap") ||
-        raw.includes("Reject")
-      ) {
-        setRegisterError(
-          "Connection error. Please refresh the page and try again.",
-        );
-      } else {
-        setRegisterError(raw || "Registration failed. Please try again.");
-      }
-      setConnectingServer(null);
+      setRegisterError(raw || "Login failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleLogin = async () => {
+    let valid = true;
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNameError("Please enter your name to continue.");
+      valid = false;
+    } else {
+      setNameError("");
+    }
+
+    const trimmedPhone = phone.trim();
+    if (!trimmedPhone) {
+      setPhoneError("Please enter your phone number.");
+      valid = false;
+    } else if (!validateIndianPhone(trimmedPhone)) {
+      setPhoneError("Only Indian numbers are allowed (e.g. +91 98765 43210).");
+      valid = false;
+    } else {
+      setPhoneError("");
+    }
+
+    if (!valid) return;
+
+    // If actor is still loading, queue the login attempt
+    if (actorLoading || !actor) {
+      setWaitingForActor(true);
+      pendingLoginRef.current = true;
+      setRegisterError("");
+      return;
+    }
+
+    await performLogin();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleLogin();
+  };
+
+  const isLoading = isSubmitting || waitingForActor;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/10 flex flex-col items-center justify-center px-4">
@@ -145,157 +179,119 @@ export default function LoginPage() {
           Dard-e-munasif
         </h1>
         <p className="text-sm text-muted-foreground">
-          Connect to experience poetry, dua & music
+          Connect to experience poetry, dua &amp; music
         </p>
       </div>
 
       {/* Card */}
       <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-xl shadow-primary/5 p-8">
-          {step === "name" && (
-            <div className="space-y-6">
-              <div className="text-center space-y-1">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto mb-4">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  Welcome
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Enter your name to get started
-                </p>
+          <div className="space-y-6">
+            <div className="text-center space-y-1">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto mb-4">
+                <User className="h-6 w-6 text-primary" />
               </div>
-
-              <div className="space-y-2">
-                <Label
-                  htmlFor="name-input"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Enter Your Name
-                </Label>
-                <Input
-                  id="name-input"
-                  type="text"
-                  placeholder="Your name..."
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (nameError) setNameError("");
-                  }}
-                  onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-                  className="h-11 rounded-xl border-border/60 bg-background/60 focus:border-primary/60 transition-colors"
-                  autoFocus
-                />
-                {nameError && (
-                  <p className="text-xs text-destructive animate-in fade-in duration-200">
-                    {nameError}
-                  </p>
-                )}
-              </div>
-
-              {/* Actor loading indicator */}
-              {actorLoading && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Connecting to network…</span>
-                </div>
-              )}
-
-              <Button
-                onClick={handleConnect}
-                disabled={actorLoading}
-                className="w-full h-11 rounded-xl font-semibold gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
-              >
-                {actorLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Connecting…
-                  </>
-                ) : (
-                  <>
-                    <Wifi className="h-4 w-4" />
-                    Connect with Server
-                    <ChevronRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
+              <h2 className="text-xl font-semibold text-foreground">Welcome</h2>
+              <p className="text-sm text-muted-foreground">
+                Enter your details to get started
+              </p>
             </div>
-          )}
 
-          {step === "server" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-400">
-              <div className="text-center space-y-1">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mx-auto mb-4">
-                  <Server className="h-6 w-6 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  Select a Server
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Hello{" "}
-                  <span className="font-medium text-foreground">
-                    {name.trim()}
-                  </span>
-                  , choose your server
-                </p>
-              </div>
-
-              {registerError && (
-                <div className="flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive animate-in fade-in duration-200">
-                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>{registerError}</span>
-                </div>
-              )}
-
-              {/* Actor loading indicator on server step */}
-              {actorLoading && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center py-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Connecting to network, please wait…</span>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {SERVERS.map((server) => {
-                  const isConnecting = connectingServer === server.label;
-                  return (
-                    <button
-                      type="button"
-                      key={server.id}
-                      onClick={() => handleServerSelect(server.label)}
-                      disabled={connectingServer !== null || actorLoading}
-                      className="w-full flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-background/60 hover:bg-primary/5 hover:border-primary/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed group text-left"
-                    >
-                      <div
-                        className={`flex-shrink-0 w-2.5 h-2.5 rounded-full transition-colors ${isConnecting ? "bg-primary animate-pulse" : actorLoading ? "bg-muted-foreground/20" : "bg-muted-foreground/40 group-hover:bg-primary/60"}`}
-                      />
-                      <span className="flex-1 text-sm font-medium text-foreground font-mono">
-                        {server.label}
-                      </span>
-                      {isConnecting ? (
-                        <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin flex-shrink-0" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setStep("name");
-                  setConnectingServer(null);
-                  setRegisterError("");
+            {/* Name field */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="name-input"
+                className="text-sm font-medium text-foreground"
+              >
+                Your Name
+              </Label>
+              <Input
+                id="name-input"
+                type="text"
+                placeholder="Enter your name..."
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameError) setNameError("");
                 }}
-                disabled={connectingServer !== null}
-                className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
-              >
-                ← Change name
-              </button>
+                onKeyDown={handleKeyDown}
+                className="h-11 rounded-xl border-border/60 bg-background/60 focus:border-primary/60 transition-colors"
+                autoFocus
+              />
+              {nameError && (
+                <p className="text-xs text-destructive animate-in fade-in duration-200">
+                  {nameError}
+                </p>
+              )}
             </div>
-          )}
+
+            {/* Phone field */}
+            <div className="space-y-2">
+              <Label
+                htmlFor="phone-input"
+                className="text-sm font-medium text-foreground"
+              >
+                Phone Number
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="phone-input"
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    if (phoneError) setPhoneError("");
+                  }}
+                  onKeyDown={handleKeyDown}
+                  className="h-11 rounded-xl border-border/60 bg-background/60 focus:border-primary/60 transition-colors pl-10"
+                />
+              </div>
+              {phoneError && (
+                <p className="text-xs text-destructive animate-in fade-in duration-200">
+                  {phoneError}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                🇮🇳 Indian numbers only (+91 or 10-digit)
+              </p>
+            </div>
+
+            {/* Error banner */}
+            {registerError && (
+              <div className="flex items-start gap-2 rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive animate-in fade-in duration-200">
+                <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>{registerError}</span>
+              </div>
+            )}
+
+            {/* Waiting / connecting indicator */}
+            {waitingForActor && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center bg-muted/30 rounded-lg p-3">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Connecting to server, please wait…</span>
+              </div>
+            )}
+
+            <Button
+              onClick={handleLogin}
+              disabled={isLoading}
+              className="w-full h-11 rounded-xl font-semibold gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {waitingForActor ? "Connecting…" : "Logging in…"}
+                </>
+              ) : (
+                <>
+                  <Wifi className="h-4 w-4" />
+                  Login
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
