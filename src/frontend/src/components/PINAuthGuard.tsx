@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useQueryClient } from "@tanstack/react-query";
 import { Lock, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -27,18 +26,16 @@ export default function PINAuthGuard({
   const [pin, setPin] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem(SESSION_KEY);
       if (stored === "true") {
-        // Ensure admin token is set
         if (!sessionStorage.getItem(ADMIN_TOKEN_KEY)) {
           sessionStorage.setItem(ADMIN_TOKEN_KEY, CORRECT_PIN);
         }
         setIsAuthenticated(true);
-        // Notify useActor that the token is already present
+        // Token already in sessionStorage — notify useActor
         dispatchAdminTokenChanged();
       }
     } catch (error) {
@@ -48,7 +45,7 @@ export default function PINAuthGuard({
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (pin === CORRECT_PIN) {
@@ -59,13 +56,8 @@ export default function PINAuthGuard({
         console.error("Error writing to sessionStorage:", error);
       }
 
-      // Notify useActor to re-create with admin token
+      // Dispatch event — useActor will detect the new token and recreate the actor
       dispatchAdminTokenChanged();
-
-      // Also explicitly invalidate + refetch actor and admin queries
-      await queryClient.invalidateQueries({ queryKey: ["actor"] });
-      await queryClient.refetchQueries({ queryKey: ["actor"] });
-      await queryClient.invalidateQueries({ queryKey: ["allUsers"] });
 
       setIsAuthenticated(true);
       toast.success("Access granted!");
