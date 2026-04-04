@@ -9,7 +9,7 @@ import {
   Sun,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useActor } from "../hooks/useActor";
 import {
   useGetMaintenanceMode,
@@ -35,12 +35,23 @@ function LoggedOutLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Maximum time (ms) to wait for actor/maintenance/user queries before
+// proceeding anyway. Prevents the loading screen from hanging forever.
+const LOADING_TIMEOUT_MS = 8000;
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { isFetching: actorFetching } = useActor();
+
+  // After LOADING_TIMEOUT_MS, stop waiting and show content anyway
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setLoadingTimedOut(true), LOADING_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, []);
 
   const isActive = (path: string) => currentPath === path;
   const isLoginPage = currentPath === "/login";
@@ -269,12 +280,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // If no credentials, show nothing while redirect happens
   if (!creds) return null;
 
-  // Show loading spinner while actor is initialising and we don't have
-  // a cached answer yet
+  // Show loading spinner only while genuinely initialising AND not timed out.
+  // The timeout prevents the loading screen from hanging forever if the
+  // backend connection is slow.
   const initialising =
-    actorFetching ||
-    (maintenanceLoading && !isMaintenance) ||
-    (userLoading && !userRecord);
+    !loadingTimedOut &&
+    (actorFetching ||
+      (maintenanceLoading && !isMaintenance) ||
+      (userLoading && !userRecord));
+
   if (initialising && !isMaintenance && !isBlocked) {
     return (
       <div
